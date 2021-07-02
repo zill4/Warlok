@@ -14,12 +14,14 @@ import Profile from './pages/profile'
 import Feed from './pages/feed'
 import Inbox from './pages/inbox'
 import Settings from './pages/settings'
+import Navbar from './navbar'
 
 function App() {
   return (
     <div className="App">
       <Router>
         <AuthProvider>
+          <PrivateRoute path="/" component={Navbar} />
         <Switch>
           <PrivateRoute path="/profile" component={Profile} />
           <PrivateRoute path="/feed" component={Feed} />

@@ -1,28 +1,6 @@
-/*
-  This example requires Tailwind CSS v2.0+ 
-  
-  This example requires some changes to your config:
-  
-  ```
-  // tailwind.config.js
-  const colors = require('tailwindcss/colors')
-  
-  module.exports = {
-    // ...
-    theme: {
-      extend: {
-        colors: {
-          'blue-gray': colors.blueGray,
-        }
-      }
-    },
-    plugins: [
-      // ...
-      require('@tailwindcss/forms'),
-    ]
-  }
-  ```
-*/
+import * as React from "react";
+import { storage } from "../../firebase"
+import { useAuth } from "../../context/authcontext"
 import { Fragment, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import {
@@ -107,6 +85,24 @@ function classNames(...classes) {
 }
 
 export default function Settings() {
+
+  const { currentUser } = useAuth()
+  
+  const updateProfile = (event) => {
+  // Create a root reference
+  console.log(event.target.user_photo);
+  console.log("HELLO HELLO HELLO HELLO");
+  var storageRef = storage.ref().put(event.target.user_photo);
+  // Create a reference to 'mountains.jpg'
+  // Create a Storage Ref w/ username
+  // storageRef.ref();
+
+
+  // Upload file
+  // var task = storageRef.put(event.target.file.value);
+  event.preventDefault();
+  }
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
@@ -328,7 +324,7 @@ export default function Settings() {
                 <div className="max-w-3xl mx-auto py-10 px-4 sm:px-6 lg:py-12 lg:px-8">
                   <h1 className="text-3xl font-extrabold text-blue-gray-900">Account</h1>
 
-                  <form className="mt-6 space-y-8 divide-y divide-y-blue-gray-200">
+                  <form className="mt-6 space-y-8 divide-y divide-y-blue-gray-200" onSubmit={updateProfile}>
                     <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-6 sm:gap-x-6">
                       <div className="sm:col-span-6">
                         <h2 className="text-xl font-medium text-blue-gray-900">Profile</h2>

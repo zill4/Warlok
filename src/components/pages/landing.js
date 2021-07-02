@@ -1,5 +1,6 @@
 import { Fragment } from 'react'
-import { Link } from 'react-router-dom'
+import { Link,Redirect } from 'react-router-dom'
+import { useAuth } from "../../context/authcontext"
 import { Popover, Transition } from '@headlessui/react'
 import {
   AnnotationIcon,
@@ -19,6 +20,8 @@ import {
 } from '@heroicons/react/outline'
 import { ChevronDownIcon } from '@heroicons/react/solid'
 import WarlokLogo from '../../images/warlok_logo.png'
+
+
 
 
 const solutions = [
@@ -185,8 +188,12 @@ function classNames(...classes) {
 }
 
 export default function Landing() {
+  const { currentUser } = useAuth()
+
   return (
+
     <div className="bg-white">
+    {currentUser ? <Redirect to="/profile"/> : <br></br>}
       <header>
         <Popover className="relative bg-white">
           {({ open }) => (
@@ -729,6 +736,8 @@ export default function Landing() {
           </div>
         </div>
       </footer>
+    
     </div>
+                
   )
 }
