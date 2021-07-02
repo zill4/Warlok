@@ -1,19 +1,3 @@
-/*
-  This example requires Tailwind CSS v2.0+ 
-  
-  This example requires some changes to your config:
-  
-  ```
-  // tailwind.config.js
-  module.exports = {
-    // ...
-    plugins: [
-      // ...
-      require('@tailwindcss/forms'),
-    ]
-  }
-  ```
-*/
 import { Fragment } from 'react'
 import { Link } from 'react-router-dom'
 import { Popover, Transition } from '@headlessui/react'
@@ -35,24 +19,26 @@ import {
 } from '@heroicons/react/outline'
 import { ChevronDownIcon } from '@heroicons/react/solid'
 import WarlokLogo from '../../images/warlok_logo.png'
+
+
 const solutions = [
   {
-    name: 'Inbox',
-    description: 'Get a better understanding of where your traffic is coming from.',
-    href: '#',
+    name: 'Pact: Inbox',
+    description: 'A shared inbox for you and your team.',
+    href: '#pact',
     icon: InboxIcon,
   },
   {
-    name: 'Messaging',
+    name: 'Portal: Profile',
     description: 'Speak directly to your customers in a more meaningful way.',
-    href: '#',
+    href: '#portal',
     icon: AnnotationIcon,
   },
-  { name: 'Live Chat', description: "Your customers' data will be safe and secure.", href: '#', icon: ChatAlt2Icon },
+  { name: 'Arcana: Feed', description: "Your customers' data will be safe and secure.", href: '#arcana', icon: ChatAlt2Icon },
   {
-    name: 'Knowledge Base',
+    name: 'Patron: Business Card',
     description: "Connect with third-party tools that you're already using.",
-    href: '#',
+    href: '#patron',
     icon: QuestionMarkCircleIcon,
   },
 ]
@@ -281,15 +267,15 @@ export default function Landing() {
                     )}
                   </Popover>
 
-                  <a href="#" className="text-base font-medium text-gray-500 hover:text-gray-900">
-                    Pricing
+                  <a href="/about" className="text-base font-medium text-gray-500 hover:text-gray-900">
+                    <Link to="/about">About</Link>
                   </a>
-                  <a href="#" className="text-base font-medium text-gray-500 hover:text-gray-900">
-                    Partners
+                  <a href="/contact" className="text-base font-medium text-gray-500 hover:text-gray-900">
+                    <Link to="/contact">Contact</Link>
                   </a>
-                  <a href="#" className="text-base font-medium text-gray-500 hover:text-gray-900">
-                    Company
-                  </a>
+                  {/* <a href="#" className="text-base font-medium text-gray-500 hover:text-gray-900">
+                    Code
+                  </a> */}
                 </Popover.Group>
                 <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
                   <a href="/login" className="whitespace-nowrap text-base font-medium text-gray-500 hover:text-gray-900">
@@ -404,27 +390,21 @@ export default function Landing() {
               </div>
               <div className="relative px-4 py-16 sm:px-6 sm:py-24 lg:py-32 lg:px-8">
                 <h1 className="text-center text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-                  <span className="block text-white">Take control of your</span>
-                  <span className="block text-indigo-200">customer support</span>
+                  <span className="block text-white">Escape Mediocrity</span>
+                  <span className="block text-indigo-200">Create a Pact</span>
                 </h1>
                 <p className="mt-6 max-w-lg mx-auto text-center text-xl text-indigo-200 sm:max-w-3xl">
-                  Anim aute id magna aliqua ad ad non deserunt sunt. Qui irure qui lorem cupidatat commodo. Elit sunt
-                  amet fugiat veniam occaecat fugiat aliqua.
+                Warlok helps content creators connect with leading brands, collaborate with rising influencers, and stay in touch with devoted fans.
                 </p>
                 <div className="mt-10 max-w-sm mx-auto sm:max-w-none sm:flex sm:justify-center">
-                  <div className="space-y-4 sm:space-y-0 sm:mx-auto sm:inline-grid sm:grid-cols-2 sm:gap-5">
+                  <div className="space-y-4 sm:space-y-0 sm:mx-auto">
                     <a
-                      href="#"
+                      href="/signup"
                       className="flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-indigo-700 bg-white hover:bg-indigo-50 sm:px-8"
                     >
-                      Get started
+                      <Link to="/signup">Sign Up</Link>
                     </a>
-                    <a
-                      href="#"
-                      className="flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-500 bg-opacity-60 hover:bg-opacity-70 sm:px-8"
-                    >
-                      Live demo
-                    </a>
+
                   </div>
                 </div>
               </div>
@@ -432,71 +412,33 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* Logo Cloud */}
-        <div className="bg-gray-100">
-          <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-            <p className="text-center text-sm font-semibold uppercase text-gray-500 tracking-wide">
-              Trusted by over 5 very average small businesses
-            </p>
-            <div className="mt-6 grid grid-cols-2 gap-8 md:grid-cols-6 lg:grid-cols-5">
-              <div className="col-span-1 flex justify-center md:col-span-2 lg:col-span-1">
-                <img className="h-12" src="https://tailwindui.com/img/logos/tuple-logo-gray-400.svg" alt="Tuple" />
-              </div>
-              <div className="col-span-1 flex justify-center md:col-span-2 lg:col-span-1">
-                <img className="h-12" src="https://tailwindui.com/img/logos/mirage-logo-gray-400.svg" alt="Mirage" />
-              </div>
-              <div className="col-span-1 flex justify-center md:col-span-2 lg:col-span-1">
-                <img
-                  className="h-12"
-                  src="https://tailwindui.com/img/logos/statickit-logo-gray-400.svg"
-                  alt="StaticKit"
-                />
-              </div>
-              <div className="col-span-1 flex justify-center md:col-span-2 md:col-start-2 lg:col-span-1">
-                <img
-                  className="h-12"
-                  src="https://tailwindui.com/img/logos/transistor-logo-gray-400.svg"
-                  alt="Transistor"
-                />
-              </div>
-              <div className="col-span-2 flex justify-center md:col-span-2 md:col-start-4 lg:col-span-1">
-                <img
-                  className="h-12"
-                  src="https://tailwindui.com/img/logos/workcation-logo-gray-400.svg"
-                  alt="Workcation"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Alternating Feature Sections */}
         <div className="relative pt-16 pb-32 overflow-hidden">
           <div aria-hidden="true" className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-gray-100" />
           <div className="relative">
             <div className="lg:mx-auto lg:max-w-7xl lg:px-8 lg:grid lg:grid-cols-2 lg:grid-flow-col-dense lg:gap-24">
+              <section id="pact">
               <div className="px-4 max-w-xl mx-auto sm:px-6 lg:py-16 lg:max-w-none lg:mx-0 lg:px-0">
                 <div>
                   <div>
                     <span className="h-12 w-12 rounded-md flex items-center justify-center bg-gradient-to-r from-purple-600 to-indigo-600">
-                      <InboxIcon className="h-6 w-6 text-white" aria-hidden="true" />
+                      <InboxIcon className="h-6 w-6 text-white" aria-hidden="true"/>
                     </span>
                   </div>
                   <div className="mt-6">
                     <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">
-                      Stay on top of customer support
+                    Pact: Inbox
                     </h2>
                     <p className="mt-4 text-lg text-gray-500">
-                      Semper curabitur ullamcorper posuere nunc sed. Ornare iaculis bibendum malesuada faucibus lacinia
-                      porttitor. Pulvinar laoreet sagittis viverra duis. In venenatis sem arcu pretium pharetra at.
-                      Lectus viverra dui tellus ornare pharetra.
+                    Keep track of potential business collaborations and longterm partnerships.
                     </p>
                     <div className="mt-6">
                       <a
-                        href="#"
+                        href="/signup"
                         className="inline-flex bg-gradient-to-r from-purple-600 to-indigo-600 bg-origin-border px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white hover:from-purple-700 hover:to-indigo-700"
                       >
-                        Get started
+                          <Link to="/signup">Get Started</Link>
                       </a>
                     </div>
                   </div>
@@ -526,6 +468,7 @@ export default function Landing() {
                   </blockquote>
                 </div>
               </div>
+              </section>
               <div className="mt-12 sm:mt-16 lg:mt-0">
                 <div className="pl-4 -mr-48 sm:pl-6 md:-mr-16 lg:px-0 lg:m-0 lg:relative lg:h-full">
                   <img
@@ -537,30 +480,29 @@ export default function Landing() {
               </div>
             </div>
           </div>
+          <section id="portal">
           <div className="mt-24">
             <div className="lg:mx-auto lg:max-w-7xl lg:px-8 lg:grid lg:grid-cols-2 lg:grid-flow-col-dense lg:gap-24">
               <div className="px-4 max-w-xl mx-auto sm:px-6 lg:py-32 lg:max-w-none lg:mx-0 lg:px-0 lg:col-start-2">
                 <div>
                   <div>
                     <span className="h-12 w-12 rounded-md flex items-center justify-center bg-gradient-to-r from-purple-600 to-indigo-600">
-                      <SparklesIcon className="h-6 w-6 text-white" aria-hidden="true" />
+                      <SparklesIcon className="h-6 w-6 text-white" aria-hidden="true" id="portal" />
                     </span>
                   </div>
                   <div className="mt-6">
                     <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">
-                      Better understand your customers
+                    Portal: Profile
                     </h2>
                     <p className="mt-4 text-lg text-gray-500">
-                      Semper curabitur ullamcorper posuere nunc sed. Ornare iaculis bibendum malesuada faucibus lacinia
-                      porttitor. Pulvinar laoreet sagittis viverra duis. In venenatis sem arcu pretium pharetra at.
-                      Lectus viverra dui tellus ornare pharetra.
+                    Schedule events and projects with creators you vibe with.
                     </p>
                     <div className="mt-6">
                       <a
-                        href="#"
+                        href="/signup"
                         className="inline-flex bg-gradient-to-r from-purple-600 to-indigo-600 bg-origin-border px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white hover:from-purple-700 hover:to-indigo-700"
                       >
-                        Get started
+                        <Link to="/signup">Get Started</Link>
                       </a>
                     </div>
                   </div>
@@ -577,9 +519,11 @@ export default function Landing() {
               </div>
             </div>
           </div>
+          </section>
         </div>
 
         {/* Gradient Feature Section */}
+        <section id="arcana">
         <div className="bg-gradient-to-r from-purple-800 to-indigo-700">
           <div className="max-w-4xl mx-auto px-4 py-16 sm:px-6 sm:pt-20 sm:pb-24 lg:max-w-7xl lg:pt-24 lg:px-8">
             <h2 className="text-3xl font-extrabold text-white tracking-tight">Inbox support built for efficiency</h2>
@@ -604,8 +548,9 @@ export default function Landing() {
             </div>
           </div>
         </div>
-
+      </section>
         {/* Stats section */}
+        <section id="patron">
         <div className="relative bg-gray-900">
           <div className="h-80 absolute inset-x-0 bottom-0 xl:top-0 xl:h-full">
             <div className="h-full w-full xl:grid xl:grid-cols-2">
@@ -650,7 +595,7 @@ export default function Landing() {
             </div>
           </div>
         </div>
-
+      </section>
         {/* CTA Section */}
         <div className="bg-white">
           <div className="max-w-4xl mx-auto py-16 px-4 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8 lg:flex lg:items-center lg:justify-between">
@@ -668,10 +613,10 @@ export default function Landing() {
                 <Link to="/about">Learn more</Link>
               </a>
               <a
-                href="#"
+                href="/signup"
                 className="flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-indigo-800 bg-indigo-50 hover:bg-indigo-100"
               >
-                Get started
+                <Link to="/signup">Get Started</Link>
               </a>
             </div>
           </div>
