@@ -14,6 +14,8 @@ import Profile from './pages/profile'
 import Feed from './pages/feed'
 import Inbox from './pages/inbox'
 import Settings from './pages/settings'
+import PublicProfile from './pages/publicProfile'
+// Components
 import Navbar from './navbar'
 
 function App() {
@@ -27,6 +29,7 @@ function App() {
           <PrivateRoute path="/feed" component={Feed} />
           <PrivateRoute path="/inbox" component={Inbox} />
           <PrivateRoute path="/settings" component={Settings} />
+          <Route exact path="/p/:profile" component={PublicProfile} />
           <Route exact path="/" component={Landing} />
           <Route path="/login" component={Login} />
           <Route path="/signup" component={SignUp} />

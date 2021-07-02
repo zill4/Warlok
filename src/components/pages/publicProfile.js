@@ -6,6 +6,7 @@ import { storage, firestore } from "../../firebase"
 import profile_pic from "../../images/warlock.png";
 import backgroundImg from "../../images/cool.jpg";
 import myPic  from "../../images/circleProfile.png";
+import { useParams } from "react-router-dom";
 
 
 const people = [
@@ -181,20 +182,31 @@ export function Calendar() {
 
 
 
-export default function Profile  () {
+export default function PublicProfile  () {
   const { currentUser } = useAuth();
   const [ user, setUser ] = useState(""); 
-  
+  const { profile } = useParams();
 
   useEffect(() => {
     const getUser = async() => {
-      const userCollection = await firestore.doc(`users/${currentUser.uid}`).get()
-      setUser(await userCollection.data());
+      const userCollection = await firestore.collection('users').where('username', '==', profile).get();
+      console.log(profile);
+      console.log(userCollection);
+      if (!userCollection.docs.exists) {
+            setUser("404");
+      } else {
+      setUser(await userCollection.docs[0].data());
+      console.log("user", user);
+         }
       }
     getUser()
   }, [])
   return (
     <div>
+           {user === '404' ?
+            <div className="w-full flex items-center justify-center h-screen text-center text-7xl">
+                <h1>404 Profile not found</h1>
+            </div>: 
       <div >
         <section className="inset-y-2  h-500-px">
           <div
@@ -334,17 +346,7 @@ export default function Profile  () {
                       </span>
                     </div>
                   </div>
-                  {/* <div className=" mb-6 mt-6 rounded flex justify-around flex-wrap"> */}
-                    {/* <div className="px-4 lg:order-2 flex mt-6 mb-5 text-4xl text-center">
-                        
-                    </div>
-                  
-                    <div className=" px-4 lg:order-3 lg:text-right lg:self-center text-4xl">
-                        
-                    </div> */}
-                    {/* <div className=" lg:order-1 px-3 items-stretch flex text-center mt-6">
-                    </div> */}
-                  {/* </div> */}
+
           <Calendar />
                 </div>
               </div>
@@ -352,6 +354,7 @@ export default function Profile  () {
           </div>
         </section>
       </div>
+        }
       </div>
   );
 }
