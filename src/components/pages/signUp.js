@@ -39,15 +39,13 @@ export default function SignUp() {
         {
           return setError("User name is taken");
         }else{
-          console.log('ASDHASKJDHASKJDHKASDJHKASJKSDHASKJSD');
-          console.log(snapshot);
-          // signup(emailRef.current.value, passwordRef.current.value).then((authUser) =>{
-          //   firestore.doc(`users/${authUser.user.uid}`).set({
-          //       email : emailRef.current.value.toLowerCase(),
-          //       username : usernameRef.current.value.toLowerCase(),
-          //       avatar: "https://avatars.dicebear.com/api/micah/:" + usernameRef.current.value.toLowerCase() + ".svg"
-          //       });
-          //   }).then(() =>history.push("/profile"))
+          signup(emailRef.current.value, passwordRef.current.value).then((authUser) =>{
+            firestore.doc(`users/${authUser.user.uid}`).set({
+                email : emailRef.current.value.toLowerCase(),
+                username : usernameRef.current.value.toLowerCase(),
+                avatar: "https://avatars.dicebear.com/api/micah/:" + usernameRef.current.value.toLowerCase() + ".svg"
+                });
+            }).then(() =>history.push("/profile"))
         }
         });
     } catch {

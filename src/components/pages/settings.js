@@ -31,53 +31,53 @@ const navigation = [
 const subNavigation = [
   {
     name: 'Account',
-    description: 'Ullamcorper id at suspendisse nec id volutpat vestibulum enim. Interdum blandit.',
-    href: '#',
+    description: 'Change profile related settings',
+    href: '',
     icon: CogIcon,
     current: true,
   },
-  {
-    name: 'Notifications',
-    description: 'Enim, nullam mi vel et libero urna lectus enim. Et sed in maecenas tellus.',
-    href: '#',
-    icon: BellIcon,
-    current: false,
-  },
-  {
-    name: 'Security',
-    description: 'Semper accumsan massa vel volutpat massa. Non turpis ut nulla aliquet turpis.',
-    href: '#',
-    icon: KeyIcon,
-    current: false,
-  },
-  {
-    name: 'Appearance',
-    description: 'Magna nulla id sed ornare ipsum eget. Massa eget porttitor suscipit consequat.',
-    href: '#',
-    icon: PhotographIcon,
-    current: false,
-  },
-  {
-    name: 'Billing',
-    description: 'Orci aliquam arcu egestas turpis cursus. Lectus faucibus netus dui auctor mauris.',
-    href: '#',
-    icon: CashIcon,
-    current: false,
-  },
-  {
-    name: 'Integrations',
-    description: 'Nisi, elit volutpat odio urna quis arcu faucibus dui. Mauris adipiscing pellentesque.',
-    href: '#',
-    icon: ViewGridAddIcon,
-    current: false,
-  },
-  {
-    name: 'Additional Resources',
-    description: 'Quis viverra netus donec ut auctor fringilla facilisis. Nunc sit donec cursus sit quis et.',
-    href: '#',
-    icon: SearchCircleIcon,
-    current: false,
-  },
+  // {
+  //   name: 'Notifications',
+  //   description: 'Enim, nullam mi vel et libero urna lectus enim. Et sed in maecenas tellus.',
+  //   href: '#',
+  //   icon: BellIcon,
+  //   current: false,
+  // },
+  // {
+  //   name: 'Security',
+  //   description: 'Semper accumsan massa vel volutpat massa. Non turpis ut nulla aliquet turpis.',
+  //   href: '#',
+  //   icon: KeyIcon,
+  //   current: false,
+  // },
+  // {
+  //   name: 'Appearance',
+  //   description: 'Magna nulla id sed ornare ipsum eget. Massa eget porttitor suscipit consequat.',
+  //   href: '#',
+  //   icon: PhotographIcon,
+  //   current: false,
+  // },
+  // {
+  //   name: 'Billing',
+  //   description: 'Orci aliquam arcu egestas turpis cursus. Lectus faucibus netus dui auctor mauris.',
+  //   href: '#',
+  //   icon: CashIcon,
+  //   current: false,
+  // },
+  // {
+  //   name: 'Integrations',
+  //   description: 'Nisi, elit volutpat odio urna quis arcu faucibus dui. Mauris adipiscing pellentesque.',
+  //   href: '#',
+  //   icon: ViewGridAddIcon,
+  //   current: false,
+  // },
+  // {
+  //   name: 'Additional Resources',
+  //   description: 'Quis viverra netus donec ut auctor fringilla facilisis. Nunc sit donec cursus sit quis et.',
+  //   href: '#',
+  //   icon: SearchCircleIcon,
+  //   current: false,
+  // },
 ]
 
 function classNames(...classes) {
@@ -226,7 +226,7 @@ export default function Settings() {
       </Transition.Root>
 
       {/* Static sidebar for desktop */}
-      <div className="hidden lg:flex lg:flex-shrink-0">
+      {/* <div className="hidden lg:flex lg:flex-shrink-0">
         <div className="flex flex-col w-20">
           <div className="flex flex-col h-0 flex-1 overflow-y-auto bg-blue-600">
             <div className="flex-1 flex flex-col">
@@ -265,7 +265,7 @@ export default function Settings() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
         {/* Mobile top navigation */}

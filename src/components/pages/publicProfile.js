@@ -190,13 +190,14 @@ export default function PublicProfile  () {
   useEffect(() => {
     const getUser = async() => {
       const userCollection = await firestore.collection('users').where('username', '==', profile).get();
-      console.log(profile);
-      console.log(userCollection);
-      if (!userCollection.docs.exists) {
+      //console.log(profile);
+      //console.log(userCollection);
+      if (userCollection.empty) {
             setUser("404");
       } else {
       setUser(await userCollection.docs[0].data());
-      console.log("user", user);
+        
+      //console.log("user", user.username);
          }
       }
     getUser()

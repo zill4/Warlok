@@ -38,6 +38,8 @@ export default function Navbar() {
 
       useEffect(() => {
         const getUser = async() => {
+          if (!currentUser)
+            return;
           const userCollection = await firestore.doc(`users/${currentUser.uid}`).get()
           setUser(await userCollection.data());
           }
@@ -145,9 +147,11 @@ export default function Navbar() {
     
   
   return (
+
     <Disclosure as="nav" className="bg-white shadow">
-      {({ open }) => (
-        <>
+    { currentUser ?  
+      ({ open }) => (
+         <>
           <div className="max-w-full mx-auto px-2 sm:px-6 lg:px-8">
             <div className="relative flex justify-between h-16">
               <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
@@ -246,7 +250,9 @@ export default function Navbar() {
             </div>
           </Disclosure.Panel>
         </>
-      )}
+      )
+      : <div></div> }
     </Disclosure>
   )
+
 }
