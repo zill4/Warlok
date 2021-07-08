@@ -20,6 +20,7 @@ import {
 } from '@heroicons/react/outline'
 import { ChevronDownIcon } from '@heroicons/react/solid'
 import WarlokLogo from '../../images/warlok_logo.png'
+import WarlokLogoSmall from '../../images/warlok_color.png'
 
 
 
@@ -194,19 +195,20 @@ export default function Landing() {
 
     <div className="bg-white">
     {currentUser ? <Redirect to="/profile"/> : <br></br>}
-      <header>
+    <header>
         <Popover className="relative bg-white">
           {({ open }) => (
             <>
               <div className="flex justify-between items-center max-w-7xl mx-auto px-4 py-6 sm:px-6 md:justify-start md:space-x-10 lg:px-8">
                 <div className="flex justify-start lg:w-0 lg:flex-1">
-                  <a href="#">
+                  <a href="/">
                     <span className="sr-only">Workflow</span>
                     <img
                       className="h-8 w-auto sm:h-10"
                       src={WarlokLogo}
                       alt="Warlok"
                     />
+                    <Link to="/"></Link>
                   </a>
                 </div>
                 <div className="-mr-2 -my-2 md:hidden">
@@ -249,7 +251,7 @@ export default function Landing() {
                             static
                             className="absolute z-10 -ml-4 mt-3 transform w-screen max-w-md lg:max-w-2xl lg:ml-0 lg:left-1/2 lg:-translate-x-1/2"
                           >
-                            <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
+                            <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 overflow-hidden ">
                               <div className="relative grid gap-6 bg-white px-5 py-6 sm:gap-8 sm:p-8 lg:grid-cols-2">
                                 {solutions.map((item) => (
                                   <a
@@ -318,8 +320,8 @@ export default function Landing() {
                         <div>
                           <img
                             className="h-8 w-auto"
-                            src="https://tailwindui.com/img/logos/workflow-mark-purple-600-to-indigo-600.svg"
-                            alt="Workflow"
+                            src={WarlokLogoSmall}
+                            alt="Warlok"
                           />
                         </div>
                         <div className="-mr-2">
@@ -348,27 +350,24 @@ export default function Landing() {
                     </div>
                     <div className="py-6 px-5">
                       <div className="grid grid-cols-2 gap-4">
-                        <a href="#" className="text-base font-medium text-gray-900 hover:text-gray-700">
-                          Pricing
+                        <a href="/about" className="text-base font-medium text-gray-900 hover:text-gray-700">
+                        <Link to="/about">About</Link>
                         </a>
-                        <a href="#" className="text-base font-medium text-gray-900 hover:text-gray-700">
-                          Partners
-                        </a>
-                        <a href="#" className="text-base font-medium text-gray-900 hover:text-gray-700">
-                          Company
+                        <a href="/contact" className="text-base font-medium text-gray-900 hover:text-gray-700">
+                        <Link to="/contact">Contact</Link>
                         </a>
                       </div>
                       <div className="mt-6">
                         <a
-                          href="#"
+                          href="/signup"
                           className="w-full flex items-center justify-center bg-gradient-to-r from-purple-600 to-indigo-600 bg-origin-border px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white hover:from-purple-700 hover:to-indigo-700"
                         >
-                          Sign up
+                      <Link to="/signup"> Sign Up</Link>
                         </a>
                         <p className="mt-6 text-center text-base font-medium text-gray-500">
-                          Existing customer?
-                          <a href="#" className="text-gray-900">
-                            Sign in
+                          Already have an account?
+                          <a  href="/login" className="text-gray-900">
+                            <Link to="/login"> Login </Link>
                           </a>
                         </p>
                       </div>
@@ -380,6 +379,7 @@ export default function Landing() {
           )}
         </Popover>
       </header>
+
 
       <main>
         {/* Hero section */}

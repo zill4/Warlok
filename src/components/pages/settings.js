@@ -1,5 +1,5 @@
-import * as React from "react";
-import { storage } from "../../firebase"
+import React, { useEffect, useRef } from "react";
+import { storage, firestore } from "../../firebase"
 import { useAuth } from "../../context/authcontext"
 import { Fragment, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
@@ -31,53 +31,53 @@ const navigation = [
 const subNavigation = [
   {
     name: 'Account',
-    description: 'Ullamcorper id at suspendisse nec id volutpat vestibulum enim. Interdum blandit.',
-    href: '#',
+    description: 'Change profile related settings',
+    href: '',
     icon: CogIcon,
     current: true,
   },
-  {
-    name: 'Notifications',
-    description: 'Enim, nullam mi vel et libero urna lectus enim. Et sed in maecenas tellus.',
-    href: '#',
-    icon: BellIcon,
-    current: false,
-  },
-  {
-    name: 'Security',
-    description: 'Semper accumsan massa vel volutpat massa. Non turpis ut nulla aliquet turpis.',
-    href: '#',
-    icon: KeyIcon,
-    current: false,
-  },
-  {
-    name: 'Appearance',
-    description: 'Magna nulla id sed ornare ipsum eget. Massa eget porttitor suscipit consequat.',
-    href: '#',
-    icon: PhotographIcon,
-    current: false,
-  },
-  {
-    name: 'Billing',
-    description: 'Orci aliquam arcu egestas turpis cursus. Lectus faucibus netus dui auctor mauris.',
-    href: '#',
-    icon: CashIcon,
-    current: false,
-  },
-  {
-    name: 'Integrations',
-    description: 'Nisi, elit volutpat odio urna quis arcu faucibus dui. Mauris adipiscing pellentesque.',
-    href: '#',
-    icon: ViewGridAddIcon,
-    current: false,
-  },
-  {
-    name: 'Additional Resources',
-    description: 'Quis viverra netus donec ut auctor fringilla facilisis. Nunc sit donec cursus sit quis et.',
-    href: '#',
-    icon: SearchCircleIcon,
-    current: false,
-  },
+  // {
+  //   name: 'Notifications',
+  //   description: 'Enim, nullam mi vel et libero urna lectus enim. Et sed in maecenas tellus.',
+  //   href: '#',
+  //   icon: BellIcon,
+  //   current: false,
+  // },
+  // {
+  //   name: 'Security',
+  //   description: 'Semper accumsan massa vel volutpat massa. Non turpis ut nulla aliquet turpis.',
+  //   href: '#',
+  //   icon: KeyIcon,
+  //   current: false,
+  // },
+  // {
+  //   name: 'Appearance',
+  //   description: 'Magna nulla id sed ornare ipsum eget. Massa eget porttitor suscipit consequat.',
+  //   href: '#',
+  //   icon: PhotographIcon,
+  //   current: false,
+  // },
+  // {
+  //   name: 'Billing',
+  //   description: 'Orci aliquam arcu egestas turpis cursus. Lectus faucibus netus dui auctor mauris.',
+  //   href: '#',
+  //   icon: CashIcon,
+  //   current: false,
+  // },
+  // {
+  //   name: 'Integrations',
+  //   description: 'Nisi, elit volutpat odio urna quis arcu faucibus dui. Mauris adipiscing pellentesque.',
+  //   href: '#',
+  //   icon: ViewGridAddIcon,
+  //   current: false,
+  // },
+  // {
+  //   name: 'Additional Resources',
+  //   description: 'Quis viverra netus donec ut auctor fringilla facilisis. Nunc sit donec cursus sit quis et.',
+  //   href: '#',
+  //   icon: SearchCircleIcon,
+  //   current: false,
+  // },
 ]
 
 function classNames(...classes) {
@@ -85,25 +85,39 @@ function classNames(...classes) {
 }
 
 export default function Settings() {
-
-  const { currentUser } = useAuth()
+  const usernameRef = useRef()
+  const [fileUrl, setFileUrl] = useState();
+  const { currentUser } = useAuth();
+  const [ user, setUser ] = useState(""); 
   
   const updateProfile = (event) => {
-  // Create a root reference
-  console.log(event.target.user_photo);
-  console.log("HELLO HELLO HELLO HELLO");
-  var storageRef = storage.ref().put(event.target.user_photo);
-  // Create a reference to 'mountains.jpg'
-  // Create a Storage Ref w/ username
-  // storageRef.ref();
+    event.preventDefault();
+    const name = event.target.username;
+    if (!name) { return }
+    firestore.doc(`users/${currentUser.uid}`).set({
+      username: usernameRef.current.value.toLowerCase(),
+      avatar: fileUrl
+    })
 
-
-  // Upload file
-  // var task = storageRef.put(event.target.file.value);
-  event.preventDefault();
+  }
+  const onFileChange = async (event) => {
+    const file = event.target.files[0];
+    const storageRef = storage.ref();
+    const fileRef = storageRef.child(file.name);
+    await fileRef.put(file);
+    setFileUrl(await fileRef.getDownloadURL());
   }
 
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  useEffect(() => {
+    const getUser = async() => {
+      const userCollection = await firestore.doc(`users/${currentUser.uid}`).get()
+      setUser(await userCollection.data());
+      }
+    getUser()
+  }, [])
 
   return (
     <div className="h-screen flex bg-blue-gray-50 overflow-hidden">
@@ -188,8 +202,8 @@ export default function Settings() {
                     <div>
                       <img
                         className="inline-block h-10 w-10 rounded-full"
-                        src="https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2.5&w=256&h=256&q=80"
-                        alt=""
+                        src={user.avatar}
+                        alt="avatar"
                       />
                     </div>
                     <div className="ml-3">
@@ -212,7 +226,7 @@ export default function Settings() {
       </Transition.Root>
 
       {/* Static sidebar for desktop */}
-      <div className="hidden lg:flex lg:flex-shrink-0">
+      {/* <div className="hidden lg:flex lg:flex-shrink-0">
         <div className="flex flex-col w-20">
           <div className="flex flex-col h-0 flex-1 overflow-y-auto bg-blue-600">
             <div className="flex-1 flex flex-col">
@@ -251,7 +265,7 @@ export default function Settings() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
         {/* Mobile top navigation */}
@@ -358,25 +372,21 @@ export default function Settings() {
                           className="mt-1 block w-full border-blue-gray-300 rounded-md shadow-sm text-blue-gray-900 sm:text-sm focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
-
-                      <div className="sm:col-span-6">
-                        <label htmlFor="username" className="block text-sm font-medium text-blue-gray-900">
-                          Username
-                        </label>
-                        <div className="mt-1 flex rounded-md shadow-sm">
-                          <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-blue-gray-300 bg-blue-gray-50 text-blue-gray-500 sm:text-sm">
-                            workcation.com/
-                          </span>
-                          <input
-                            type="text"
-                            name="username"
-                            id="username"
-                            autoComplete="username"
-                            defaultValue="lisamarie"
-                            className="flex-1 block w-full min-w-0 border-blue-gray-300 rounded-none rounded-r-md text-blue-gray-900 sm:text-sm focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </div>
-                      </div>
+                      <div>
+                    <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                      Username
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        id="username"
+                        name="username"
+                        type="username"
+                        ref={usernameRef}
+                        autoComplete="username"
+                        className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      />
+                    </div>
+                  </div>
 
                       <div className="sm:col-span-6">
                         <label htmlFor="photo" className="block text-sm font-medium text-blue-gray-900">
@@ -385,8 +395,8 @@ export default function Settings() {
                         <div className="mt-1 flex items-center">
                           <img
                             className="inline-block h-12 w-12 rounded-full"
-                            src="https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2.5&w=256&h=256&q=80"
-                            alt=""
+                            src={user.avatar}
+                            alt="avatar"
                           />
                           <div className="ml-4 flex">
                             <div className="relative bg-white py-2 px-3 border border-blue-gray-300 rounded-md shadow-sm flex items-center cursor-pointer hover:bg-blue-gray-50 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-blue-gray-50 focus-within:ring-blue-500">
@@ -398,9 +408,8 @@ export default function Settings() {
                                 <span className="sr-only"> user photo</span>
                               </label>
                               <input
-                                id="user_photo"
-                                name="user_photo"
                                 type="file"
+                                onChange={onFileChange}
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer border-gray-300 rounded-md"
                               />
                             </div>

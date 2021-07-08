@@ -18,6 +18,7 @@ import {
     UsersIcon,
   } from '@heroicons/react/outline'
 import WarlokLogo from '../../images/warlok_logo.png'
+import WarlokLogoSmall from '../../images/warlok_color.png'
 
 function classNames(...classes) {
     return classes.filter(Boolean).join(' ')
@@ -150,7 +151,7 @@ const footerNavigation = {
 export default function Contact() {
   return (
     <div className="min-h-screen bg-white">
-      <header>
+     <header>
         <Popover className="relative bg-white">
           {({ open }) => (
             <>
@@ -275,8 +276,8 @@ export default function Contact() {
                         <div>
                           <img
                             className="h-8 w-auto"
-                            src="https://tailwindui.com/img/logos/workflow-mark-purple-600-to-indigo-600.svg"
-                            alt="Workflow"
+                            src={WarlokLogoSmall}
+                            alt="Warlok"
                           />
                         </div>
                         <div className="-mr-2">
@@ -305,27 +306,24 @@ export default function Contact() {
                     </div>
                     <div className="py-6 px-5">
                       <div className="grid grid-cols-2 gap-4">
-                        <a href="#" className="text-base font-medium text-gray-900 hover:text-gray-700">
-                          Pricing
+                        <a href="/about" className="text-base font-medium text-gray-900 hover:text-gray-700">
+                        <Link to="/about">About</Link>
                         </a>
-                        <a href="#" className="text-base font-medium text-gray-900 hover:text-gray-700">
-                          Partners
-                        </a>
-                        <a href="#" className="text-base font-medium text-gray-900 hover:text-gray-700">
-                          Company
+                        <a href="/contact" className="text-base font-medium text-gray-900 hover:text-gray-700">
+                        <Link to="/contact">Contact</Link>
                         </a>
                       </div>
                       <div className="mt-6">
                         <a
-                          href="#"
+                          href="/signup"
                           className="w-full flex items-center justify-center bg-gradient-to-r from-purple-600 to-indigo-600 bg-origin-border px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white hover:from-purple-700 hover:to-indigo-700"
                         >
-                          Sign up
+                      <Link to="/signup"> Sign Up</Link>
                         </a>
                         <p className="mt-6 text-center text-base font-medium text-gray-500">
-                          Existing customer?
-                          <a href="#" className="text-gray-900">
-                            Sign in
+                          Already have an account?
+                          <a  href="/login" className="text-gray-900">
+                            <Link to="/login"> Login </Link>
                           </a>
                         </p>
                       </div>

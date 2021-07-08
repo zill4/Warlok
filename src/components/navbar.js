@@ -1,22 +1,12 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react";
 import { Link, useHistory } from "react-router-dom";
-
+import { firestore } from '../firebase';
 import smallLogo from '../images/warlok_color.png';
 import logo from '../images/warlok_logo.png';
 import { Fragment } from 'react'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { BellIcon, MenuIcon, XIcon } from '@heroicons/react/outline'
 import { useAuth } from "../context/authcontext"
-
-
-// import { createAvatar } from '@dicebear/avatars';
-// import * as style from '@dicebear/micah';
-
-// let avatar = createAvatar(style, {
-//   seed: 'Justin',
-//   // ... and other options
-// });
-
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
@@ -28,7 +18,9 @@ export default function Navbar() {
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
     const history = useHistory()
-  
+    const [ user, setUser ] = useState(""); 
+    const { currentUser } = useAuth();
+
     async function handleLogout(e) {
         e.preventDefault()
     
@@ -43,6 +35,17 @@ export default function Navbar() {
     
         setLoading(false)
       }
+
+      useEffect(() => {
+        const getUser = async() => {
+          if (!currentUser)
+            return;
+          const userCollection = await firestore.doc(`users/${currentUser.uid}`).get()
+          setUser(await userCollection.data());
+          }
+        getUser()
+      }, [])
+
     const NavigationAuth = () => (
       
         <Fragment>
@@ -76,8 +79,8 @@ export default function Navbar() {
                                 <span className="sr-only">Open user menu</span>
                                 <img
                                   className="h-8 w-8 rounded-full"
-                                  src="https://avatars.dicebear.com/api/micah/:justin.svg                              "
-                                  alt=""
+                                  src={user.avatar}
+                                  alt="avatar"
                                 />
                               </Menu.Button>
                             </div>
@@ -144,9 +147,11 @@ export default function Navbar() {
     
   
   return (
+
     <Disclosure as="nav" className="bg-white shadow">
-      {({ open }) => (
-        <>
+    { currentUser ?  
+      ({ open }) => (
+         <>
           <div className="max-w-full mx-auto px-2 sm:px-6 lg:px-8">
             <div className="relative flex justify-between h-16">
               <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
@@ -245,7 +250,9 @@ export default function Navbar() {
             </div>
           </Disclosure.Panel>
         </>
-      )}
+      )
+      : <div></div> }
     </Disclosure>
   )
+
 }

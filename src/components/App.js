@@ -14,6 +14,8 @@ import Profile from './pages/profile'
 import Feed from './pages/feed'
 import Inbox from './pages/inbox'
 import Settings from './pages/settings'
+import PublicProfile from './pages/publicProfile'
+// Components
 import Navbar from './navbar'
 
 function App() {
@@ -21,13 +23,14 @@ function App() {
     <div className="App">
       <Router>
         <AuthProvider>
-          <PrivateRoute path="/" component={Navbar} />
+          <Route path="/" component={Navbar} />
         <Switch>
           <PrivateRoute path="/profile" component={Profile} />
           <PrivateRoute path="/feed" component={Feed} />
           <PrivateRoute path="/inbox" component={Inbox} />
           <PrivateRoute path="/settings" component={Settings} />
           <Route exact path="/" component={Landing} />
+          <Route exact path="/p/:profile" component={PublicProfile} />
           <Route path="/login" component={Login} />
           <Route path="/signup" component={SignUp} />
           <Route path="/forgot-password" component={ForgotPassword} />
