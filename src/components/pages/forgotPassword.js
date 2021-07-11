@@ -1,3 +1,5 @@
+import { Link, useHistory } from 'react-router-dom'
+import warlokw from "../../images/warlok_color.png"
 
 export default function ForgotPassword() {
     return (
@@ -5,14 +7,14 @@ export default function ForgotPassword() {
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <img
             className="mx-auto h-12 w-auto"
-            src="https://tailwindui.com/img/logos/workflow-mark-indigo-600.svg"
+            src={warlokw}
             alt="Workflow"
           />
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Forgot your password?</h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{' '}
-            <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
-              start your 14-day free trial
+            <a href="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link to="/signup">Sign Up</Link>  
             </a>
           </p>
         </div>
@@ -36,7 +38,7 @@ export default function ForgotPassword() {
                 </div>
               </div>
   
-              <div>
+              {/* <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Password
                 </label>
@@ -50,9 +52,9 @@ export default function ForgotPassword() {
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   />
                 </div>
-              </div>
+              </div> */}
   
-              <div className="flex items-center justify-between">
+              {/* <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <input
                     id="remember_me"
@@ -70,19 +72,19 @@ export default function ForgotPassword() {
                     Forgot your password?
                   </a>
                 </div>
-              </div>
+              </div> */}
   
               <div>
                 <button
                   type="submit"
                   className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
-                  Sign in
+                  Submit
                 </button>
               </div>
             </form>
   
-            <div className="mt-6">
+            {/* <div className="mt-6">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-300" />
@@ -137,7 +139,7 @@ export default function ForgotPassword() {
                   </a>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

@@ -57,7 +57,8 @@ export default function Login() {
             </div>
   
             <div className="mt-8">
-              <div>
+              {/* Sign other methods */}
+              {/* <div>
                 <div>
                   <p className="text-sm font-medium text-gray-700">Sign in with</p>
   
@@ -116,7 +117,7 @@ export default function Login() {
                     <span className="px-2 bg-white text-gray-500">Or continue with</span>
                   </div>
                 </div>
-              </div>
+              </div> */}
   
               <div className="mt-6">
                 <form onSubmit={handleSubmit} className="space-y-6">
