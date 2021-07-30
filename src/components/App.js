@@ -3,6 +3,7 @@ import './App.css';
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom"
 import { AuthProvider } from "../context/authcontext"
 import PrivateRoute from "./privateRoute"
+import "tailwindcss/tailwind.css"
 // Pages
 import Landing from './pages/landing'
 import Login from './pages/login'
@@ -19,9 +20,10 @@ import PublicProfile from './pages/publicProfile'
 import Navbar from './navbar'
 
 function App() {
+  console.log("Am I working?");
   return (
     <div className="App">
-      <Router>
+      {/* <Router>
         <AuthProvider>
           <Route path="/" component={Navbar} />
         <Switch>
@@ -38,7 +40,10 @@ function App() {
           <Route path="/contact" component={Contact} />
         </Switch>
         </AuthProvider>
-      </Router>
+      </Router> */}
+      <h1>
+        Bobs burgers
+      </h1>
     </div>
   );
 }

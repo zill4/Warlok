@@ -29,8 +29,8 @@ export default function Navbar() {
           setLoading(true)
           await logout()
           history.push("/")
-        } catch {
-          setError("Failed to logout")
+        } catch (error) {
+          setError(error)
         }
     
         setLoading(false)
@@ -73,7 +73,7 @@ export default function Navbar() {
                       {/* Profile dropdown */}
                       <Menu as="div" className="ml-3 relative z-10">
                         {({ open }) => (
-                          <>
+                          <div>
                             <div>
                               <Menu.Button className="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                 <span className="sr-only">Open user menu</span>
@@ -139,7 +139,7 @@ export default function Navbar() {
                                 </Menu.Item>
                               </Menu.Items>
                             </Transition>
-                          </>
+                          </div>
                         )}
                       </Menu>
                     </div>
@@ -151,7 +151,7 @@ export default function Navbar() {
     <Disclosure as="nav" className="bg-white shadow">
     { currentUser ?  
       ({ open }) => (
-         <>
+         <div>
           <div className="max-w-full mx-auto px-2 sm:px-6 lg:px-8">
             <div className="relative flex justify-between h-16">
               <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
@@ -249,7 +249,7 @@ export default function Navbar() {
               </a>
             </div>
           </Disclosure.Panel>
-        </>
+        </div>
       )
       : <div></div> }
     </Disclosure>

@@ -1,29 +1,4 @@
-/*
-  This example requires Tailwind CSS v2.0+ 
-  
-  This example requires some changes to your config:
-  
-  ```
-  // tailwind.config.js
-  const colors = require('tailwindcss/colors')
-  
-  module.exports = {
-    // ...
-    theme: {
-      extend: {
-        colors: {
-          cyan: colors.cyan,
-        }
-      }
-    },
-    plugins: [
-      // ...
-      require('@tailwindcss/forms'),
-      require('@tailwindcss/line-clamp'),
-    ]
-  }
-  ```
-*/
+import React from "react"
 import { Fragment, useState } from 'react'
 import { Dialog, Menu, Transition } from '@headlessui/react'
 import {
@@ -298,7 +273,7 @@ export default function Inbox() {
                 item.children.length ? (
                   <Menu key={item.name} as="div" className="relative text-left">
                     {({ open }) => (
-                      <>
+                      <div>
                         <Menu.Button className="flex items-center text-sm font-medium text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600">
                           <span>{item.name}</span>
                           <ChevronDownIcon className="ml-1 h-5 w-5 text-gray-500" aria-hidden="true" />
@@ -337,7 +312,7 @@ export default function Inbox() {
                             </div>
                           </Menu.Items>
                         </Transition>
-                      </>
+                      </div>
                     )}
                   </Menu>
                 ) : (
@@ -357,7 +332,7 @@ export default function Inbox() {
 
               <Menu as="div" className="relative inline-block text-left">
                 {({ open }) => (
-                  <>
+                  <div>
                     <Menu.Button className="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600">
                       <span className="sr-only">Open user menu</span>
                       <img className="h-8 w-8 rounded-full" src={user.imageUrl} alt="" />
@@ -407,7 +382,7 @@ export default function Inbox() {
                         </div>
                       </Menu.Items>
                     </Transition>
-                  </>
+                  </div>
                 )}
               </Menu>
             </div>
@@ -607,7 +582,7 @@ export default function Inbox() {
 
                         <Menu as="span" className="-ml-px relative block sm:shadow-sm lg:hidden">
                           {({ open }) => (
-                            <>
+                            <div>
                               <div>
                                 <Menu.Button className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-900 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 sm:rounded-md sm:px-3">
                                   <span className="sr-only sm:hidden">More</span>
@@ -689,7 +664,7 @@ export default function Inbox() {
                                   </div>
                                 </Menu.Items>
                               </Transition>
-                            </>
+                            </div>
                           )}
                         </Menu>
                       </span>
@@ -736,7 +711,7 @@ export default function Inbox() {
                     </span>
                     <Menu as="div" className="ml-3 relative inline-block text-left">
                       {({ open }) => (
-                        <>
+                        <div>
                           <div>
                             <Menu.Button className="-my-2 p-2 rounded-full bg-white flex items-center text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600">
                               <span className="sr-only">Open options</span>
@@ -801,7 +776,7 @@ export default function Inbox() {
                               </div>
                             </Menu.Items>
                           </Transition>
-                        </>
+                        </div>
                       )}
                     </Menu>
                   </div>

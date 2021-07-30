@@ -48,7 +48,7 @@ export default function SignUp() {
             }).then(() =>history.push("/profile"))
         }
         });
-    } catch {
+    } catch (error) {
       setError("Failed to create an account", error)
     }
     setLoading(false)

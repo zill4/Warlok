@@ -23,6 +23,7 @@
   }
   ```
 */
+import React from "react"
 import { Fragment } from 'react'
 import { Menu, Popover, Transition } from '@headlessui/react'
 import {
@@ -134,7 +135,7 @@ export default function Feed() {
         }
       >
         {({ open }) => (
-          <>
+          <div>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="relative flex justify-between xl:grid xl:grid-cols-12 lg:gap-8">
                 <div className="flex md:absolute md:left-0 md:inset-y-0 lg:static xl:col-span-2">
@@ -195,7 +196,7 @@ export default function Feed() {
                   {/* Profile dropdown */}
                   <Menu as="div" className="flex-shrink-0 relative ml-5">
                     {({ open }) => (
-                      <>
+                      <div>
                         <div>
                           <Menu.Button className="bg-white rounded-full flex focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500">
                             <span className="sr-only">Open user menu</span>
@@ -233,7 +234,7 @@ export default function Feed() {
                             ))}
                           </Menu.Items>
                         </Transition>
-                      </>
+                      </div>
                     )}
                   </Menu>
 
@@ -293,7 +294,7 @@ export default function Feed() {
                 </div>
               </div>
             </Popover.Panel>
-          </>
+          </div>
         )}
       </Popover>
 
@@ -413,7 +414,7 @@ export default function Feed() {
                           <div className="flex-shrink-0 self-center flex">
                             <Menu as="div" className="relative inline-block text-left">
                               {({ open }) => (
-                                <>
+                                <div>
                                   <div>
                                     <Menu.Button className="-m-2 p-2 rounded-full flex items-center text-gray-400 hover:text-gray-600">
                                       <span className="sr-only">Open options</span>
@@ -481,7 +482,7 @@ export default function Feed() {
                                       </div>
                                     </Menu.Items>
                                   </Transition>
-                                </>
+                                </div>
                               )}
                             </Menu>
                           </div>

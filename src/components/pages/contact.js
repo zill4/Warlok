@@ -1,3 +1,4 @@
+import React from "react"
 import { Fragment } from 'react'
 import { Link } from 'react-router-dom'
 import { Popover, Transition } from '@headlessui/react'
@@ -154,7 +155,7 @@ export default function Contact() {
      <header>
         <Popover className="relative bg-white">
           {({ open }) => (
-            <>
+            <div>
               <div className="flex justify-between items-center max-w-7xl mx-auto px-4 py-6 sm:px-6 md:justify-start md:space-x-10 lg:px-8">
                 <div className="flex justify-start lg:w-0 lg:flex-1">
                   <a href="/">
@@ -176,7 +177,7 @@ export default function Contact() {
                 <Popover.Group as="nav" className="hidden md:flex space-x-10">
                   <Popover className="relative">
                     {({ open }) => (
-                      <>
+                      <div>
                         <Popover.Button
                           className={classNames(
                             open ? 'text-gray-900' : 'text-gray-500',
@@ -228,7 +229,7 @@ export default function Contact() {
                             </div>
                           </Popover.Panel>
                         </Transition>
-                      </>
+                      </div>
                     )}
                   </Popover>
 
@@ -331,7 +332,7 @@ export default function Contact() {
                   </div>
                 </Popover.Panel>
               </Transition>
-            </>
+            </div>
           )}
         </Popover>
       </header>
