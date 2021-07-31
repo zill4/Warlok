@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Link, useHistory } from "react-router-dom";
+// import { Link, useHistory } from "react-router-dom";
+// import { useHistory } from "react-router-dom";
 import { firestore } from '../firebase';
 import smallLogo from '../images/warlok_color.png';
 import logo from '../images/warlok_logo.png';
@@ -17,7 +18,7 @@ export default function Navbar() {
     const { logout } = useAuth()
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
-    const history = useHistory()
+    // const history = useHistory()
     const [ user, setUser ] = useState(""); 
     const { currentUser } = useAuth();
 
@@ -28,7 +29,7 @@ export default function Navbar() {
           setError("")
           setLoading(true)
           await logout()
-          history.push("/")
+        //   history.push("/")
         } catch (error) {
           setError(error)
         }
@@ -50,13 +51,13 @@ export default function Navbar() {
       
         <Fragment>
             <a href="/inbox" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-            <Link to="/inbox">Inbox</Link>
+            {/* <Link to="/inbox">Inbox</Link> */}
             </a>
           <a href="/" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" >
-             <Link to="/" onClick={handleLogout}>Sign Out</Link> 
+             {/* <Link to="/" onClick={handleLogout}>Sign Out</Link>  */}
           </a>  
           <a href="/profile" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" >
-             <Link to="/profile">Profile</Link> 
+             {/* <Link to="/profile">Profile</Link>  */}
           </a>  
         </Fragment>
       
@@ -107,7 +108,7 @@ export default function Navbar() {
                                         'block px-4 py-2 text-sm text-gray-700'
                                       )}
                                     >
-                                    <Link to="/profile" >Your Profile</Link> 
+                                    {/* <Link to="/profile" >Your Profile</Link>  */}
                                     </a>
                                   )}
                                 </Menu.Item>
@@ -120,7 +121,7 @@ export default function Navbar() {
                                         'block px-4 py-2 text-sm text-gray-700'
                                       )}
                                     >
-                                    <Link to="/settings" >Settings</Link> 
+                                    {/* <Link to="/settings" >Settings</Link>  */}
                                     </a>
                                   )}
                                 </Menu.Item>
@@ -133,7 +134,7 @@ export default function Navbar() {
                                         'block px-4 py-2 text-sm text-gray-700'
                                       )}
                                     >
-                                    <Link to="/" onClick={handleLogout}>Sign Out</Link> 
+                                    {/* <Link to="/" onClick={handleLogout}>Sign Out</Link>  */}
                                     </a>
                                   )}
                                 </Menu.Item>
@@ -173,7 +174,7 @@ export default function Navbar() {
                     src= {smallLogo}
                     alt="Warlok"
                   />
-                    <Link to="/feed"></Link> 
+                    {/* <Link to="/feed"></Link>  */}
                   </a>
                   <a href="/feed">
                   <img
@@ -181,7 +182,7 @@ export default function Navbar() {
                     src={logo}
                     alt="Warlok"
                   />
-                    <Link to="/feed"></Link> 
+                    {/* <Link to="/feed"></Link>  */}
                   </a>
                   
                 </div>
