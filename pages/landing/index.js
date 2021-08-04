@@ -193,7 +193,6 @@ function classNames(...classes) {
 
 export default function Landing() {
 
-//{currentUser ?  <Profile/> : <br></br>}
 const { currentUser } = useAuth()
 
   useEffect(() => {
@@ -203,7 +202,6 @@ const { currentUser } = useAuth()
     }
   });
 
-//<Redirect to="/profile"/>
   return (
 
     <div className="bg-white">
