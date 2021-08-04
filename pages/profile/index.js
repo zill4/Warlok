@@ -204,6 +204,7 @@ export default function Profile  () {
 
   return (
     <div>
+    {!currentUser ? <br></br> : 
       <div >
         <section className="inset-y-2  h-500-px">
           <div
@@ -361,6 +362,7 @@ export default function Profile  () {
           </div>
         </section>
       </div>
+            }
       </div>
   );
 }

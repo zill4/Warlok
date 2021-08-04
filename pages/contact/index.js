@@ -160,7 +160,7 @@ export default function Contact() {
                     <span className="sr-only">Workflow</span>
                     <img
                       className="h-8 w-auto sm:h-10"
-                      src={WarlokLogo}
+                      src="images/warlok_logo.png"
                       alt="Warlok"
                     />
                     {/* <Link to="/"></Link> */}
@@ -279,7 +279,7 @@ export default function Contact() {
                         <div>
                           <img
                             className="h-8 w-auto"
-                            src={WarlokLogoSmall}
+                            src="images/warlok_color.png"
                             alt="Warlok"
                           />
                         </div>

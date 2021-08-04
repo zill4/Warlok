@@ -59,7 +59,7 @@ export default function About() {
                     <span className="sr-only">Workflow</span>
                     <img
                       className="h-8 w-auto sm:h-10"
-                      src={WarlokLogo}
+                      src="images/warlok_logo.png"
                       alt="Warlok"
                     />
                     {/* <Link to="/"></Link> */}
@@ -131,9 +131,11 @@ export default function About() {
                   </Popover>
 
                   <a href="/about" className="text-base font-medium text-gray-500 hover:text-gray-900">
+                    About
                     {/* <Link to="/about">About</Link> */}
                   </a>
                   <a href="/contact" className="text-base font-medium text-gray-500 hover:text-gray-900">
+                    Contact
                     {/* <Link to="/contact">Contact</Link> */}
                   </a>
                   {/* <a href="#" className="text-base font-medium text-gray-500 hover:text-gray-900">
@@ -142,12 +144,14 @@ export default function About() {
                 </Popover.Group>
                 <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
                   <a href="/login" className="whitespace-nowrap text-base font-medium text-gray-500 hover:text-gray-900">
+                    Login
                     {/* <Link to="/login"> Login </Link> */}
                   </a>
                   <a
                     href="/signup"
                     className="ml-8 whitespace-nowrap inline-flex items-center justify-center bg-gradient-to-r from-purple-600 to-indigo-600 bg-origin-border px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white hover:from-purple-700 hover:to-indigo-700"
                   >
+                    Sign Up
                       {/* <Link to="/signup"> Sign Up</Link> */}
                   </a>
                 </div>
@@ -174,7 +178,7 @@ export default function About() {
                         <div>
                           <img
                             className="h-8 w-auto"
-                            src={WarlokLogoSmall}
+                            src="/images/warlok_color.png"
                             alt="Warlok"
                           />
                         </div>
@@ -205,9 +209,11 @@ export default function About() {
                     <div className="py-6 px-5">
                       <div className="grid grid-cols-2 gap-4">
                         <a href="/about" className="text-base font-medium text-gray-900 hover:text-gray-700">
+                          About
                         {/* <Link to="/about">About</Link> */}
                         </a>
                         <a href="/contact" className="text-base font-medium text-gray-900 hover:text-gray-700">
+                          Contact
                         {/* <Link to="/contact">Contact</Link> */}
                         </a>
                       </div>
@@ -216,11 +222,13 @@ export default function About() {
                           href="/signup"
                           className="w-full flex items-center justify-center bg-gradient-to-r from-purple-600 to-indigo-600 bg-origin-border px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white hover:from-purple-700 hover:to-indigo-700"
                         >
+                          Sign Up
                       {/* <Link to="/signup"> Sign Up</Link> */}
                         </a>
                         <p className="mt-6 text-center text-base font-medium text-gray-500">
                           Already have an account?
                           <a  href="/login" className="text-gray-900">
+                            Login
                             {/* <Link to="/login"> Login </Link> */}
                           </a>
                         </p>
