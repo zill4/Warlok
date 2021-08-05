@@ -1,6 +1,7 @@
 import { useRef, useState } from "react"
 import { useAuth } from "../../authcontext"
 import { firestore } from "../../firebase"
+import Router from 'next/router'
 //images
 import Image from 'next/image'
 import nightdrive from "../../public/images/NightDrive.jpg"
@@ -45,8 +46,8 @@ export default function signup() {
                 username : usernameRef.current.value.toLowerCase(),
                 avatar: "https://avatars.dicebear.com/api/micah/:" + usernameRef.current.value.toLowerCase() + ".svg"
                 });
-            })
-            // .then(() =>history.push("/profile"))
+            })   
+            Router.push('/profile')
         }
         });
     } catch (error) {

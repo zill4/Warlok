@@ -1,5 +1,6 @@
 import { useRef, useState } from "react"
 import { useAuth } from "../../authcontext"
+import Router from 'next/router'
 // images
 import Image from 'next/image'
 import nightdrive from "../../public/images/NightDrive.jpg"
@@ -13,13 +14,15 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
 //   const history = useHistory()
 
+
   async function handleSubmit(e) {
     e.preventDefault()
 
     try {
-      setError("")
-      setLoading(true)
-      await login(emailRef.current.value, passwordRef.current.value)
+        setError("")
+        setLoading(true)
+        await login(emailRef.current.value, passwordRef.current.value)
+        Router.push('/profile')
     //   history.push("/profile")
     } catch (error) {
       setError(error)
