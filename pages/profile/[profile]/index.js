@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useAuth } from "../../authcontext"
-import { storage, firestore } from "../../firebase"
+import { useAuth } from "../../../authcontext"
+import { storage, firestore } from "../../../firebase"
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 
 //images
-import profile_pic from "../../public/images/warlock.png";
-import backgroundImg from "../../public/images/cool.jpg";
-import myPic  from "../../public/images/circleProfile.png";
+import profile_pic from "../../../public/images/warlock.png";
+import backgroundImg from "../../../public/images/cool.jpg";
+import myPic  from "../../../public/images/circleProfile.png";
 // import { useParams } from "react-router-dom";
 
 
@@ -184,6 +185,7 @@ export function Calendar() {
 
 
 export default function PublicProfile  () {
+  const router = useRouter();
   const { currentUser } = useAuth();
   const [ user, setUser ] = useState(""); 
   const { profile } = router.query;
@@ -192,7 +194,6 @@ export default function PublicProfile  () {
   useEffect(() => {
     const getUser = async() => {
       const userCollection = await firestore.collection('users').where('username', '==', profile).get();
-      //console.log(profile);
       //console.log(userCollection);
       if (userCollection.empty) {
             setUser("404");
