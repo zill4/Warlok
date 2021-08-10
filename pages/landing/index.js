@@ -212,15 +212,16 @@ const { currentUser } = useAuth()
             <div>
               <div className="flex justify-between items-center max-w-7xl mx-auto px-4 py-6 sm:px-6 md:justify-start md:space-x-10 lg:px-8">
                 <div className="flex justify-start lg:w-0 lg:flex-1">
-                  <a href="/">
-                    <span className="sr-only">Workflow</span>
+                    <span className="sr-only">Warlok</span>
+                    <Link href="/">
+                    <a>
                     <img
                       className="h-8 w-auto sm:h-10"
                       src="images/warlok_logo.png"
                       alt="Warlok"
                     />
-                    {/* <Link to="/"></Link> */}
-                  </a>
+                    </a>
+                    </Link>
                 </div>
                 <div className="-mr-2 -my-2 md:hidden">
                   <Popover.Button className="bg-white rounded-md p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
@@ -286,31 +287,30 @@ const { currentUser } = useAuth()
                       </div>
                     )}
                   </Popover>
-
-                  <a href="/about" className="text-base font-medium text-gray-500 hover:text-gray-900">
-                                About
-                    {/* <Link to="/about">About</Link> */}
-                  </a>
-                  <a href="/contact" className="text-base font-medium text-gray-500 hover:text-gray-900">
+                  <Link href="/about">
+                    <a className="text-base font-medium text-gray-500 hover:text-gray-900">
+                    About
+                    </a>
+                  </Link>
+                  <Link href="/contact">
+                    <a className="text-base font-medium text-gray-500 hover:text-gray-900">
                     Contact
-                    {/* <Link to="/contact">Contact</Link> */}
-                  </a>
-                  {/* <a href="#" className="text-base font-medium text-gray-500 hover:text-gray-900">
-                    Code
-                  </a> */}
+                    </a>
+                  </Link>
                 </Popover.Group>
                 <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
-                  <a href="/login" className="whitespace-nowrap text-base font-medium text-gray-500 hover:text-gray-900">
-                      Login
-                    {/* <Link to="/login"> Login </Link> */}
-                  </a>
-                  <a
-                    href="/signup"
-                    className="ml-8 whitespace-nowrap inline-flex items-center justify-center bg-gradient-to-r from-purple-600 to-indigo-600 bg-origin-border px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white hover:from-purple-700 hover:to-indigo-700"
-                  >
-                    Sign Up
-                      {/* <Link to="/signup"> Sign Up</Link> */}
-                  </a>
+                  <Link href="/login">
+                    <a  className="whitespace-nowrap text-base font-medium text-gray-500 hover:text-gray-900">
+                        Login
+                    </a>
+                  </Link>
+                  <Link href="/signup">
+                      <a
+                        className="ml-8 whitespace-nowrap inline-flex items-center justify-center bg-gradient-to-r from-purple-600 to-indigo-600 bg-origin-border px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white hover:from-purple-700 hover:to-indigo-700"
+                      >
+                        Sign Up
+                      </a>
+                  </Link>
                 </div>
               </div>
 
@@ -365,29 +365,32 @@ const { currentUser } = useAuth()
                     </div>
                     <div className="py-6 px-5">
                       <div className="grid grid-cols-2 gap-4">
-                        <a href="/about" className="text-base font-medium text-gray-900 hover:text-gray-700">
-                          About
-                        {/* <Link to="/about">About</Link> */}
-                        </a>
-                        <a href="/contact" className="text-base font-medium text-gray-900 hover:text-gray-700">
-                          Contact
-                        {/* <Link to="/contact">Contact</Link> */}
-                        </a>
+                        <Link href="/about">
+                          <a className="text-base font-medium text-gray-900 hover:text-gray-700">
+                            About
+                          </a>
+                        </Link>
+                        <Link href="/contact">
+                          <a className="text-base font-medium text-gray-900 hover:text-gray-700">
+                            Contact
+                          </a>
+                        </Link>
                       </div>
                       <div className="mt-6">
+                        <Link href="/signup">
                         <a
-                          href="/signup"
                           className="w-full flex items-center justify-center bg-gradient-to-r from-purple-600 to-indigo-600 bg-origin-border px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white hover:from-purple-700 hover:to-indigo-700"
                         >
                           Sign Up
-                      {/* <Link to="/signup"> Sign Up</Link> */}
                         </a>
+                        </Link>
                         <p className="mt-6 text-center text-base font-medium text-gray-500">
                           Already have an account?
-                          <a  href="/login" className="text-gray-900">
-                            Login
-                            {/* <Link to="/login"> Login </Link> */}
-                          </a>
+                          <Link href="/login">
+                            <a className="text-gray-900">
+                              Login
+                            </a>
+                          </Link>
                         </p>
                       </div>
                     </div>
@@ -424,14 +427,13 @@ const { currentUser } = useAuth()
                 </p>
                 <div className="mt-10 max-w-sm mx-auto sm:max-w-none sm:flex sm:justify-center">
                   <div className="space-y-4 sm:space-y-0 sm:mx-auto">
+                    <Link href="/signup">
                     <a
-                      href="/signup"
                       className="flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-indigo-700 bg-white hover:bg-indigo-50 sm:px-8"
                     >
                       Sign Up
-                      {/* <Link to="/signup">Sign Up</Link> */}
                     </a>
-
+                  </Link>
                   </div>
                 </div>
               </div>
@@ -461,13 +463,13 @@ const { currentUser } = useAuth()
                     Keep track of potential business collaborations and longterm partnerships.
                     </p>
                     <div className="mt-6">
-                      <a
-                        href="/signup"
-                        className="inline-flex bg-gradient-to-r from-purple-600 to-indigo-600 bg-origin-border px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white hover:from-purple-700 hover:to-indigo-700"
-                      >
-                          {/* <Link to="/signup">Get Started</Link> */}
-                          Get Started
-                      </a>
+                        <Link href="/signup">
+                          <a
+                            className="inline-flex bg-gradient-to-r from-purple-600 to-indigo-600 bg-origin-border px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white hover:from-purple-700 hover:to-indigo-700"
+                          >
+                              Get Started
+                          </a>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -526,13 +528,13 @@ const { currentUser } = useAuth()
                     Schedule events and projects with creators you vibe with.
                     </p>
                     <div className="mt-6">
+                      <Link href="/signup">
                       <a
-                        href="/signup"
                         className="inline-flex bg-gradient-to-r from-purple-600 to-indigo-600 bg-origin-border px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white hover:from-purple-700 hover:to-indigo-700"
                       >
-                        {/* <Link to="/signup">Get Started</Link> */}
                         Get Started
                       </a>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -635,20 +637,20 @@ const { currentUser } = useAuth()
               </span>
             </h2>
             <div className="mt-6 space-y-4 sm:space-y-0 sm:flex sm:space-x-5">
-              <a
-                href="/about"
-                className="flex items-center justify-center bg-gradient-to-r from-purple-600 to-indigo-600 bg-origin-border px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white hover:from-purple-700 hover:to-indigo-700"
-              >
-                {/* <Link to="/about">Learn more</Link> */}
-                Learn More
-              </a>
-              <a
-                href="/signup"
-                className="flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-indigo-800 bg-indigo-50 hover:bg-indigo-100"
-              >
-                {/* <Link to="/signup">Get Started</Link> */}
-                Get Started
-              </a>
+              <Link href="/about">
+                  <a
+                    className="flex items-center justify-center bg-gradient-to-r from-purple-600 to-indigo-600 bg-origin-border px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white hover:from-purple-700 hover:to-indigo-700"
+                  >
+                    Learn More
+                  </a>
+              </Link>
+              <Link href="signup">
+                <a
+                  className="flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-indigo-800 bg-indigo-50 hover:bg-indigo-100"
+                >
+                  Get Started
+                </a>
+              </Link>
             </div>
           </div>
         </div>
