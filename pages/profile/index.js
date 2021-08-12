@@ -86,9 +86,9 @@ export function Thumbnails() {
   return (
     <ul role="list" className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8 mb-6 mt-6">
       {files.map((file) => (
-        <li key={backgroundImg} className="relative">
+        <li key="images/cool.jpg" className="relative">
           <div className="group block w-full aspect-w-16 aspect-h-9 rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-indigo-500 overflow-hidden">
-            <img src={backgroundImg} alt="" className="object-cover pointer-events-none group-hover:opacity-75" />
+            <img src="images/cool.jpg" alt="" className="object-cover pointer-events-none group-hover:opacity-75" />
             <button type="button" className="absolute inset-0 focus:outline-none">
               <span className="sr-only">View details for {file.title}</span>
             </button>
@@ -235,7 +235,7 @@ export default function Profile  () {
                   <div className="w-full lg:w-3/12 px-4 lg:order-2 flex justify-center mt-6 mb-5">
                     <div className="relative">
                       <img
-                        alt="..."
+                        alt="avatar"
                         src={user.avatar}// 800 x 800 
                         className="shadow-xl rounded-full h-auto align-middle border-none "
                       />
@@ -280,7 +280,7 @@ export default function Profile  () {
                         className="bg-purple-500 active:bg-lightBlue-600 uppercase text-white font-bold hover:shadow-md shadow text-xs px-4 py-2 rounded outline-none focus:outline-none sm:mr-2 mb-1 ease-linear transition-all duration-150"
                         type="button"
                       >
-                        Connect
+                        Edit Profile
                       </button>
                     </div>
                   </div>

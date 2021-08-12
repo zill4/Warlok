@@ -1,6 +1,7 @@
 import { useRef, useState } from "react"
 import { useAuth } from "../../authcontext"
 import Router from 'next/router'
+import Link from 'next/link'
 // images
 import Image from 'next/image'
 import nightdrive from "../../public/images/NightDrive.jpg"
@@ -52,16 +53,17 @@ export default function Login() {
               <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Login</h2>
               <p className="mt-2 text-sm text-gray-600">
                 Or{' '}
-                <a href="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
+                <Link href="/signup">
+                <a className="font-medium text-indigo-600 hover:text-indigo-500">
                     Sign Up
-                  {/* <Link to="/signup">Sign Up</Link> */}
                 </a>
+                </Link>
               </p>
             </div>
   
             <div className="mt-8">
               <div>
-                <div>
+                {/* <div>
                   <p className="text-sm font-medium text-gray-700">Sign in with</p>
   
                   <div className="mt-1 grid grid-cols-3 gap-3">
@@ -109,16 +111,16 @@ export default function Login() {
                       </a>
                     </div>
                   </div>
-                </div>
+                </div> */}
   
-                <div className="mt-6 relative">
+                {/* <div className="mt-6 relative">
                   <div className="absolute inset-0 flex items-center" aria-hidden="true">
                     <div className="w-full border-t border-gray-300" />
                   </div>
                   <div className="relative flex justify-center text-sm">
                     <span className="px-2 bg-white text-gray-500">Or continue with</span>
                   </div>
-                </div>
+                </div> */}
               </div>
   
               <div className="mt-6">
@@ -171,10 +173,11 @@ export default function Login() {
                     </div>
   
                     <div className="text-sm">
-                      <a href="/forgotPassword" className="font-medium text-indigo-600 hover:text-indigo-500">
+                      <Link href="/forgotPassword">
+                      <a className="font-medium text-indigo-600 hover:text-indigo-500">
                           Forgot your password?
-                        {/* <Link to="/forgot-password">Forgot your password?</Link> */}
                       </a>
+                      </Link>
                     </div>
                   </div>
   
