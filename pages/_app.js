@@ -1,6 +1,6 @@
 import 'tailwindcss/tailwind.css'
 import { AuthProvider } from "../authcontext"
-import Navbar from "./navbar"
+import Navbar from "../components/navbar"
 
 function MyApp({ Component, pageProps }) {
 
