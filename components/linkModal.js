@@ -9,8 +9,8 @@ import React from "react";
     return (
       <>
         <div className="py-4">
-          <div className="aspect-w-16 aspect-h-9 rounded-lg  py-4">
-              <div className="rounded-lg w-64 h-64 content-center bg-gray-100 align-middle flex flex-wrap focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-indigo-500 justify-center">
+          <div className="aspect-w-16 aspect-h-9 rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-indigo-500  py-4">
+              <div className="rounded-t-lg w-64 h-64 content-center align-middle flex flex-wrap justify-center">
                 <div>
                     <button           className="bg-pink-500 text-white active:bg-pink-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
                     type="button"

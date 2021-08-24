@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../authcontext";
 import { storage, firestore } from "../../firebase";
 import Router from 'next/router';
-
 // Components
 import VideoModal from '../../components/videoModal';
 
@@ -10,7 +9,9 @@ import VideoModal from '../../components/videoModal';
 import profile_pic from "../../public/images/warlock.png";
 import backgroundImg from "../../public/images/cool.jpg";
 import myPic  from "../../public/images/circleProfile.png";
-
+import { DotsVerticalIcon } from '@heroicons/react/solid'
+import { faTwitch  } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const people = [
   {
@@ -56,7 +57,12 @@ const people = [
 
   // More people...
 ]
-
+const projects = [
+  { name: 'Graph API', initials: 'GA', href: '#', members: 16, bgColor: 'bg-pink-600' },
+  { name: 'Component Design', initials: 'CD', href: '#', members: 12, bgColor: 'bg-purple-600' },
+  { name: 'Templates', initials: 'T', href: '#', members: 16, bgColor: 'bg-yellow-500' },
+  { name: 'React Components', initials: 'RC', href: '#', members: 8, bgColor: 'bg-green-500' },
+]
 const files = [
   // {
   //   title: 'IMG_4985.HEIC',
@@ -105,25 +111,56 @@ export function Thumbnails() {
       ))}
     </ul>
     : 
-        <div className="py-4">
-      <div className="aspect-w-16 aspect-h-9 rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-indigo-500  py-4">
-          <div className="rounded-t-lg w-64 h-64 content-center align-middle flex flex-wrap justify-center">
-            <div>
-                <button type="button" onClick={() => setState({showModal: true})}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                    </svg>
-                </button>
-                <p className="mt-2 block text-sm font-medium text-gray-900 truncate pointer-events-none">Add video</p>
-              </div>
-            </div>
-        </div>
-        </div>
+      <VideoModal/>
       }
     </div>
   )
 }
-
+export function Links() {
+  
+  return (
+    <div>
+    {projects.length > 0 ? 
+    <div>
+    <h2 className="text-gray-500 text-xs font-medium uppercase tracking-wide">Pinned Projects</h2>
+    <ul role="list" className="mt-3 grid grid-cols-1 gap-5 sm:gap-6 sm:grid-cols-1 lg:grid-cols-1">
+      {projects.map((project) => (
+        <li key={project.name} className=" flex shadow-sm rounded-md">
+          <div
+            className={classNames(
+              project.bgColor,
+              'flex-shrink-0 flex items-center justify-center w-16 text-white text-sm font-medium rounded-l-md'
+            )}
+          >
+<svg aria-hidden="true" focusable="false" data-prefix="fab" data-icon="twitch" class="svg-inline--fa fa-twitch fa-w-16" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M391.17,103.47H352.54v109.7h38.63ZM285,103H246.37V212.75H285ZM120.83,0,24.31,91.42V420.58H140.14V512l96.53-91.42h77.25L487.69,256V0ZM449.07,237.75l-77.22,73.12H294.61l-67.6,64v-64H140.14V36.58H449.07Z"></path></svg>            {/* {project.initials} */}
+          </div>
+          <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
+            <div className="flex-1 px-4 py-2 text-sm truncate">
+              <a href={project.href} className="text-gray-900 font-medium hover:text-gray-600">
+                {project.name}
+              </a>
+              <p className="text-gray-500">{project.members} Members</p>
+            </div>
+            <div className="flex-shrink-0 pr-2">
+              <button
+                type="button"
+                className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                <span className="sr-only">Open options</span>
+                <DotsVerticalIcon className="w-5 h-5" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+    : 
+      <VideoModal/>
+      }
+    </div>
+  )
+}
 export function Calendar() {
   return (
     <div className="flex flex-col">
@@ -203,12 +240,16 @@ export function Calendar() {
 }
 
 
-
+function classNames(...classes) {
+  return classes.filter(Boolean).join(' ')
+}
 
 export default function Profile  () {
   const { currentUser } = useAuth();
   const [ user, setUser ] = useState(""); 
   const [showModal, setModal] = useState(false);
+
+  
   console.log(showModal);
   useEffect(() => {
     const {pathname} = Router
@@ -316,92 +357,72 @@ export default function Profile  () {
               Word to the motherfucker, straight outta Compton
                   </p>
                   <div className="border-t border-blueGray-200 mb-6 mt-6 rounded flex justify-around flex-wrap">
-                  <div>
-                      {files.length > 0 ? 
-                      <ul role="list" className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8 mb-6 mt-6">
-                        {files.map((file) => (
-                          <li key="images/cool.jpg" className="relative">
-                            <div className="group block w-full aspect-w-16 aspect-h-9 rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-indigo-500 overflow-hidden">
-                              <img src="images/cool.jpg" alt="" className="object-cover pointer-events-none group-hover:opacity-75" />
-                              <button type="button" className="absolute inset-0 focus:outline-none">
-                                <span className="sr-only">View details for {file.title}</span>
-                              </button>
-                            </div>
-                            <p className="mt-2 block text-sm font-medium text-gray-900 truncate pointer-events-none">{file.title}</p>
-                            <p className="block text-sm font-medium text-gray-500 pointer-events-none">{file.size}</p>
+                  <div className="w-1/2">
+                    <Thumbnails />
+                  </div>
+                  <div className="w-1/2">
+                    <Links/>
+                    {/* <div className="lg:order-1 px-3 items-stretch flex text-center mt-2">
+                        <ul>
+                          <li>
+                              <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
+                                  <i className="fab fa-twitch"></i>
+                                  <br/>
+                                  <span className="text-sm text-blueGray-400">
+                                  Twitch
+                                  </span>
+                              </span>
                           </li>
-                        ))}
-                      </ul>
-                      : 
-                          <div className="py-4">
-                        <div className="aspect-w-16 aspect-h-9 rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-indigo-500  py-4">
-                            <div className="rounded-t-lg w-64 h-64 content-center align-middle flex flex-wrap justify-center">
-                              <div>
-                                  <button type="button" onClick={() => setModal(true)}>
-                                      {console.log(showModal)}
-                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                                      </svg>
-                                  </button>
-                                  <p className="mt-2 block text-sm font-medium text-gray-900 truncate pointer-events-none">Add video</p>
-                                </div>
-                              </div>
-                          </div>
-                          </div>
-                        }
-                    </div>
-                      {!showModal ? <br></br> : 
-                        <VideoModal open={showModal}/>
-                      }
-                    {/* <div className="px-4 lg:order-2 flex mt-6 mb-5 text-4xl text-center">
+                          <li>
+                            <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
+                              <i className="fab fa-youtube"></i>
+                                    <br/>
+                                    <span className="text-sm text-blueGray-400">
+                                    YouTube
+                                    </span>
+                              </span>
+                          </li>
+                          <li>
+                              <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
+                            <i className="fab fa-tiktok"></i>
+                                  <br/>
+                                  <span className="text-sm text-blueGray-400">
+                                  TikTok
+                                  </span>
+                            </span>
+                          </li>
+                          <li>
+                              <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
+                                  <i className="fab fa-twitter"></i>
+                                  <br/>
+                                  <span className="text-sm text-blueGray-400">
+                                  Twitter
+                                  </span>
+                            </span>
+                          </li>
+                          <li>
+                              <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
+                            <i className="fab fa-instagram"></i>
+                                  <br/>
+                                  <span className="text-sm text-blueGray-400">
+                                  Instagram
+                                  </span>
+                            </span>
+                          </li>
+                          <li>
+                              <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
+                            <i className="fab fa-facebook"></i>
+                                  <br/>
+                                  <span className="text-sm text-blueGray-400">
+                                  Facebook
+                                  </span>
+                            </span>
+                          </li>
+                        </ul>
                     </div> */}
-                    {/* <div className=" px-4 lg:order-3 lg:text-right lg:self-center text-4xl">
-                        
-                    </div> */}
-                    <div className=" lg:order-1 px-3 items-stretch flex text-center mt-6">
-                      <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
-                            <i className="fab fa-twitch"></i>
-                            <br/>
-                            <span className="text-sm text-blueGray-400">
-                            Twitch
-                            </span>
-                      </span>
-                      <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
-                      <i className="fab fa-youtube"></i>
-                            <br/>
-                            <span className="text-sm text-blueGray-400">
-                            YouTube
-                            </span>
-                      </span>
-                      <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
-                      <i className="fab fa-tiktok"></i>
-                            <br/>
-                            <span className="text-sm text-blueGray-400">
-                            TikTok
-                            </span>
-                      </span>
-                      <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
-                            <i className="fab fa-twitter"></i>
-                            <br/>
-                            <span className="text-sm text-blueGray-400">
-                            Twitter
-                            </span>
-                      </span>
-                      <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
-                      <i className="fab fa-instagram"></i>
-                            <br/>
-                            <span className="text-sm text-blueGray-400">
-                            Instagram
-                            </span>
-                      </span>
-                      <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
-                      <i className="fab fa-facebook"></i>
-                            <br/>
-                            <span className="text-sm text-blueGray-400">
-                            Facebook
-                            </span>
-                      </span>
-                    </div>
+                    
+                  </div>
+                    
                   </div>
                   {/* <div className=" mb-6 mt-6 rounded flex justify-around flex-wrap"> */}
                     {/* <div className="px-4 lg:order-2 flex mt-6 mb-5 text-4xl text-center">
