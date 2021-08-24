@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import { AuthProvider } from '../authcontext'
-import Navbar from './navbar'
+import Navbar from '../components/navbar'
 import About from './about'
 import Landing from './landing'
 

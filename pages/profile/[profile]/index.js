@@ -1,16 +1,14 @@
-import { useEffect, useRef, useState } from "react";
-import { useAuth } from "../../authcontext";
-import { storage, firestore } from "../../firebase";
-import Router from 'next/router';
-// Components
-import VideoModal from '../../components/videoModal';
-import LinkModal from '../../components/linkModal';
+import React, { useEffect, useRef, useState } from "react";
+import { useAuth } from "../../../authcontext"
+import { storage, firestore } from "../../../firebase"
+import Link from 'next/link'
+import { useRouter } from 'next/router'
 
-// Images
-import profile_pic from "../../public/images/warlok_color.png";
-import { DotsVerticalIcon } from '@heroicons/react/solid'
-import { faTwitch } from '@fortawesome/free-brands-svg-icons';
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+//images
+import profile_pic from "../../../public/images/warlok_color.png";
+import backgroundImg from "../../../public/images/warlok_logo.png";
+// import { useParams } from "react-router-dom";
+
 
 const people = [
   {
@@ -56,50 +54,42 @@ const people = [
 
   // More people...
 ]
-const projects = [
-  { name: 'Graph API', initials: 'GA', href: '#', members: 16, bgColor: 'bg-pink-600' },
-  { name: 'Component Design', initials: 'CD', href: '#', members: 12, bgColor: 'bg-purple-600' },
-  { name: 'Templates', initials: 'T', href: '#', members: 16, bgColor: 'bg-yellow-500' },
-  { name: 'React Components', initials: 'RC', href: '#', members: 8, bgColor: 'bg-green-500' },
-]
+
 const files = [
-  // {
-  //   title: 'IMG_4985.HEIC',
-  //   size: '3.9 MB',
-  //   source:
-  //     'https://images.unsplash.com/photo-1582053433976-25c00369fc93?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80',
-  // },
-  // {
-  //   title: 'IMG_4985.HEIC',
-  //   size: '3.9 MB',
-  //   source:
-  //     'https://images.unsplash.com/photo-1582053433976-25c00369fc93?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80',
-  // },
-  // {
-  //   title: 'IMG_4985.HEIC',
-  //   size: '3.9 MB',
-  //   source:
-  //     'https://images.unsplash.com/photo-1582053433976-25c00369fc93?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80',
-  // },
-  // {
-  //   title: 'IMG_4985.HEIC',
-  //   size: '3.9 MB',
-  //   source:
-  //     'https://images.unsplash.com/photo-1582053433976-25c00369fc93?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80',
-  // },
+  {
+    title: 'IMG_4985.HEIC',
+    size: '3.9 MB',
+    source:
+      'https://images.unsplash.com/photo-1582053433976-25c00369fc93?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80',
+  },
+  {
+    title: 'IMG_4985.HEIC',
+    size: '3.9 MB',
+    source:
+      'https://images.unsplash.com/photo-1582053433976-25c00369fc93?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80',
+  },
+  {
+    title: 'IMG_4985.HEIC',
+    size: '3.9 MB',
+    source:
+      'https://images.unsplash.com/photo-1582053433976-25c00369fc93?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80',
+  },
+  {
+    title: 'IMG_4985.HEIC',
+    size: '3.9 MB',
+    source:
+      'https://images.unsplash.com/photo-1582053433976-25c00369fc93?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80',
+  },
   // More files...
 ]
 
 export function Thumbnails() {
-  
   return (
-    <div>
-    {files.length > 0 ? 
     <ul role="list" className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8 mb-6 mt-6">
       {files.map((file) => (
-        <li key="images/TwitchGlitchWhite.png" className="relative">
+        <li key={backgroundImg} className="relative">
           <div className="group block w-full aspect-w-16 aspect-h-9 rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-indigo-500 overflow-hidden">
-            <img src="images/TwitchGlitchWhite.jpg" alt="" className="object-cover pointer-events-none group-hover:opacity-75" />
+            <img src={backgroundImg} alt="" className="object-cover pointer-events-none group-hover:opacity-75" />
             <button type="button" className="absolute inset-0 focus:outline-none">
               <span className="sr-only">View details for {file.title}</span>
             </button>
@@ -109,57 +99,9 @@ export function Thumbnails() {
         </li>
       ))}
     </ul>
-    : 
-      <VideoModal/>
-      }
-    </div>
   )
 }
-export function Links() {
-  
-  return (
-    <div>
-    {projects.length < 0 ? 
-    <div>
-    <h2 className="text-gray-500 text-xs font-medium uppercase tracking-wide">Pinned Projects</h2>
-    <ul role="list" className="mt-3 grid grid-cols-1 gap-5 sm:gap-6 sm:grid-cols-1 lg:grid-cols-1">
-      {projects.map((project) => (
-        <li key={project.name} className=" flex shadow-sm rounded-md">
-          <div
-            className={classNames(
-              project.bgColor,
-              'flex-shrink-0 flex items-center justify-center w-16 text-white text-sm font-medium rounded-l-md'
-            )}
-          >
-            <FontAwesomeIcon icon={faTwitch} />
-          </div>
-          <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
-            <div className="flex-1 px-4 py-2 text-sm truncate">
-              <a href={project.href} className="text-gray-900 font-medium hover:text-gray-600">
-                {project.name}
-              </a>
-              <p className="text-gray-500">{project.members} Members</p>
-            </div>
-            <div className="flex-shrink-0 pr-2">
-              <button
-                type="button"
-                className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                <span className="sr-only">Open options</span>
-                <DotsVerticalIcon className="w-5 h-5" aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-        </li>
-      ))}
-    </ul>
-  </div>
-    : 
-      <LinkModal/>
-      }
-    </div>
-  )
-}
+
 export function Calendar() {
   return (
     <div className="flex flex-col">
@@ -239,35 +181,35 @@ export function Calendar() {
 }
 
 
-function classNames(...classes) {
-  return classes.filter(Boolean).join(' ')
-}
 
-export default function Profile  () {
+
+export default function PublicProfile  () {
+  const router = useRouter();
   const { currentUser } = useAuth();
   const [ user, setUser ] = useState(""); 
-  const [showModal, setModal] = useState(false);
+  const { profile } = router.query;
+  // const { profile } = useParams();
 
-  
-  console.log(showModal);
   useEffect(() => {
-    const {pathname} = Router
-    if(pathname == '/profile' && !currentUser ){
-        Router.push('/')
-    }
-    else
-    {
-        const getUser = async() => {
-            const userCollection = await firestore.doc(`users/${currentUser.uid}`).get()
-            setUser(await userCollection.data());
-            }
-          getUser()
-    }
+    const getUser = async() => {
+      const userCollection = await firestore.collection('users').where('username', '==', profile).get();
+      //console.log(userCollection);
+      if (userCollection.empty) {
+            setUser("404");
+      } else {
+      setUser(await userCollection.docs[0].data());
+        
+      //console.log("user", user.username);
+         }
+      }
+    getUser()
   }, [])
-
   return (
     <div>
-    {!currentUser ? <br></br> : 
+           {user === '404' ?
+            <div className="w-full flex items-center justify-center h-screen text-center text-7xl">
+                <h1>404 Profile not found</h1>
+            </div>: 
       <div >
         <section className="inset-y-2  h-500-px">
           <div
@@ -298,13 +240,19 @@ export default function Profile  () {
                   <div className="w-full lg:w-3/12 px-4 lg:order-2 flex justify-center mt-6 mb-5">
                     <div className="relative">
                       <img
-                        alt="avatar"
+                        alt="..."
                         src={user.avatar}// 800 x 800 
                         className="shadow-xl rounded-full h-auto align-middle border-none "
                       />
                     </div>
                   </div>
                   <div className="w-full lg:w-4/12 px-4 lg:order-3 lg:text-right lg:self-center">
+                  <button
+                        type="button"
+                        className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      >
+                        Connect
+                      </button>
                   </div>
                   <div className="w-full lg:w-4/12 px-4 lg:order-1">
                     <div className="flex justify-center py-4 lg:pt-4 pt-8">
@@ -339,12 +287,8 @@ export default function Profile  () {
                       </span>
                     </div>
                     <div className="justify-center lg:mr-4 p-3 items-stretch flex text-center">
-                    <button
-                        className="bg-purple-500 active:bg-lightBlue-600 uppercase text-white font-bold hover:shadow-md shadow text-xs px-4 py-2 rounded outline-none focus:outline-none sm:mr-2 mb-1 ease-linear transition-all duration-150"
-                        type="button"
-                      >
-                        Edit Profile
-                      </button>
+
+
                     </div>
                   </div>
                 </div>
@@ -356,84 +300,58 @@ export default function Profile  () {
               Word to the motherfucker, straight outta Compton
                   </p>
                   <div className="border-t border-blueGray-200 mb-6 mt-6 rounded flex justify-around flex-wrap">
-                  <div className="w-1/2">
-                    <Thumbnails />
-                  </div>
-                  <div className="w-1/2">
-                    <Links/>
-                    {/* <div className="lg:order-1 px-3 items-stretch flex text-center mt-2">
-                        <ul>
-                          <li>
-                              <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
-                                  <i className="fab fa-twitch"></i>
-                                  <br/>
-                                  <span className="text-sm text-blueGray-400">
-                                  Twitch
-                                  </span>
-                              </span>
-                          </li>
-                          <li>
-                            <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
-                              <i className="fab fa-youtube"></i>
-                                    <br/>
-                                    <span className="text-sm text-blueGray-400">
-                                    YouTube
-                                    </span>
-                              </span>
-                          </li>
-                          <li>
-                              <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
-                            <i className="fab fa-tiktok"></i>
-                                  <br/>
-                                  <span className="text-sm text-blueGray-400">
-                                  TikTok
-                                  </span>
-                            </span>
-                          </li>
-                          <li>
-                              <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
-                                  <i className="fab fa-twitter"></i>
-                                  <br/>
-                                  <span className="text-sm text-blueGray-400">
-                                  Twitter
-                                  </span>
-                            </span>
-                          </li>
-                          <li>
-                              <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
-                            <i className="fab fa-instagram"></i>
-                                  <br/>
-                                  <span className="text-sm text-blueGray-400">
-                                  Instagram
-                                  </span>
-                            </span>
-                          </li>
-                          <li>
-                              <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
-                            <i className="fab fa-facebook"></i>
-                                  <br/>
-                                  <span className="text-sm text-blueGray-400">
-                                  Facebook
-                                  </span>
-                            </span>
-                          </li>
-                        </ul>
-                    </div> */}
-                    
-                  </div>
-                    
-                  </div>
-                  {/* <div className=" mb-6 mt-6 rounded flex justify-around flex-wrap"> */}
+                        <Thumbnails/>
                     {/* <div className="px-4 lg:order-2 flex mt-6 mb-5 text-4xl text-center">
+                    </div> */}
+                    {/* <div className=" px-4 lg:order-3 lg:text-right lg:self-center text-4xl">
                         
+                    </div> */}
+                    <div className=" lg:order-1 px-3 items-stretch flex text-center mt-6">
+                      <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
+                            <i className="fab fa-twitch"></i>
+                            <br/>
+                            <span className="text-sm text-blueGray-400">
+                            Twitch
+                            </span>
+                      </span>
+                      <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
+                      <i className="fab fa-youtube"></i>
+                            <br/>
+                            <span className="text-sm text-blueGray-400">
+                            YouTube
+                            </span>
+                      </span>
+                      <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
+                      <i className="fab fa-tiktok"></i>
+                            <br/>
+                            <span className="text-sm text-blueGray-400">
+                            TikTok
+                            </span>
+                      </span>
+                      <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
+                            <i className="fab fa-twitter"></i>
+                            <br/>
+                            <span className="text-sm text-blueGray-400">
+                            Twitter
+                            </span>
+                      </span>
+                      <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
+                      <i className="fab fa-instagram"></i>
+                            <br/>
+                            <span className="text-sm text-blueGray-400">
+                            Instagram
+                            </span>
+                      </span>
+                      <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
+                      <i className="fab fa-facebook"></i>
+                            <br/>
+                            <span className="text-sm text-blueGray-400">
+                            Facebook
+                            </span>
+                      </span>
                     </div>
-                  
-                    <div className=" px-4 lg:order-3 lg:text-right lg:self-center text-4xl">
-                        
-                    </div> */}
-                    {/* <div className=" lg:order-1 px-3 items-stretch flex text-center mt-6">
-                    </div> */}
-                  {/* </div> */}
+                  </div>
+
           <Calendar />
                 </div>
               </div>
@@ -441,7 +359,7 @@ export default function Profile  () {
           </div>
         </section>
       </div>
-            }
+        }
       </div>
   );
 }

@@ -129,18 +129,12 @@ export default function Settings() {
           getUser()
     }
   }, [])
-//   useEffect(() => {
-//     const getUser = async() => {
-//       const userCollection = await firestore.doc(`users/${currentUser.uid}`).get()
-//       setUser(await userCollection.data());
-//       }
-//     getUser()
-//   }, [])
+
 
   return (
       <div>
         {!currentUser ? <br></br> : 
-    <div className="h-screen flex bg-blue-gray-50 overflow-hidden">
+    <div className="h-screen flex bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 overflow-hidden">
       <Transition.Root show={mobileMenuOpen} as={Fragment}>
         <Dialog
           as="div"
@@ -363,37 +357,13 @@ export default function Settings() {
                       <div className="sm:col-span-6">
                         <h2 className="text-xl font-medium text-blue-gray-900">Profile</h2>
                         <p className="mt-1 text-sm text-blue-gray-500">
-                          This information will be displayed publicly so be careful what you share.
+                          Update the content people can view on your public profile.
                         </p>
                       </div>
 
-                      <div className="sm:col-span-3">
-                        <label htmlFor="first_name" className="block text-sm font-medium text-blue-gray-900">
-                          First name
-                        </label>
-                        <input
-                          type="text"
-                          name="first_name"
-                          id="first_name"
-                          autoComplete="given-name"
-                          className="mt-1 block w-full border-blue-gray-300 rounded-md shadow-sm text-blue-gray-900 sm:text-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
 
-                      <div className="sm:col-span-3">
-                        <label htmlFor="last_name" className="block text-sm font-medium text-blue-gray-900">
-                          Last name
-                        </label>
-                        <input
-                          type="text"
-                          name="last_name"
-                          id="last_name"
-                          autoComplete="family-name"
-                          className="mt-1 block w-full border-blue-gray-300 rounded-md shadow-sm text-blue-gray-900 sm:text-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
                       <div>
-                    <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="username" className="block text-sm font-medium ">
                       Username
                     </label>
                     <div className="mt-1">
@@ -445,7 +415,7 @@ export default function Settings() {
 
                       <div className="sm:col-span-6">
                         <label htmlFor="description" className="block text-sm font-medium text-blue-gray-900">
-                          Description
+                          Bio
                         </label>
                         <div className="mt-1">
                           <textarea
@@ -457,13 +427,13 @@ export default function Settings() {
                           />
                         </div>
                         <p className="mt-3 text-sm text-blue-gray-500">
-                          Brief description for your profile. URLs are hyperlinked.
+                          If it makes people laugh it must be good right?
                         </p>
                       </div>
 
                       <div className="sm:col-span-6">
                         <label htmlFor="url" className="block text-sm font-medium text-blue-gray-900">
-                          URL
+                          Manage links
                         </label>
                         <input
                           type="text"

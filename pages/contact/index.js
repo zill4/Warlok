@@ -1,4 +1,5 @@
 import { Fragment } from 'react'
+import Link from 'next/link'
 import { Popover, Transition } from '@headlessui/react'
 import { MailIcon, MenuIcon, PhoneIcon, XIcon } from '@heroicons/react/outline'
 import {
@@ -156,15 +157,16 @@ export default function Contact() {
             <div>
               <div className="flex justify-between items-center max-w-7xl mx-auto px-4 py-6 sm:px-6 md:justify-start md:space-x-10 lg:px-8">
                 <div className="flex justify-start lg:w-0 lg:flex-1">
-                  <a href="/">
+                  <Link href="/">
+                  <a>
                     <span className="sr-only">Workflow</span>
                     <img
                       className="h-8 w-auto sm:h-10"
                       src="images/warlok_logo.png"
                       alt="Warlok"
                     />
-                    {/* <Link to="/"></Link> */}
                   </a>
+                  </Link>
                 </div>
                 <div className="-mr-2 -my-2 md:hidden">
                   <Popover.Button className="bg-white rounded-md p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
@@ -230,31 +232,30 @@ export default function Contact() {
                       </div>
                     )}
                   </Popover>
-
-                  <a href="/about" className="text-base font-medium text-gray-500 hover:text-gray-900">
+                  <Link href="/about">
+                  <a className="text-base font-medium text-gray-500 hover:text-gray-900">
                       About
-                    {/* <Link to="/about">About</Link> */}
                   </a>
-                  <a href="/contact" className="text-base font-medium text-gray-500 hover:text-gray-900">
+                  </Link>
+                  <Link href="/contact">
+                  <a className="text-base font-medium text-gray-500 hover:text-gray-900">
                       Contact
-                    {/* <Link to="/contact">Contact</Link> */}
                   </a>
-                  {/* <a href="#" className="text-base font-medium text-gray-500 hover:text-gray-900">
-                    Code
-                  </a> */}
+                  </Link>
                 </Popover.Group>
                 <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
-                  <a href="/login" className="whitespace-nowrap text-base font-medium text-gray-500 hover:text-gray-900">
+                  <Link href="/login">
+                  <a className="whitespace-nowrap text-base font-medium text-gray-500 hover:text-gray-900">
                       Login
-                    {/* <Link to="/login"> Login </Link> */}
                   </a>
+                  </Link>
+                  <Link href="/signup">
                   <a
-                    href="/signup"
                     className="ml-8 whitespace-nowrap inline-flex items-center justify-center bg-gradient-to-r from-purple-600 to-indigo-600 bg-origin-border px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white hover:from-purple-700 hover:to-indigo-700"
                   >
                       Sign Up
-                      {/* <Link to="/signup"> Sign Up</Link> */}
                   </a>
+                  </Link>
                 </div>
               </div>
 
@@ -309,29 +310,32 @@ export default function Contact() {
                     </div>
                     <div className="py-6 px-5">
                       <div className="grid grid-cols-2 gap-4">
+                        <Link href="/about">
                         <a href="/about" className="text-base font-medium text-gray-900 hover:text-gray-700">
                             About
-                        {/* <Link to="/about">About</Link> */}
                         </a>
-                        <a href="/contact" className="text-base font-medium text-gray-900 hover:text-gray-700">
+                        </Link>
+                        <Link href="/contact">
+                        <a  className="text-base font-medium text-gray-900 hover:text-gray-700">
                             Contact
-                        {/* <Link to="/contact">Contact</Link> */}
                         </a>
+                        </Link>
                       </div>
                       <div className="mt-6">
+                        <Link href="/signup">
                         <a
-                          href="/signup"
                           className="w-full flex items-center justify-center bg-gradient-to-r from-purple-600 to-indigo-600 bg-origin-border px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white hover:from-purple-700 hover:to-indigo-700"
                         >
                             Sign Up
-                      {/* <Link to="/signup"> Sign Up</Link> */}
                         </a>
+                        </Link>
                         <p className="mt-6 text-center text-base font-medium text-gray-500">
                           Already have an account?
-                          <a  href="/login" className="text-gray-900">
+                          <Link href="/login">
+                          <a className="text-gray-900">
                               Login
-                            {/* <Link to="/login"> Login </Link> */}
                           </a>
+                          </Link>
                         </p>
                       </div>
                     </div>
@@ -352,8 +356,7 @@ export default function Contact() {
                 Get in touch
               </h1>
               <p className="mt-6 text-xl text-warm-gray-500 max-w-3xl">
-                Vel nunc non ut montes, viverra tempor. Proin lectus nibh phasellus morbi non morbi. In elementum urna
-                ut volutpat. Sagittis et vel et fermentum amet consequat.
+                Interested in learning more about Warlok or looking to join the team? Send us a line and we'd love to hear from you!
               </p>
             </div>
           </div>
@@ -495,8 +498,7 @@ export default function Contact() {
                   </div>
                   <h3 className="text-lg font-medium text-white">Contact information</h3>
                   <p className="mt-6 text-base text-teal-50 max-w-3xl">
-                    Nullam risus blandit ac aliquam justo ipsum. Quam mauris volutpat massa dictumst amet. Sapien tortor
-                    lacus arcu.
+                    Contact us via email or phone and we'll get back to you right away!
                   </p>
                   <dl className="mt-8 space-y-6">
                     <dt>
@@ -504,14 +506,14 @@ export default function Contact() {
                     </dt>
                     <dd className="flex text-base text-teal-50">
                       <PhoneIcon className="flex-shrink-0 w-6 h-6 text-teal-200" aria-hidden="true" />
-                      <span className="ml-3">+1 (555) 123-4567</span>
+                      <span className="ml-3">+1 (949) 873-3619</span>
                     </dd>
                     <dt>
                       <span className="sr-only">Email</span>
                     </dt>
                     <dd className="flex text-base text-teal-50">
                       <MailIcon className="flex-shrink-0 w-6 h-6 text-teal-200" aria-hidden="true" />
-                      <span className="ml-3">support@workcation.com</span>
+                      <span className="ml-3">Justin@warlok.net</span>
                     </dd>
                   </dl>
                   <ul className="mt-8 flex space-x-12" role="list">
@@ -662,122 +664,8 @@ export default function Contact() {
               </div>
             </div>
           </div>
-        </section>
-
-        {/* Contact grid */}
-        <section aria-labelledby="officesHeading">
-          <div className="max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
-            <h2 id="officesHeading" className="text-3xl font-extrabold text-warm-gray-900">
-              Our offices
-            </h2>
-            <p className="mt-6 text-lg text-warm-gray-500 max-w-3xl">
-              Varius facilisi mauris sed sit. Non sed et duis dui leo, vulputate id malesuada non. Cras aliquet purus
-              dui laoreet diam sed lacus, fames.
-            </p>
-            <div className="mt-10 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
-              {offices.map((office) => (
-                <div key={office.id}>
-                  <h3 className="text-lg font-medium text-warm-gray-900">{office.city}</h3>
-                  <p className="mt-2 text-base text-warm-gray-500">
-                    {office.address.map((line) => (
-                      <span key={line} className="block">
-                        {line}
-                      </span>
-                    ))}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        </section>      
       </main>
-
-      <footer className="bg-warm-gray-900" aria-labelledby="footerHeading">
-        <h2 id="footerHeading" className="sr-only">
-          Footer
-        </h2>
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
-          <div className="xl:grid xl:grid-cols-3 xl:gap-8">
-            <div className="space-y-8 xl:col-span-1">
-              <img
-                className="h-10"
-                src="https://tailwindui.com/img/logos/workflow-mark.svg?color=warmGray&shade=400"
-                alt="Company name"
-              />
-              <p className="text-warm-gray-400 text-base">
-                Making the world a better place through constructing elegant hierarchies.
-              </p>
-              <div className="flex space-x-6">
-                {footerNavigation.social.map((item) => (
-                  <a key={item.name} href={item.href} className="text-warm-gray-400 hover:text-warm-gray-300">
-                    <span className="sr-only">{item.name}</span>
-                    <item.icon className="h-6 w-6" aria-hidden="true" />
-                  </a>
-                ))}
-              </div>
-            </div>
-            <div className="mt-12 grid grid-cols-2 gap-8 xl:mt-0 xl:col-span-2">
-              <div className="md:grid md:grid-cols-2 md:gap-8">
-                <div>
-                  <h3 className="text-sm font-semibold text-warm-gray-200 tracking-wider uppercase">Solutions</h3>
-                  <ul className="mt-4 space-y-4">
-                    {footerNavigation.solutions.map((item) => (
-                      <li key={item.name}>
-                        <a href={item.href} className="text-base text-warm-gray-400 hover:text-warm-gray-300">
-                          {item.name}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="mt-12 md:mt-0">
-                  <h3 className="text-sm font-semibold text-warm-gray-200 tracking-wider uppercase">Support</h3>
-                  <ul className="mt-4 space-y-4">
-                    {footerNavigation.support.map((item) => (
-                      <li key={item.name}>
-                        <a href={item.href} className="text-base text-warm-gray-400 hover:text-warm-gray-300">
-                          {item.name}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-              <div className="md:grid md:grid-cols-2 md:gap-8">
-                <div>
-                  <h3 className="text-sm font-semibold text-warm-gray-200 tracking-wider uppercase">Company</h3>
-                  <ul className="mt-4 space-y-4">
-                    {footerNavigation.company.map((item) => (
-                      <li key={item.name}>
-                        <a href={item.href} className="text-base text-warm-gray-400 hover:text-warm-gray-300">
-                          {item.name}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="mt-12 md:mt-0">
-                  <h3 className="text-sm font-semibold text-warm-gray-200 tracking-wider uppercase">Legal</h3>
-                  <ul className="mt-4 space-y-4">
-                    {footerNavigation.legal.map((item) => (
-                      <li key={item.name}>
-                        <a href={item.href} className="text-base text-warm-gray-400 hover:text-warm-gray-300">
-                          {item.name}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="mt-12 border-t border-warm-gray-700 pt-8">
-            <p className="text-base text-warm-gray-400 xl:text-center">
-              &copy; 2020 Workflow, Inc. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
