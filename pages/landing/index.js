@@ -18,7 +18,6 @@ import {
   XIcon,
 } from '@heroicons/react/outline'
 import { ChevronDownIcon } from '@heroicons/react/solid'
-import Image from 'next/image'
 import WarlokLogo from '../../public/images/warlok_logo.png'
 import WarlokLogoSmall from '../../public/images/warlok_color.png'
 //

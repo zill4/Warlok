@@ -8,8 +8,8 @@ import { Fragment } from 'react'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { BellIcon, MenuIcon, XIcon } from '@heroicons/react/outline'
 import { AuthContext, useAuth } from "../authcontext"
-import Image from 'next/image'
 import Router from 'next/router'
+import Link from 'next/link'
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
@@ -58,14 +58,18 @@ export default function Navbar() {
               Inbox */}
             {/* <Link to="/inbox">Inbox</Link> */}
             {/* </a> */}
-          <a href="/" onClick={handleLogout} className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" >
+            <Link href="/">
+            <a  onClick={handleLogout} className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" >
             Sign Out
              {/* <Link to="/" onClick={handleLogout}>Sign Out</Link>  */}
-          </a>  
-          <a href="/profile" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" >
-            Profile
-             {/* <Link to="/profile">Profile</Link>  */}
-          </a>  
+            </a>
+            </Link>
+            <Link href="/profile">
+              <a className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" >
+              Profile
+              </a> 
+            </Link>
+ 
         </Fragment>
       
       );
@@ -108,36 +112,36 @@ export default function Navbar() {
                               >
                                 <Menu.Item>
                                   {({ active}) => (
+                                    <Link href="/profile">
                                     <a
-                                      href="/profile"
                                       className={classNames(
                                         active ? 'bg-gray-100' : '',
                                         'block px-4 py-2 text-sm text-gray-700'
                                       )}
                                     >
                                       Your Profile
-                                    {/* <Link to="/profile" >Your Profile</Link>  */}
                                     </a>
+                                    </Link>
                                   )}
                                 </Menu.Item>
                                 <Menu.Item>
                                   {({ active }) => (
+                                    <Link href="/settings">
                                     <a
-                                      href="/settings"
                                       className={classNames(
                                         active ? 'bg-gray-100' : '',
                                         'block px-4 py-2 text-sm text-gray-700'
                                       )}
                                     >
                                       Settings
-                                    {/* <Link to="/settings" >Settings</Link>  */}
                                     </a>
+                                    </Link>
                                   )}
                                 </Menu.Item>
                                 <Menu.Item>
                                   {({ active }) => (
+                                    <Link href="/">
                                     <a
-                                      href="/"
                                       onClick={handleLogout}
                                       className={classNames(
                                         active ? 'bg-gray-100' : '',
@@ -145,8 +149,8 @@ export default function Navbar() {
                                       )}
                                     >
                                       Sign Out
-                                    {/* <Link to="/" onClick={handleLogout}>Sign Out</Link>  */}
                                     </a>
+                                    </Link>
                                   )}
                                 </Menu.Item>
                               </Menu.Items>
@@ -179,24 +183,27 @@ export default function Navbar() {
               </div>
               <div className="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
                 <div className="flex-shrink-0 flex items-center">
-                  <a href="/feed">
-                  <img
-                 // import smallLogo from '../images/warlok_color.png';
-                  // import logo from '../images/warlok_logo.png';
-                    className="block lg:hidden h-8 w-auto"
-                    src="images/warlok_color.png"
-                    alt="Warlok"
-                  />
-                    {/* <Link to="/feed"></Link>  */}
-                  </a>
-                  <a href="/feed">
-                  <img
-                    className="hidden lg:block h-8 w-auto"
-                    src="images/warlok_logo.png"
-                    alt="Warlok"
-                  />
-                    {/* <Link to="/feed"></Link>  */}
-                  </a>
+                  <Link href="/feed">
+                    <a>
+                    <img
+                  // import smallLogo from '../images/warlok_color.png';
+                    // import logo from '../images/warlok_logo.png';
+                      className="block lg:hidden h-8 w-auto"
+                      src="images/warlok_color.png"
+                      alt="Warlok"
+                    />
+                    </a>
+                  </Link>
+                  <Link href="/feed">
+                    <a>
+                    <img
+                      className="hidden lg:block h-8 w-auto"
+                      src="images/warlok_logo.png"
+                      alt="Warlok"
+                    />
+                    </a>
+                  </Link>
+                  
                   
                 </div>
                 <div className="hidden sm:ml-6 sm:flex sm:space-x-8">

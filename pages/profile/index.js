@@ -4,14 +4,13 @@ import { storage, firestore } from "../../firebase";
 import Router from 'next/router';
 // Components
 import VideoModal from '../../components/videoModal';
+import LinkModal from '../../components/linkModal';
 
 // Images
-import profile_pic from "../../public/images/warlock.png";
-import backgroundImg from "../../public/images/cool.jpg";
-import myPic  from "../../public/images/circleProfile.png";
+import profile_pic from "../../public/images/warlok_color.png";
 import { DotsVerticalIcon } from '@heroicons/react/solid'
-import { faTwitch  } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faTwitch } from '@fortawesome/free-brands-svg-icons';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const people = [
   {
@@ -98,9 +97,9 @@ export function Thumbnails() {
     {files.length > 0 ? 
     <ul role="list" className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8 mb-6 mt-6">
       {files.map((file) => (
-        <li key="images/cool.jpg" className="relative">
+        <li key="images/TwitchGlitchWhite.png" className="relative">
           <div className="group block w-full aspect-w-16 aspect-h-9 rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-indigo-500 overflow-hidden">
-            <img src="images/cool.jpg" alt="" className="object-cover pointer-events-none group-hover:opacity-75" />
+            <img src="images/TwitchGlitchWhite.jpg" alt="" className="object-cover pointer-events-none group-hover:opacity-75" />
             <button type="button" className="absolute inset-0 focus:outline-none">
               <span className="sr-only">View details for {file.title}</span>
             </button>
@@ -120,7 +119,7 @@ export function Links() {
   
   return (
     <div>
-    {projects.length > 0 ? 
+    {projects.length < 0 ? 
     <div>
     <h2 className="text-gray-500 text-xs font-medium uppercase tracking-wide">Pinned Projects</h2>
     <ul role="list" className="mt-3 grid grid-cols-1 gap-5 sm:gap-6 sm:grid-cols-1 lg:grid-cols-1">
@@ -132,7 +131,7 @@ export function Links() {
               'flex-shrink-0 flex items-center justify-center w-16 text-white text-sm font-medium rounded-l-md'
             )}
           >
-<svg aria-hidden="true" focusable="false" data-prefix="fab" data-icon="twitch" class="svg-inline--fa fa-twitch fa-w-16" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M391.17,103.47H352.54v109.7h38.63ZM285,103H246.37V212.75H285ZM120.83,0,24.31,91.42V420.58H140.14V512l96.53-91.42h77.25L487.69,256V0ZM449.07,237.75l-77.22,73.12H294.61l-67.6,64v-64H140.14V36.58H449.07Z"></path></svg>            {/* {project.initials} */}
+            <FontAwesomeIcon icon={faTwitch} />
           </div>
           <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
             <div className="flex-1 px-4 py-2 text-sm truncate">
@@ -156,7 +155,7 @@ export function Links() {
     </ul>
   </div>
     : 
-      <VideoModal/>
+      <LinkModal/>
       }
     </div>
   )

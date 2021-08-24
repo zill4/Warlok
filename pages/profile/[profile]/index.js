@@ -5,9 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 
 //images
-import profile_pic from "../../../public/images/warlock.png";
-import backgroundImg from "../../../public/images/cool.jpg";
-import myPic  from "../../../public/images/circleProfile.png";
+import profile_pic from "../../../public/images/warlok_color.png";
+import backgroundImg from "../../../public/images/warlok_logo.png";
 // import { useParams } from "react-router-dom";
 
 
