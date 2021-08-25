@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../authcontext";
 import { storage, firestore } from "../../firebase";
 import Router from 'next/router';
+import Link from 'next/link';
 // Components
 import VideoModal from '../../components/videoModal';
 import LinkModal from '../../components/linkModal';
@@ -10,49 +11,50 @@ import LinkModal from '../../components/linkModal';
 import profile_pic from "../../public/images/warlok_color.png";
 import { DotsVerticalIcon } from '@heroicons/react/solid'
 import { faTwitch } from '@fortawesome/free-brands-svg-icons';
+import { faClock, faGamepad, faSign, faInfoCircle} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const people = [
-  {
-    name: '7am - 7pm ?',
-    title: 'World of Warcraft',
-    department: 'Lvling to 70',
-    role: '12hrs',
-    email: 'Monday',
-    image: profile_pic,
-  },
-  {
-    name: '7am - 7pm ?',
-    title: 'World of Warcraft',
-    department: 'Lvling to 70',
-    role: '12hrs',
-    email: 'Tuesday',
-    image: profile_pic,
-  },
-  {
-    name: '7am - 7pm ?',
-    title: 'World of Warcraft',
-    department: 'Lvling to 70',
-    role: '12hrs',
-    email: 'Wednesday',
-    image: profile_pic,
-  },
-  {
-    name: '7am - 7pm ?',
-    title: 'World of Warcraft',
-    department: 'Lvling to 70',
-    role: '12hrs',
-    email: 'Thursday',
-    image: profile_pic,
-  },
-  {
-    name: '7am - 7pm ?',
-    title: 'World of Warcraft',
-    department: 'Lvling to 70',
-    role: '12hrs',
-    email: 'Friday',
-    image: profile_pic,
-  },
+  // {
+  //   name: '7am - 7pm ?',
+  //   title: 'World of Warcraft',
+  //   department: 'Lvling to 70',
+  //   role: '12hrs',
+  //   email: 'Monday',
+  //   image: profile_pic,
+  // },
+  // {
+  //   name: '7am - 7pm ?',
+  //   title: 'World of Warcraft',
+  //   department: 'Lvling to 70',
+  //   role: '12hrs',
+  //   email: 'Tuesday',
+  //   image: profile_pic,
+  // },
+  // {
+  //   name: '7am - 7pm ?',
+  //   title: 'World of Warcraft',
+  //   department: 'Lvling to 70',
+  //   role: '12hrs',
+  //   email: 'Wednesday',
+  //   image: profile_pic,
+  // },
+  // {
+  //   name: '7am - 7pm ?',
+  //   title: 'World of Warcraft',
+  //   department: 'Lvling to 70',
+  //   role: '12hrs',
+  //   email: 'Thursday',
+  //   image: profile_pic,
+  // },
+  // {
+  //   name: '7am - 7pm ?',
+  //   title: 'World of Warcraft',
+  //   department: 'Lvling to 70',
+  //   role: '12hrs',
+  //   email: 'Friday',
+  //   image: profile_pic,
+  // },
 
   // More people...
 ]
@@ -161,6 +163,10 @@ export function Links() {
   )
 }
 export function Calendar() {
+  var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var today = new Date();
+  var date = days[today.getDay()];
   return (
     <div className="flex flex-col">
       <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8 mb-6 mt-6">
@@ -171,27 +177,47 @@ export function Calendar() {
                 <tr>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    Time
+                  <div className="flex items-center">
+                            <div className="flex-shrink-0 h-6 w-10">
+                            <FontAwesomeIcon icon={faClock} />
+                            </div>
+                            <div className="text-sm font-medium text-gray-900"> Time</div>
+                          </div>
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    Category
+                  <div className="flex items-center">
+                            <div className="flex-shrink-0 h-6 w-10">
+                            <FontAwesomeIcon icon={faGamepad} />
+                            </div>
+                            <div className="text-sm font-medium text-gray-900"> category</div>
+                          </div>
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    Title
+                  <div className="flex items-center">
+                            <div className="flex-shrink-0 h-6 w-10">
+                            <FontAwesomeIcon icon={faSign} />
+                            </div>
+                            <div className="text-sm font-medium text-gray-900"> title </div>
+                          </div>
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-6 py-3 text-left  font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    Duration / Tags / #
+                  <div className="flex items-center">
+                            <div className="flex-shrink-0 h-6 w-10">
+                            <FontAwesomeIcon icon={faInfoCircle} />
+                            </div>
+                            <div className="text-sm font-medium text-gray-900"> #Tags / @Creators </div>
+                          </div>
                   </th>
                   <th scope="col" className="relative px-6 py-3">
                     <span className="sr-only">Edit</span>
@@ -199,36 +225,79 @@ export function Calendar() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {people.map((person) => (
-                  <tr key={person.email}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <img className="h-10 w-10 rounded-full" src={person.image} alt="" />
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{person.name}</div>
-                          <div className="text-sm text-gray-500">{person.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{person.title}</div>
-                      <div className="text-sm text-gray-500">{person.department}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                        Active
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{person.role}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <a href="#" className="text-indigo-600 hover:text-indigo-900">
-                        Edit
-                      </a>
-                    </td>
-                  </tr>
-                ))}
+                {people.length > 0 ? 
+                  <div>
+                    {people.map((person) => (
+                      <tr key={person.email}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10">
+                              <FontAwesomeIcon icon={faClock} />
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">{person.name}</div>
+                              <div className="text-sm text-gray-500">{person.email}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{person.title}</div>
+                          <div className="text-sm text-gray-500">{person.department}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            Active
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{person.role}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <Link href="/settings">
+                          <a className="text-indigo-600 hover:text-indigo-900">
+                            Edit
+                          </a>
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </div>
+                  : 
+
+                    <tr>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="text-xl font-medium text-gray-900 pr-4"> {date}</div>
+                            <div className="px-2 py-1.5 inline-flex text-sm leading-5 font-semibold rounded-full bg-purple-300 "> 7 PM - 12 AM PDT</div>
+                          </div>
+                        </td>
+                      
+                        <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                            <div className="px-2 py-1.5 inline-flex text-sm leading-5 font-semibold rounded-full bg-pink-300 ">RPG</div>
+                            <div className="pr-2"></div>
+                            <div className="px-2 py-1.5 inline-flex text-sm leading-5 font-semibold rounded-full bg-indigo-300 ">Action Adventure</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                            <div className="text-xl font-medium text-gray-900 pr-4"> Slaying lv. 42 Dragons! 🐉</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                            <div className="text-xl font-medium text-gray-900 pr-4"> #Example @CreatorName </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <Link href="settings">
+                          <a className="text-indigo-600 hover:text-indigo-900">
+                            Edit
+                          </a>
+                          </Link>
+                        </td>
+                      </tr>
+
+                }
+                
               </tbody>
             </table>
           </div>

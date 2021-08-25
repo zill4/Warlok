@@ -27,9 +27,9 @@ function classNames(...classes) {
                   </button>
             </div>
 
-              <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
+              <div className="flex-1 flex items-center justify-between border-2 border-pink-200 bg-white rounded-r-md truncate">
                 <div className="flex-1 px-4 py-2 text-sm truncate">
-                  <a href="#" className="text-gray-900 font-medium hover:text-gray-600">
+                  <a onClick={() => setShowModal(true)} href="#" className="text-gray-900 font-medium hover:text-pink-600">
                     Add link to website or socials
                   </a>
                 </div>
