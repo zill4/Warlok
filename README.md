@@ -1,4 +1,4 @@
-#Warlok
+# Warlok
 
 Warlok is a tool for enabling content creators on Twitch and YouTube.
 
