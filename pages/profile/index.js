@@ -288,7 +288,7 @@ export function Calendar() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <Link href="settings">
+                          <Link href="/settings#calendar">
                           <a className="text-indigo-600 hover:text-indigo-900">
                             Edit
                           </a>

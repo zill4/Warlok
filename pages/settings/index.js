@@ -34,37 +34,38 @@ const navigation = [
   { name: 'Profile', href: '#', icon: UserIcon },
 ]
 const navMap = {
-  'account': 0,
-  'links' : 1,
-  'calendar': 2,
-  'help': 3,
+  '/settings#account': 0,
+  '/settings#links' : 1,
+  '/settings#calendar': 2,
+  '/settings#help': 3,
+  '/settings': 0
 };
 const subNavigation = [
   {
     name: 'account',
     description: 'Change profile related settings',
-    href: '',
+    href: '/settings#account',
     icon: CogIcon,
-    current: true,
+    current: false,
   },
   {
     name: 'links',
-    description: 'Enim, nullam mi vel et libero urna lectus enim. Et sed in maecenas tellus.',
-    href: '#',
+    description: 'Change profile related settings',
+    href: '/settings#links',
     icon: BellIcon,
     current: false,
   },
   {
     name: 'calendar',
-    description: 'Semper accumsan massa vel volutpat massa. Non turpis ut nulla aliquet turpis.',
-    href: '#',
+    description: 'Change profile related settings',
+    href: '/settings#calendar',
     icon: KeyIcon,
     current: false,
   },
   {
     name: 'help',
-    description: 'Magna nulla id sed ornare ipsum eget. Massa eget porttitor suscipit consequat.',
-    href: '#',
+    description: 'Change profile related settings',
+    href: '/settings#help',
     icon: PhotographIcon,
     current: false,
   },
@@ -100,7 +101,8 @@ export default function Settings() {
   const [fileUrl, setFileUrl] = useState();
   const { currentUser } = useAuth();
   const [ user, setUser ] = useState(""); 
-  
+  const {asPath} = Router;
+  const [role, setRole] = useState(asPath);
   const updateProfile = (event) => {
     event.preventDefault();
     const name = event.target.username;
@@ -123,17 +125,22 @@ export default function Settings() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
 
-  const navChange = async (name) =>
+  const navChange = async (href) =>
   {
-    subNavigation[navMap[role]].current = false;
-    setRole(name);
-    subNavigation[navMap[role]].current = true;
-    console.log(role);
+    if(href === '/settings#account' || href === '/settings')
+      setRole('/settings#account');
+    if(href === '/settings#calendar')
+      setRole('/settings#calendar');
+    if(href === '/settings#help')
+      setRole('/settings#help');
+    if(href === '/settings#links')
+      setRole('/settings#links');
   }
-
+  
   useEffect(() => {
     const {pathname} = Router
-    if(pathname == '/settings' && !currentUser ){
+    navChange(asPath);
+    if(pathname.includes('/settings') && !currentUser ){
         Router.push('/')
     }
     else
@@ -145,7 +152,6 @@ export default function Settings() {
           getUser()
     }
   }, [])
-  const [role, setRole] = React.useState('calendar');
 
   return (
       <div>
@@ -209,11 +215,10 @@ export default function Settings() {
                   />
                 </div>
                 <nav aria-label="Sidebar" className="mt-5">
-                  <div className="px-2 space-y-1">
+                  <div className="px-1 space-y-1">
                     {navigation.map((item) => (
                       <a
                         key={item.name}
-                        href={item.href}
                         className="group p-2 rounded-md flex items-center text-base font-medium text-blue-gray-600 hover:bg-blue-gray-50 hover:text-blue-gray-900"
                       >
                         <item.icon
@@ -337,39 +342,68 @@ export default function Settings() {
               {/* Secondary sidebar */}
               <nav
                 aria-label="Sections"
-                className="hidden flex-shrink-0 w-96 bg-white border-r border-blue-gray-200 xl:flex xl:flex-col"
+                className="hidden flex-shrink-0 w-64 bg-white border-r border-blue-gray-200 xl:flex xl:flex-col"
               >
                 <div className="flex-shrink-0 h-16 px-6 border-b border-blue-gray-200 flex items-center">
                   <p className="text-lg font-medium text-blue-gray-900">Settings</p>
                 </div>
                 <div className="flex-1 min-h-0 overflow-y-auto">
-                  {subNavigation.map((item) => (
-                    <button onClick={() => navChange(item.name)} >
-                      press
-                    <a
-                      key={item.name}
-                      className={classNames(
-                        item.current ? 'bg-blue-50 bg-opacity-50' : 'hover:bg-blue-50 hover:bg-opacity-50',
-                        'flex p-6 border-b border-blue-gray-200'
-                      )}
-                      aria-current={item.current ? 'page' : undefined}
-                    >
-                      <item.icon className="flex-shrink-0 -mt-0.5 h-6 w-6 text-blue-gray-400" aria-hidden="true" />
-                      <div className="ml-3 text-sm">
-                        <p className="font-medium text-blue-gray-900">{item.name}</p>
-                        <p className="mt-1 text-blue-gray-500">{item.description}</p>
-                      </div>
+                <button onClick={() => setRole("/settings#account")}>
+                    <a className={classNames(
+                      role === "/settings#account" ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                      'group flex items-center px-2 py-2 text-sm font-medium rounded-md'
+                    )}>
+                    <CogIcon className="flex-shrink-0 mt-5 h-6 w-6 text-blue-gray-400" aria-hidden="true"/>
+                    <div className="ml-3 text-sm">
+                        <p className="font-bold text-blue-gray-900">Account</p>
+                        <p className="mt-1 text-blue-gray-500">Change profile related settings</p>
+                    </div>
                     </a>
-                    </button>
-                  ))}
+                  </button>
+                  <button onClick={() => setRole("/settings#calendar")}>
+                    <a className={classNames(
+                      role === "/settings#calendar" ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                      'group flex items-center px-2 py-2 text-sm font-medium rounded-md'
+                    )}>
+                    <CogIcon className="flex-shrink-0 mt-5 h-6 w-6 text-blue-gray-400" aria-hidden="true"/>
+                    <div className="ml-3 text-sm">
+                        <p className="font-bold text-blue-gray-900">Calendar</p>
+                        <p className="mt-1 text-blue-gray-500">Change profile related settings</p>
+                    </div>
+                    </a>
+                  </button>
+                  <button onClick={() => setRole("/settings#links")}>
+                    <a className={classNames(
+                      role === "/settings#links" ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                      'group flex items-center px-2 py-2 text-sm font-medium rounded-md'
+                    )}>
+                    <CogIcon className="flex-shrink-0 mt-5 h-6 w-6 text-blue-gray-400" aria-hidden="true"/>
+                    <div className="ml-3 text-sm">
+                        <p className="font-bold text-blue-gray-900">Links</p>
+                        <p className="mt-1 text-blue-gray-500">Change profile related settings</p>
+                    </div>
+                    </a>
+                  </button>
+                  <button onClick={() => setRole("/settings#help")}>
+                    <a className={classNames(
+                      role === "/settings#help" ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                      'group flex items-center px-2 py-2 text-sm font-medium rounded-md'
+                    )}>
+                    <CogIcon className="flex-shrink-0 mt-5 h-6 w-6 text-blue-gray-400" aria-hidden="true"/>
+                    <div className="ml-3 text-sm">
+                        <p className="font-bold text-blue-gray-900">Help</p>
+                        <p className="mt-1 text-blue-gray-500">Change profile related settings</p>
+                    </div>
+                    </a>
+                  </button>
                 </div>
               </nav>
 
               {/* Main content */}
-              { role === 'account' ? <Account /> : <br></br>}
-              { role === 'calendar' ? <Calendar /> : <br></br>}
-              { role === 'links' ? <Links /> : <br></br>}
-              { role === 'help' ? <Help /> : <br></br>}
+              { role === '/settings#account' | role === '/settings' ? <Account /> : <br></br>}
+              { role === '/settings#calendar' ? <Calendar /> : <br></br>}
+              { role === '/settings#links' ? <Links /> : <br></br>}
+              { role === '/settings#help' ? <Help /> : <br></br>}
             </div>
           </div>
         </main>
