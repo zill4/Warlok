@@ -35,7 +35,9 @@ export function useAuth() {
     return currentUser.updatePassword(password)
   }
   
-
+  function getID() {
+    return currentUser.user
+  }
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
@@ -52,7 +54,8 @@ export function useAuth() {
     logout,
     resetPassword,
     updateEmail,
-    updatePassword
+    updatePassword,
+    getID
   }
 
   return (
