@@ -408,12 +408,14 @@ export default function Profile  () {
                       </span>
                     </div>
                     <div className="justify-center lg:mr-4 p-3 items-stretch flex text-center">
-                    <button
+                    <div
                         className="bg-purple-500 active:bg-lightBlue-600 uppercase text-white font-bold hover:shadow-md shadow text-xs px-4 py-2 rounded outline-none focus:outline-none sm:mr-2 mb-1 ease-linear transition-all duration-150"
                         type="button"
                       >
-                        Edit Profile
-                      </button>
+                      <Link href="settings">
+                        <a> Edit Profile</a>
+                      </Link>
+                      </div>
                     </div>
                   </div>
                 </div>

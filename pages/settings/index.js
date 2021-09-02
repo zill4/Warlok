@@ -3,6 +3,7 @@ import { storage, firestore } from "../../firebase"
 import { useAuth } from "../../authcontext"
 import { Fragment, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
+import 'react-calendar/dist/Calendar.css';
 import {
   BellIcon,
   BookmarkAltIcon,
@@ -20,9 +21,13 @@ import {
   XIcon,
 } from '@heroicons/react/outline'
 import Router from 'next/router'
+// icons
 import { ChevronLeftIcon } from '@heroicons/react/solid'
+import { faCalendarAlt, faUserPlus, faUserCircle, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// sub-pages
 import Account from './account';
-import Calendar from './calendar';
+import CalendarSettings from './calendar';
 import Links from './links';
 import Help from './help';
 
@@ -43,16 +48,16 @@ const navMap = {
 const subNavigation = [
   {
     name: 'account',
-    description: 'Change profile related settings',
+    description: 'Change profile pic, name, and bio.',
     href: '/settings#account',
     icon: CogIcon,
     current: false,
   },
   {
     name: 'links',
-    description: 'Change profile related settings',
+    description: 'Set website and social links.',
     href: '/settings#links',
-    icon: BellIcon,
+    icon: <FontAwesomeIcon icon={faUserPlus}/>,
     current: false,
   },
   {
@@ -69,27 +74,6 @@ const subNavigation = [
     icon: PhotographIcon,
     current: false,
   },
-  // {
-  //   name: 'Billing',
-  //   description: 'Orci aliquam arcu egestas turpis cursus. Lectus faucibus netus dui auctor mauris.',
-  //   href: '#',
-  //   icon: CashIcon,
-  //   current: false,
-  // },
-  // {
-  //   name: 'Integrations',
-  //   description: 'Nisi, elit volutpat odio urna quis arcu faucibus dui. Mauris adipiscing pellentesque.',
-  //   href: '#',
-  //   icon: ViewGridAddIcon,
-  //   current: false,
-  // },
-  // {
-  //   name: 'Additional Resources',
-  //   description: 'Quis viverra netus donec ut auctor fringilla facilisis. Nunc sit donec cursus sit quis et.',
-  //   href: '#',
-  //   icon: SearchCircleIcon,
-  //   current: false,
-  // },
 ]
 
 function classNames(...classes) {
@@ -353,10 +337,10 @@ export default function Settings() {
                       role === "/settings#account" ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
                       'group flex items-center px-2 py-2 text-sm font-medium rounded-md'
                     )}>
-                    <CogIcon className="flex-shrink-0 mt-5 h-6 w-6 text-blue-gray-400" aria-hidden="true"/>
+                    <FontAwesomeIcon icon={faUserCircle} className="flex-shrink-0 mt-5 h-6 w-6 text-blue-gray-400" aria-hidden="true"/>
                     <div className="ml-3 text-sm">
                         <p className="font-bold text-blue-gray-900">Account</p>
-                        <p className="mt-1 text-blue-gray-500">Change profile related settings</p>
+                        <p className="mt-1 text-blue-gray-500">Change profile pic, name, and bio.</p>
                     </div>
                     </a>
                   </button>
@@ -365,10 +349,10 @@ export default function Settings() {
                       role === "/settings#calendar" ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
                       'group flex items-center px-2 py-2 text-sm font-medium rounded-md'
                     )}>
-                    <CogIcon className="flex-shrink-0 mt-5 h-6 w-6 text-blue-gray-400" aria-hidden="true"/>
+                    <FontAwesomeIcon icon={faCalendarAlt} className="flex-shrink-0 mt-5 h-6 w-6 text-blue-gray-400" aria-hidden="true"/>
                     <div className="ml-3 text-sm">
                         <p className="font-bold text-blue-gray-900">Calendar</p>
-                        <p className="mt-1 text-blue-gray-500">Change profile related settings</p>
+                        <p className="mt-1 text-blue-gray-500">Set stream and content release schedule.</p>
                     </div>
                     </a>
                   </button>
@@ -377,10 +361,10 @@ export default function Settings() {
                       role === "/settings#links" ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
                       'group flex items-center px-2 py-2 text-sm font-medium rounded-md'
                     )}>
-                    <CogIcon className="flex-shrink-0 mt-5 h-6 w-6 text-blue-gray-400" aria-hidden="true"/>
+                    <FontAwesomeIcon icon={faUserPlus} className="flex-shrink-0 mt-5 h-6 w-6 text-blue-gray-400" aria-hidden="true"/>
                     <div className="ml-3 text-sm">
                         <p className="font-bold text-blue-gray-900">Links</p>
-                        <p className="mt-1 text-blue-gray-500">Change profile related settings</p>
+                        <p className="mt-1 text-blue-gray-500">Set website and social links.</p>
                     </div>
                     </a>
                   </button>
@@ -389,10 +373,10 @@ export default function Settings() {
                       role === "/settings#help" ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
                       'group flex items-center px-2 py-2 text-sm font-medium rounded-md'
                     )}>
-                    <CogIcon className="flex-shrink-0 mt-5 h-6 w-6 text-blue-gray-400" aria-hidden="true"/>
+                    <FontAwesomeIcon icon={faQuestionCircle} className="flex-shrink-0 mt-5 h-6 w-6 text-blue-gray-400" aria-hidden="true"/>
                     <div className="ml-3 text-sm">
                         <p className="font-bold text-blue-gray-900">Help</p>
-                        <p className="mt-1 text-blue-gray-500">Change profile related settings</p>
+                        <p className="mt-1 text-blue-gray-500">Questions? Get answers!</p>
                     </div>
                     </a>
                   </button>
@@ -401,7 +385,7 @@ export default function Settings() {
 
               {/* Main content */}
               { role === '/settings#account' | role === '/settings' ? <Account /> : <br></br>}
-              { role === '/settings#calendar' ? <Calendar /> : <br></br>}
+              { role === '/settings#calendar' ? <CalendarSettings /> : <br></br>}
               { role === '/settings#links' ? <Links /> : <br></br>}
               { role === '/settings#help' ? <Help /> : <br></br>}
             </div>
