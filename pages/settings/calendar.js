@@ -21,7 +21,7 @@ import {
 } from '@heroicons/react/outline'
 import Router from 'next/router'
 // Links
-import { faClock, faGamepad, faSign, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
+import { faCalendarAlt, faClock , faSign, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from 'next/link';
 import CalModal from '../../components/calModal';
@@ -143,7 +143,7 @@ export default function CalendarSettings() {
       <div className="px-2">
         <h1 className="text-3xl font-extrabold text-blue-gray-900">CALENDAR</h1>
 
-        <form className="mt-6 space-y-8 divide-y divide-y-blue-gray-200" onSubmit={updateProfile}>
+        <form className="mt-6 space-y-8 " onSubmit={updateProfile}>
           <div className="flex flex-col">
             <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8 mb-6 mt-6">
               <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
@@ -157,9 +157,9 @@ export default function CalendarSettings() {
                         >
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-6 w-10">
-                              <FontAwesomeIcon icon={faClock} />
+                              <FontAwesomeIcon icon={faCalendarAlt} />
                             </div>
-                            <div className="text-sm font-medium text-gray-900"> Time</div>
+                            <div className="text-sm font-medium text-gray-900"> Date</div>
                           </div>
                         </th>
                         <th
@@ -168,9 +168,10 @@ export default function CalendarSettings() {
                         >
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-6 w-10">
-                              <FontAwesomeIcon icon={faGamepad} />
+                              <FontAwesomeIcon icon={faClock} />
                             </div>
-                            <div className="text-sm font-medium text-gray-900"> category</div>
+
+                            <div className="text-sm font-medium text-gray-900"> Time</div>
                           </div>
                         </th>
                         <th
@@ -207,31 +208,142 @@ export default function CalendarSettings() {
                             <div className="text-xl font-medium text-gray-900 pr-4"> {date} </div>
                             <div className="px-2 py-1.5 inline-flex text-sm leading-5 font-semibold rounded-full bg-purple-300 "> 7 PM - 12 AM PDT</div>
                           </div> */}
-                          
-                            <CalModal/>
+
+                          <CalModal />
                         </td>
 
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-1 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="px-2 py-1.5 inline-flex text-sm leading-5 font-semibold rounded-full bg-pink-300 ">RPG</div>
+                            <label htmlFor="startTime" className="block text-sm font-medium text-gray-700">
+                              Start Time
+                            </label>
                             <div className="pr-2"></div>
-                            <div className="px-2 py-1.5 inline-flex text-sm leading-5 font-semibold rounded-full bg-indigo-300 ">Action Adventure</div>
+                            <select
+                              id="startTime"
+                              name="startTime"
+                              className="px-2 py-1.5 inline-flex text-sm leading-5 font-semibold rounded-full bg-indigo-300"
+                              defaultValue="7:00"
+                            >
+                              <option>12:00</option>
+                              <option>12:30</option>
+                              <option>1:00</option>
+                              <option>1:30</option>
+                              <option>2:00</option>
+                              <option>2:30</option>
+                              <option>3:00</option>
+                              <option>3:30</option>
+                              <option>4:00</option>
+                              <option>4:30</option>
+                              <option>5:00</option>
+                              <option>5:30</option>
+                              <option>6:00</option>
+                              <option>6:30</option>
+                              <option>7:00</option>
+                              <option>7:30</option>
+                              <option>8:00</option>
+                              <option>8:30</option>
+                              <option>9:00</option>
+                              <option>9:30</option>
+                              <option>10:00</option>
+                              <option>10:30</option>
+                              <option>11:00</option>
+                              <option>11:30</option>
+                            </select>
+                            <div className="pr-2"></div>
+                            <select
+                              id="amPm"
+                              name="amPm"
+                              className="px-2 py-1.5 inline-flex text-sm leading-5 font-semibold rounded-full bg-pink-300"
+                              defaultValue="pm"
+                            >
+                              <option>am</option>
+                              <option>pm</option>
+                            </select>
+                          </div>
+                          <div className="py-2 flex items-center">
+                            <label htmlFor="endTime" className="text-sm font-medium text-gray-700">
+                              End Time
+                            </label>
+                            <div className="pr-2"></div>
+                            <select
+                              id="endTime"
+                              name="endTime"
+                              className="px-2 py-1.5 inline-flex text-sm leading-5 font-semibold rounded-full bg-pink-300"
+                              defaultValue="10:00"
+                            >
+                              <option>12:00</option>
+                              <option>12:30</option>
+                              <option>1:00</option>
+                              <option>1:30</option>
+                              <option>2:00</option>
+                              <option>2:30</option>
+                              <option>3:00</option>
+                              <option>3:30</option>
+                              <option>4:00</option>
+                              <option>4:30</option>
+                              <option>5:00</option>
+                              <option>5:30</option>
+                              <option>6:00</option>
+                              <option>6:30</option>
+                              <option>7:00</option>
+                              <option>7:30</option>
+                              <option>8:00</option>
+                              <option>8:30</option>
+                              <option>9:00</option>
+                              <option>9:30</option>
+                              <option>10:00</option>
+                              <option>10:30</option>
+                              <option>11:00</option>
+                              <option>11:30</option>
+                            </select>
+                            <div className="pr-2"></div>
+                            <select
+                              id="amPm"
+                              name="amPm"
+                              className="px-2 py-1.5 inline-flex text-sm leading-5 font-semibold rounded-full bg-indigo-300 "
+                              defaultValue="pm"
+                            >
+                              <option>am</option>
+                              <option>pm</option>
+                            </select>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="text-xl font-medium text-gray-900 pr-4"> Slaying lv. 42 Dragons! 🐉</div>
+                            <label htmlFor="title" className="block text-xl font-medium pr-2">
+                              Title
+                            </label>
+                            <div className="mt-1">
+                              <input
+                                id="title"
+                                name="title"
+                                type="title"
+                                autoComplete="title"
+                                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-xl placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 xl:text-xl"
+                              />
+                            </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="text-xl font-medium text-gray-900 pr-4"> #Example @CreatorName </div>
+                          <label htmlFor="tags" className="block text-xl font-medium pr-2">
+                              Tags
+                            </label>
+                            <div className="mt-1">
+                              <input
+                                id="tags"
+                                name="tags"
+                                type="tags"
+                                autoComplete="tag"
+                                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-xl placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 xl:text-xl"
+                              />
+                            </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <Link href="/settings#calendar">
                             <a className="text-indigo-600 hover:text-indigo-900">
-                              Edit
+                              Add Event
                             </a>
                           </Link>
                         </td>
@@ -258,6 +370,6 @@ export default function CalendarSettings() {
           </div>
         </form>
       </div>
-    </div>
+    </div >
   )
 }

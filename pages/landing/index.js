@@ -28,20 +28,20 @@ import Link from 'next/link'
 
 const solutions = [
   {
-    name: 'Pact: Inbox',
+    name: 'Inbox',
     description: 'A shared inbox for you and your team.',
     href: '#pact',
     icon: InboxIcon,
   },
   {
-    name: 'Portal: Profile',
+    name: 'Profile',
     description: 'Speak directly to your customers in a more meaningful way.',
     href: '#portal',
     icon: AnnotationIcon,
   },
-  { name: 'Arcana: Feed', description: "Your customers' data will be safe and secure.", href: '#arcana', icon: ChatAlt2Icon },
+  { name: 'Feed', description: "Your customers' data will be safe and secure.", href: '#arcana', icon: ChatAlt2Icon },
   {
-    name: 'Patron: Business Card',
+    name: 'Business Card',
     description: "Connect with third-party tools that you're already using.",
     href: '#patron',
     icon: QuestionMarkCircleIcon,
@@ -49,51 +49,51 @@ const solutions = [
 ]
 const features = [
   {
-    name: 'Unlimited Inboxes',
-    description: 'Ac tincidunt sapien vehicula erat auctor pellentesque rhoncus. Et magna sit morbi lobortis.',
+    name: 'Verfied Messaging',
+    description: "Don't waste time on annoying spam, contact real people that want to get things done.",
     icon: InboxIcon,
   },
   {
-    name: 'Manage Team Members',
-    description: 'Ac tincidunt sapien vehicula erat auctor pellentesque rhoncus. Et magna sit morbi lobortis.',
+    name: 'Real Connections',
+    description: 'Find creators, businesses, or fans that want to join your community.',
     icon: UsersIcon,
   },
   {
-    name: 'Spam Report',
-    description: 'Ac tincidunt sapien vehicula erat auctor pellentesque rhoncus. Et magna sit morbi lobortis.',
+    name: 'No Wasted Time',
+    description: 'Let your community know what your up to in one place.',
     icon: TrashIcon,
   },
   {
-    name: 'Compose in Markdown',
-    description: 'Ac tincidunt sapien vehicula erat auctor pellentesque rhoncus. Et magna sit morbi lobortis.',
+    name: 'Schedule Share',
+    description: 'Connect the dots with your org on a shared schedule.',
     icon: PencilAltIcon,
   },
-  {
-    name: 'Team Reporting',
-    description: 'Ac tincidunt sapien vehicula erat auctor pellentesque rhoncus. Et magna sit morbi lobortis.',
-    icon: DocumentReportIcon,
-  },
-  {
-    name: 'Saved Replies',
-    description: 'Ac tincidunt sapien vehicula erat auctor pellentesque rhoncus. Et magna sit morbi lobortis.',
-    icon: ReplyIcon,
-  },
-  {
-    name: 'Email Commenting',
-    description: 'Ac tincidunt sapien vehicula erat auctor pellentesque rhoncus. Et magna sit morbi lobortis.',
-    icon: ChatAltIcon,
-  },
-  {
-    name: 'Connect with Customers',
-    description: 'Ac tincidunt sapien vehicula erat auctor pellentesque rhoncus. Et magna sit morbi lobortis.',
-    icon: HeartIcon,
-  },
+  // {
+  //   name: 'Team Reporting',
+  //   description: 'Ac tincidunt sapien vehicula erat auctor pellentesque rhoncus. Et magna sit morbi lobortis.',
+  //   icon: DocumentReportIcon,
+  // },
+  // {
+  //   name: 'Saved Replies',
+  //   description: 'Ac tincidunt sapien vehicula erat auctor pellentesque rhoncus. Et magna sit morbi lobortis.',
+  //   icon: ReplyIcon,
+  // },
+  // {
+  //   name: 'Email Commenting',
+  //   description: 'Ac tincidunt sapien vehicula erat auctor pellentesque rhoncus. Et magna sit morbi lobortis.',
+  //   icon: ChatAltIcon,
+  // },
+  // {
+  //   name: 'Connect with Customers',
+  //   description: 'Ac tincidunt sapien vehicula erat auctor pellentesque rhoncus. Et magna sit morbi lobortis.',
+  //   icon: HeartIcon,
+  // },
 ]
 const metrics = [
-  { id: 1, stat: '8K+', emphasis: 'Companies', rest: 'use laoreet amet lacus nibh integer quis.' },
-  { id: 2, stat: '25K+', emphasis: 'Countries around the globe', rest: 'lacus nibh integer quis.' },
-  { id: 3, stat: '98%', emphasis: 'Customer satisfaction', rest: 'laoreet amet lacus nibh integer quis.' },
-  { id: 4, stat: '12M+', emphasis: 'Issues resolved', rest: 'lacus nibh integer quis.' },
+  // { id: 1, stat: '8K+', emphasis: 'Companies', rest: 'use laoreet amet lacus nibh integer quis.' },
+  // { id: 2, stat: '25K+', emphasis: 'Countries around the globe', rest: 'lacus nibh integer quis.' },
+  // { id: 3, stat: '98%', emphasis: 'Customer satisfaction', rest: 'laoreet amet lacus nibh integer quis.' },
+  // { id: 4, stat: '12M+', emphasis: 'Issues resolved', rest: 'lacus nibh integer quis.' },
 ]
 const footerNavigation = {
   solutions: [
@@ -418,8 +418,8 @@ const { currentUser } = useAuth()
               </div>
               <div className="relative px-4 py-16 sm:px-6 sm:py-24 lg:py-32 lg:px-8">
                 <h1 className="text-center text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-                  <span className="block text-white">Escape Mediocrity</span>
-                  <span className="block text-indigo-200">Create a Pact</span>
+                  <span className="block text-white">What's Your Magic?</span>
+                  <span className="block text-indigo-200">Find it Here</span>
                 </h1>
                 <p className="mt-6 max-w-lg mx-auto text-center text-xl text-indigo-200 sm:max-w-3xl">
                 Warlok helps content creators connect with leading brands, collaborate with rising influencers, and stay in touch with devoted fans.
@@ -456,10 +456,10 @@ const { currentUser } = useAuth()
                   </div>
                   <div className="mt-6">
                     <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">
-                    Pact: Inbox
+                    Schedule
                     </h2>
                     <p className="mt-4 text-lg text-gray-500">
-                    Keep track of potential business collaborations and longterm partnerships.
+                      Create a schedule for optimal viewership based on recent trends and viewer data.
                     </p>
                     <div className="mt-6">
                         <Link href="/signup">
@@ -472,7 +472,7 @@ const { currentUser } = useAuth()
                     </div>
                   </div>
                 </div>
-                <div className="mt-8 border-t border-gray-200 pt-6">
+                {/* <div className="mt-8 border-t border-gray-200 pt-6">
                   <blockquote>
                     <div>
                       <p className="text-base text-gray-500">
@@ -495,7 +495,7 @@ const { currentUser } = useAuth()
                       </div>
                     </footer>
                   </blockquote>
-                </div>
+                </div> */}
               </div>
               </section>
               <div className="mt-12 sm:mt-16 lg:mt-0">
@@ -521,10 +521,10 @@ const { currentUser } = useAuth()
                   </div>
                   <div className="mt-6">
                     <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">
-                    Portal: Profile
+                    Your Own Page
                     </h2>
                     <p className="mt-4 text-lg text-gray-500">
-                    Schedule events and projects with creators you vibe with.
+                    More than just a profile; tell a story, showcase your best content, and provide links for fans, businesses, and creators to engage with your content.
                     </p>
                     <div className="mt-6">
                       <Link href="/signup">
@@ -556,10 +556,9 @@ const { currentUser } = useAuth()
         <section id="arcana">
         <div className="bg-gradient-to-r from-purple-800 to-indigo-700">
           <div className="max-w-4xl mx-auto px-4 py-16 sm:px-6 sm:pt-20 sm:pb-24 lg:max-w-7xl lg:pt-24 lg:px-8">
-            <h2 className="text-3xl font-extrabold text-white tracking-tight">Inbox support built for efficiency</h2>
+            <h2 className="text-3xl font-extrabold text-white tracking-tight">Creative Community</h2>
             <p className="mt-4 max-w-3xl text-lg text-purple-200">
-              Ac tincidunt sapien vehicula erat auctor pellentesque rhoncus. Et magna sit morbi lobortis. Blandit
-              aliquam sit nisl euismod mattis in.
+              Warlok is the place to connect and collab with other creators.
             </p>
             <div className="mt-12 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:mt-16 lg:grid-cols-4 lg:gap-x-8 lg:gap-y-16">
               {features.map((feature) => (
@@ -601,16 +600,14 @@ const { currentUser } = useAuth()
             <div className="relative pt-12 pb-64 sm:pt-24 sm:pb-64 xl:col-start-1 xl:pb-24">
               <h2 className="text-sm font-semibold tracking-wide uppercase">
                 <span className="bg-gradient-to-r from-purple-300 to-indigo-300 bg-clip-text text-transparent">
-                  Valuable Metrics
+                Super Charge Discovery
                 </span>
               </h2>
               <p className="mt-3 text-3xl font-extrabold text-white">
-                Get actionable data that will help grow your business
+                Grow your community with analytics based on current trends.
               </p>
               <p className="mt-5 text-lg text-gray-300">
-                Rhoncus sagittis risus arcu erat lectus bibendum. Ut in adipiscing quis in viverra tristique sem. Ornare
-                feugiat viverra eleifend fusce orci in quis amet. Sit in et vitae tortor, massa. Dapibus laoreet amet
-                lacus nibh integer quis. Eu vulputate diam sit tellus quis at.
+                Growing a community requires patience and attention, simplify your content output by measuring every stream, post, and video. Find what clicks all on one place on Warlok, so you can go back to making great content.
               </p>
               <div className="mt-12 grid grid-cols-1 gap-y-12 gap-x-6 sm:grid-cols-2">
                 {metrics.map((item) => (
