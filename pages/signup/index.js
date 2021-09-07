@@ -4,7 +4,7 @@ import { firestore } from "../../firebase"
 import Router from 'next/router'
 import Link from 'next/link'
 
-export default function signup() {
+export default function SignUpPage() {
   const emailRef = useRef()
   const passwordRef = useRef()
   const usernameRef = useRef()
@@ -35,22 +35,22 @@ export default function signup() {
       usersRef.where('username','==',usernameRef.current.value).get().then(snapshot => {
         if(!snapshot.empty)
         {
+          setLoading(false)
           return setError("User name is taken");
         }else{
           signup(emailRef.current.value, passwordRef.current.value).then((authUser) =>{
             firestore.doc(`users/${authUser.user.uid}`).set({
                 email : emailRef.current.value.toLowerCase(),
-                username : usernameRef.current.value.toLowerCase(),
-                avatar: "https://avatars.dicebear.com/api/micah/:" + usernameRef.current.value.toLowerCase() + ".svg"
+                username : usernameRef.current.value.toLowerCase()
                 });
             })   
-            Router.push('/profile')
         }
+        setLoading(false)
+        Router.push('/profile')
         });
     } catch (error) {
       setError("Failed to create an account", error)
     }
-    setLoading(false)
   }
 
 
@@ -182,7 +182,7 @@ export default function signup() {
                       disabled={loading}
                       className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
-                      Sign in
+                      Sign up
                     </button>
                   </div>
                 </form>
