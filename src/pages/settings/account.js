@@ -44,41 +44,7 @@ const subNavigation = [
     icon: BellIcon,
     current: false,
   },
-  // {
-  //   name: 'Security',
-  //   description: 'Semper accumsan massa vel volutpat massa. Non turpis ut nulla aliquet turpis.',
-  //   href: '#',
-  //   icon: KeyIcon,
-  //   current: false,
-  // },
-  // {
-  //   name: 'Appearance',
-  //   description: 'Magna nulla id sed ornare ipsum eget. Massa eget porttitor suscipit consequat.',
-  //   href: '#',
-  //   icon: PhotographIcon,
-  //   current: false,
-  // },
-  // {
-  //   name: 'Billing',
-  //   description: 'Orci aliquam arcu egestas turpis cursus. Lectus faucibus netus dui auctor mauris.',
-  //   href: '#',
-  //   icon: CashIcon,
-  //   current: false,
-  // },
-  // {
-  //   name: 'Integrations',
-  //   description: 'Nisi, elit volutpat odio urna quis arcu faucibus dui. Mauris adipiscing pellentesque.',
-  //   href: '#',
-  //   icon: ViewGridAddIcon,
-  //   current: false,
-  // },
-  // {
-  //   name: 'Additional Resources',
-  //   description: 'Quis viverra netus donec ut auctor fringilla facilisis. Nunc sit donec cursus sit quis et.',
-  //   href: '#',
-  //   icon: SearchCircleIcon,
-  //   current: false,
-  // },
+
 ]
 
 function classNames(...classes) {
@@ -86,21 +52,36 @@ function classNames(...classes) {
 }
 
 export default function Account() {
-  const usernameRef = useRef()
+  const usernameRef = useRef();
   const [fileUrl, setFileUrl] = useState();
   const { currentUser } = useAuth();
   const [ user, setUser ] = useState(""); 
-  
+  const bioRef = useRef();
+
   const updateProfile = (event) => {
+
     event.preventDefault();
+
     const name = event.target.username;
+
     if (!name) { return }
+    if (fileUrl !== undefined) {
+
     firestore.doc(`users/${currentUser.uid}`).set({
       username: usernameRef.current.value.toLowerCase(),
-      avatar: fileUrl
+      avatar: fileUrl,
+      bio: bioRef.current.value
     })
 
+    } else {
+      firestore.doc(`users/${currentUser.uid}`).set({
+        username: usernameRef.current.value.toLowerCase(),
+        bio: bioRef.current.value
+      })
+    }
+
   }
+
   const onFileChange = async (event) => {
     const file = event.target.files[0];
     const storageRef = storage.ref();
@@ -157,8 +138,9 @@ export default function Account() {
             name="username"
             type="username"
             ref={usernameRef}
+            defaultValue={user.username}
             autoComplete="username"
-            className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-xl placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 xl:text-xl"
+            className="appearance-none block  px-3 py-2 border border-gray-300 rounded-md shadow-xl placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 xl:text-xl"
           />
         </div>
       </div>
@@ -204,11 +186,12 @@ export default function Account() {
             </label>
             <div className="mt-1">
               <textarea
-                id="description"
-                name="description"
+                id="bio"
+                name="bio"
+                ref={bioRef}
                 rows={4}
+                defaultValue={user.bio === undefined ? "Change your bio!" : user.bio}
                 className="block w-full border border-blue-gray-300 rounded-md shadow-xl xl:text-xl focus:ring-blue-500 focus:border-blue-500"
-                defaultValue={''}
               />
             </div>
             <p className="mt-3 text-xl text-blue-gray-500">

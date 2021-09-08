@@ -456,9 +456,7 @@ export default function Profile() {
                   <div className="text-center mt-2">
 
                     <p className="text-black text-lg font-medium">
-                      This is the autobiography of the E, and if you ever fuck with me
-                      You'll get taken by a stupid dope brotha who will smother
-                      Word to the motherfucker, straight outta Compton
+                        {user.bio === undefined ? "set up bio in settings!" : user.bio}
                     </p>
                     <div className="border-t border-blueGray-200 mb-6 mt-6 rounded flex justify-around flex-wrap">
                       <div className="w-1/2">

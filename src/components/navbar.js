@@ -47,7 +47,7 @@ export default function Navbar() {
 
     const getUser = async () => {
       if (!currentUser)
-        return ;
+        return;
       const userCollection = await firestore.doc(`users/${currentUser.uid}`).get()
       setUser(await userCollection.data());
       if (user === undefined)
@@ -65,6 +65,7 @@ export default function Navbar() {
       handleLogout();
     }
     setLoading(false)
+  
   }, [])
 
   const NavigationAuth = () => (
