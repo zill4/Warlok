@@ -23,7 +23,7 @@ import WarlokLogoSmall from '../../../public/images/warlok_color.png'
 //
 import Router from 'next/router'
 import Link from 'next/link'
-
+import Image from 'next/image'
 
 
 const solutions = [
@@ -214,10 +214,12 @@ const { currentUser } = useAuth()
                     <span className="sr-only">Warlok</span>
                     <Link href="/">
                     <a>
-                    <img
+                    <Image
                       className="h-8 w-auto sm:h-10"
-                      src='../../../public/images/warlok_logo.png'
+                      src={WarlokLogo}
                       alt="Warlok"
+                      width={200}
+                      height={40}
                     />
                     </a>
                     </Link>
@@ -332,10 +334,12 @@ const { currentUser } = useAuth()
                     <div className="pt-5 pb-6 px-5">
                       <div className="flex items-center justify-between">
                         <div>
-                          <img
+                          <Image
                             className="h-8 w-auto"
-                            src="../../../public/images/warlok_color.png"
+                            src={WarlokLogoSmall}
                             alt="Warlok"
+                            height={50}
+                            width={50}
                           />
                         </div>
                         <div className="-mr-2">

@@ -19,6 +19,7 @@ import {
   } from '@heroicons/react/outline'
 import WarlokLogoSmall from '../../../public/images/warlok_color.png'
 import WarlokLogo from '../../../public/images/warlok_logo.png'
+import Image from 'next/image'
 
 function classNames(...classes) {
     return classes.filter(Boolean).join(' ')
@@ -58,10 +59,12 @@ export default function About() {
                 <div className="flex justify-start lg:w-0 lg:flex-1">
                 <Link href="/">
                     <a>
-                    <img
+                    <Image
                       className="h-8 w-auto sm:h-10"
-                      src="images/warlok_logo.png"
+                      src={WarlokLogo}
                       alt="Warlok"
+                      width={200}
+                      height={40}
                     />
                     </a>
                     </Link>
@@ -177,10 +180,12 @@ export default function About() {
                     <div className="pt-5 pb-6 px-5">
                       <div className="flex items-center justify-between">
                         <div>
-                          <img
+                        <Image
                             className="h-8 w-auto"
-                            src="/images/warlok_color.png"
+                            src={WarlokLogoSmall}
                             alt="Warlok"
+                            height={50}
+                            width={50}
                           />
                         </div>
                         <div className="-mr-2">

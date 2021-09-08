@@ -3,6 +3,9 @@ import { useAuth } from "../../authcontext"
 import { firestore } from "../../firebase"
 import Router from 'next/router'
 import Link from 'next/link'
+import WarlokLogo from '../../../public/images/warlok_logo.png'
+import WarlokLogoSmall from '../../../public/images/warlok_color.png'
+import Image from 'next/image'
 
 export default function SignUpPage() {
   const emailRef = useRef()
@@ -35,22 +38,21 @@ export default function SignUpPage() {
       usersRef.where('username','==',usernameRef.current.value).get().then(snapshot => {
         if(!snapshot.empty)
         {
-          setLoading(false)
           return setError("User name is taken");
         }else{
           signup(emailRef.current.value, passwordRef.current.value).then(authUser =>{
             firestore.doc(`users/${authUser.user.uid}`).set({
                 email : emailRef.current.value.toLowerCase(),
-                username : usernameRef.current.value.toLowerCase()
-                });
-            }).then(console.log("success"));   
+                username : usernameRef.current.value.toLowerCase(),
+                avatar: "https://images.unsplash.com/photo-1608237652484-b478fac3bf7c?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80"
+                }).then(Router.push('/profile'));
+            });
         }
-        setLoading(false)
-        Router.push('/profile')
         });
     } catch (error) {
       setError("Failed to create an account", error)
     }
+    setLoading(false)
   }
 
 
@@ -66,11 +68,13 @@ export default function SignUpPage() {
                     </span>
           </div>}
             <div>
-              <img
-                className="h-12 w-auto"
-                src="images/warlok_color.png"
-                alt="Warlok"
-              />
+            <Image
+                      className="h-8 w-auto sm:h-10"
+                      src={WarlokLogo}
+                      alt="Warlok"
+                      width={200}
+                      height={40}
+                    />
               <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Sign Up</h2>
               <p className="mt-2 text-sm text-gray-600">
                 Or{' '}

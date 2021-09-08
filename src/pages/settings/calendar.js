@@ -24,7 +24,9 @@ import Router from 'next/router'
 import { faCalendarAlt, faClock , faSign, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from 'next/link';
-import CalModal from '../../../components/calModal';
+import CalModal from '../../components/calModal';
+
+
 const navigation = [
   { name: 'Home', href: '#', icon: HomeIcon },
   { name: 'Trending', href: '#', icon: FireIcon },

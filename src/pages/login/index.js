@@ -2,6 +2,9 @@ import { useRef, useState } from "react"
 import { useAuth } from "../../authcontext"
 import Router from 'next/router'
 import Link from 'next/link'
+import WarlokLogo from '../../../public/images/warlok_logo.png'
+import WarlokLogoSmall from '../../../public/images/warlok_color.png'
+import Image from 'next/image'
 
 
 export default function Login() {
@@ -40,11 +43,13 @@ export default function Login() {
           </div>}
 
             <div>
-              <img
-                className="h-12 w-auto"
-                src="images/warlok_color.png"
-                alt="Warlok"
-              />
+            <Image
+                      className="h-8 w-auto sm:h-10"
+                      src={WarlokLogo}
+                      alt="Warlok"
+                      width={200}
+                      height={40}
+                    />
               <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Login</h2>
               <p className="mt-2 text-sm text-gray-600">
                 Or{' '}
