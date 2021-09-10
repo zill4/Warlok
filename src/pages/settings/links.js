@@ -41,7 +41,7 @@ export default function Links() {
     if (event.target.twitch_link.value.length > 1) {
       userDocRef.update({
 
-        twitch: `https://twitch.tv` + event.target.twitch_link.value.toLowerCase(),
+        twitch: `https://twitch.tv/` + event.target.twitch_link.value.toLowerCase(),
         twitchId: event.target.twitch_link.value.toLowerCase()
       })
     }
@@ -106,9 +106,6 @@ export default function Links() {
       })
     }
   }
-
-
-
 
   useEffect(() => {
     const { pathname } = Router

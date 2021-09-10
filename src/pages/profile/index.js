@@ -672,7 +672,7 @@ export default function Profile() {
                                     <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
                                       <div className="flex-1 px-4 py-2 text-sm truncate">
                                         <a href={user.linkedin} className="text-xl text-blue-600 font-medium hover:text-pink-200">
-                                            Warlok
+                                            {user.linkedinId}
                                         </a>
                                         {/* <p className="text-gray-500">{link.members} Members</p> */}
                                       </div>
