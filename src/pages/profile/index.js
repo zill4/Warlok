@@ -12,7 +12,7 @@ import LinkModal from '../../components/linkModal';
 // Images
 import profile_pic from "../../../public/images/warlok_color.png";
 import { DotsVerticalIcon } from '@heroicons/react/solid'
-import { faTwitch, faYoutube, faTwitter, faTiktok, faFacebook,  faReddit, faDiscord, faLinkedin} from '@fortawesome/free-brands-svg-icons';
+import { faTwitch, faYoutube, faTwitter, faTiktok, faFacebook, faReddit, faDiscord, faLinkedin } from '@fortawesome/free-brands-svg-icons';
 import { faClock, faGamepad, faSign, faInfoCircle, faGlobe, faTshirt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { user } from "firebase-functions/v1/auth";
@@ -96,22 +96,22 @@ const files = [
   // More files...
 ]
 
-export function Thumbnails() {
-
+export function Thumbnails(userVideos) {
+  console.log(userVideos)
   return (
     <div>
-      {files.length > 0 ?
+      {userVideos !== undefined ?
         <ul role="list" className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8 mb-6 mt-6">
-          {files.map((file) => (
+          {userVideos.map((file) => (
             <li key="images/TwitchGlitchWhite.png" className="relative">
               <div className="group block w-full aspect-w-16 aspect-h-9 rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-indigo-500 overflow-hidden">
                 <img src="images/TwitchGlitchWhite.jpg" alt="" className="object-cover pointer-events-none group-hover:opacity-75" />
                 <button type="button" className="absolute inset-0 focus:outline-none">
-                  <span className="sr-only">View details for {file.title}</span>
+                  <span className="sr-only">View details for {file.data().title}</span>
                 </button>
               </div>
-              <p className="mt-2 block text-sm font-medium text-gray-900 truncate pointer-events-none">{file.title}</p>
-              <p className="block text-sm font-medium text-gray-500 pointer-events-none">{file.size}</p>
+              <p className="mt-2 block text-sm font-medium text-gray-900 truncate pointer-events-none">{file.data().title}</p>
+              {/* <p className="block text-sm font-medium text-gray-500 pointer-events-none">{file.size}</p> */}
             </li>
           ))}
         </ul>
@@ -282,6 +282,7 @@ const dummyUser = {
 export default function Profile() {
   const { currentUser } = useAuth();
   const [user, setUser] = useState(dummyUser);
+  const [userVideos, setUserVideos] = useState();
   const [showModal, setModal] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -310,9 +311,10 @@ export default function Profile() {
 
       const getUser = async () => {
         const userCollection = await firestore.doc(`users/${currentUser.uid}`).get()
+        const userVideoCollection = await firestore.doc(`users/${currentUser.uid}`).collection('videos').get()
         setUser(await userCollection.data());
+        setUserVideos(await userVideoCollection);
         if (user === undefined) {
-          console.log("STUPIDDDDDDDDDD")
           handleLogout();
         }
       }
@@ -420,7 +422,31 @@ export default function Profile() {
                     </p>
                     <div className="border-t border-blueGray-200 mb-6 mt-6 rounded flex justify-around flex-wrap">
                       <div className="w-1/2">
-                        <Thumbnails />
+                        <div>
+                          {userVideos !== undefined ?
+  
+                            <ul role="list" className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8 mb-6 mt-6">
+                              {userVideos.docs.map((file) => (
+                                <li className="relative">
+                                  {console.log(file.data())}
+                                  <div className="group block w-full aspect-w-16 aspect-h-9 rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-indigo-500 overflow-hidden">
+                                    <img src={file.data().videoThumbnail} alt="video thumbnail" className="object-cover pointer-events-none group-hover:opacity-75" />
+                                  </div>
+                                  <a href={file.data().videoLink} className="mt-2 block text-sm font-medium text-gray-900">{file.data().videoTitle}</a>
+                                  {/* <p className="block text-sm font-medium text-gray-500 pointer-events-none">{file.size}</p> */}
+                                </li>
+                              ))}
+                              {userVideos.docs.length < 6 ?
+                              <li className="relative">
+                                <VideoModal /> 
+                              </li>
+                                : 
+                                <div></div>}
+                            </ul>
+                            :
+                            <VideoModal />
+                          }
+                        </div>
                       </div>
                       <div className="w-1/2">
                         <div>
@@ -452,7 +478,7 @@ export default function Profile() {
                                       </div>
                                     </div>
                                   </li>
-                                  : <div><LinkModal/></div>}
+                                  : <div><LinkModal /></div>}
                                 {/* YOUTUBE */}
                                 {user.youtube !== undefined ?
                                   <li className="flex shadow-sm rounded-md">
@@ -672,7 +698,7 @@ export default function Profile() {
                                     <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
                                       <div className="flex-1 px-4 py-2 text-sm truncate">
                                         <a href={user.linkedin} className="text-xl text-blue-600 font-medium hover:text-pink-200">
-                                            {user.linkedinId}
+                                          {user.linkedinId}
                                         </a>
                                         {/* <p className="text-gray-500">{link.members} Members</p> */}
                                       </div>

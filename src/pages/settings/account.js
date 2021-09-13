@@ -20,6 +20,7 @@ import {
   XIcon,
 } from '@heroicons/react/outline'
 import Router from 'next/router'
+import Link from 'next/link'
 import { ChevronLeftIcon } from '@heroicons/react/solid'
 
 const navigation = [
@@ -58,7 +59,7 @@ export default function Account() {
   const [ user, setUser ] = useState(""); 
   const bioRef = useRef();
   const userDocRef = firestore.doc(`users/${currentUser.uid}`);
-
+  
   const updateProfile = (event) => {
 
     event.preventDefault();
@@ -205,7 +206,9 @@ export default function Account() {
             type="button"
             className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-blue-gray-900 hover:bg-blue-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            Cancel
+            <Link href="/profile">
+              Cancel
+            </Link>
           </button>
           <button
             type="submit"
