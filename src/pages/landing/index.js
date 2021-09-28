@@ -503,10 +503,10 @@ const { currentUser } = useAuth()
               </div>
               </section>
               <div className="mt-12 sm:mt-16 lg:mt-0">
-                <div className="pl-4 -mr-48 sm:pl-6 md:-mr-16 lg:px-0 lg:m-0 lg:relative lg:h-full">
+                <div className="pl-4 -mr-48 sm:pl-6 md:-mr-16 m-0 py-11 relative h-1/3">
                   <img
-                    className="w-full rounded-xl shadow-xl ring-1 ring-black ring-opacity-5 lg:absolute lg:left-0 lg:h-full lg:w-auto lg:max-w-none"
-                    src="https://tailwindui.com/img/component-images/inbox-app-screenshot-1.jpg"
+                    className="w-1/2 rounded-xl shadow-xl ring-1 ring-black ring-opacity-5 lg:absolute lg:left-0 lg:h-full lg:w-auto lg:max-w-none"
+                    src="https://firebasestorage.googleapis.com/v0/b/ember-hearth.appspot.com/o/calendar.PNG?alt=media&token=d1d6b010-5f69-470d-b48a-722d88d6b99b"
                     alt="Inbox user interface"
                   />
                 </div>
@@ -546,9 +546,10 @@ const { currentUser } = useAuth()
                 <div className="pr-4 -ml-48 sm:pr-6 md:-ml-16 lg:px-0 lg:m-0 lg:relative lg:h-full">
                   <img
                     className="w-full rounded-xl shadow-xl ring-1 ring-black ring-opacity-5 lg:absolute lg:right-0 lg:h-full lg:w-auto lg:max-w-none"
-                    src="https://tailwindui.com/img/component-images/inbox-app-screenshot-2.jpg"
+                    src="https://firebasestorage.googleapis.com/v0/b/ember-hearth.appspot.com/o/centered.PNG?alt=media&token=da34c0b3-6701-4441-94ac-16a0dcd5cecc"
                     alt="Customer profile user interface"
                   />
+
                 </div>
               </div>
             </div>
@@ -692,12 +693,12 @@ const { currentUser } = useAuth()
           </div>
           <div className="mt-12 border-t border-gray-200 pt-8 md:flex md:items-center md:justify-between lg:mt-16">
             <div className="flex space-x-6 md:order-2">
-              {footerNavigation.social.map((item) => (
+              {/* {footerNavigation.social.map((item) => (
                 <a key={item.name} href={item.href} className="text-gray-400 hover:text-gray-500">
                   <span className="sr-only">{item.name}</span>
                   <item.icon className="h-6 w-6" aria-hidden="true" />
                 </a>
-              ))}
+              ))} */}
             </div>
             <p className="mt-8 text-base text-gray-400 md:mt-0 md:order-1">
               &copy; 2021 Warlok, llc. All rights reserved.

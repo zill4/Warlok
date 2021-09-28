@@ -6,6 +6,7 @@ import React from "react";
 import { faTwitch } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { DotsVerticalIcon } from '@heroicons/react/solid'
+import Link from 'next/link';
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
@@ -29,9 +30,11 @@ function classNames(...classes) {
 
               <div className="flex-1 flex items-center justify-between border-2 border-pink-200 bg-white rounded-r-md truncate">
                 <div className="flex-1 px-4 py-2 text-sm truncate">
-                  <a onClick={() => setShowModal(true)} href="#" className="text-gray-900 font-medium hover:text-pink-600">
+                  <Link href="/settings" >
+                  <a   className="text-gray-900 font-medium hover:text-pink-600">
                     Add link to website or socials
                   </a>
+                  </Link>
                 </div>
               </div>
           </div>

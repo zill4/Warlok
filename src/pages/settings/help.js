@@ -140,13 +140,13 @@ export default function Help() {
       <form className="mt-6 space-y-8" onSubmit={updateProfile}>
         <div className="pt-8 grid grid-cols-1 gap-y-6 xl:grid-cols-6 xl:gap-x-6">
           <div className="xl:col-span-6">
-            <h2 className="text-xl font-medium text-blue-gray-900">Have an issue or want to learn more?</h2>
+            {/* <h2 className="text-xl font-medium text-blue-gray-900">Have an issue or want to learn more?</h2>
             <p className="mt-1 text-l text-blue-gray-500">
               Leave us a message a way to contact you and we'll be in touch.
-            </p>
+            </p> */}
           </div>
 
-          <div className="xl:col-span-3">
+          {/* <div className="xl:col-span-3">
             <label htmlFor="email_address" className="block text-xl font-medium text-blue-gray-900">
               Email address
             </label>
@@ -185,21 +185,21 @@ export default function Help() {
                 defaultValue={''}
               />
             </div>
-          </div>
+          </div> */}
 
           <p className="text-xl text-blue-gray-500 xl:col-span-6">
-            Need answers now?! Call or email us directly at Justin@warlok.net - (949)873-3619
+          Call or email us directly at Justin@warlok.net - (949)873-3619
           </p>
         </div>
 
         <div className="pt-8 flex justify-end">
 
-          <button
+          {/* <button
             type="submit"
             className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-xl text-xl font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Send
-          </button>
+          </button> */}
         </div>
       </form>
     </div>

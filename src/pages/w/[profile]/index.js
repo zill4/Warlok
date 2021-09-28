@@ -1,66 +1,25 @@
 import { useEffect, useRef, useState } from "react";
-import { useAuth } from "../../authcontext";
-import { storage, firestore } from "../../firebase";
-import Router from 'next/router';
+import { useAuth } from "../../../authcontext";
+import { storage, firestore } from "../../../firebase";
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Error from 'next/error';
 
 // Components
-import VideoModal from '../../components/videoModal';
-import LinkModal from '../../components/linkModal';
+import VideoModal from '../../../components/videoModal';
+import LinkModal from '../../../components/linkModal';
 
 // Images
-import profile_pic from "../../../public/images/warlok_color.png";
+import profile_pic from "../../../../public/images/warlok_color.png";
 import { DotsVerticalIcon } from '@heroicons/react/solid'
-import { faTwitch, faYoutube, faTwitter, faTiktok, faFacebook,  faReddit, faDiscord, faLinkedin} from '@fortawesome/free-brands-svg-icons';
+import { faTwitch, faYoutube, faTwitter, faTiktok, faFacebook, faReddit, faDiscord, faLinkedin } from '@fortawesome/free-brands-svg-icons';
 import { faClock, faGamepad, faSign, faInfoCircle, faGlobe, faTshirt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { user } from "firebase-functions/v1/auth";
 import link from "next/link";
 
 const people = [
-  // {
-  //   name: '7am - 7pm ?',
-  //   title: 'World of Warcraft',
-  //   department: 'Lvling to 70',
-  //   role: '12hrs',
-  //   email: 'Monday',
-  //   image: profile_pic,
-  // },
-  // {
-  //   name: '7am - 7pm ?',
-  //   title: 'World of Warcraft',
-  //   department: 'Lvling to 70',
-  //   role: '12hrs',
-  //   email: 'Tuesday',
-  //   image: profile_pic,
-  // },
-  // {
-  //   name: '7am - 7pm ?',
-  //   title: 'World of Warcraft',
-  //   department: 'Lvling to 70',
-  //   role: '12hrs',
-  //   email: 'Wednesday',
-  //   image: profile_pic,
-  // },
-  // {
-  //   name: '7am - 7pm ?',
-  //   title: 'World of Warcraft',
-  //   department: 'Lvling to 70',
-  //   role: '12hrs',
-  //   email: 'Thursday',
-  //   image: profile_pic,
-  // },
-  // {
-  //   name: '7am - 7pm ?',
-  //   title: 'World of Warcraft',
-  //   department: 'Lvling to 70',
-  //   role: '12hrs',
-  //   email: 'Friday',
-  //   image: profile_pic,
-  // },
 
-  // More people...
 ]
 const projects = [
   { name: 'Graph API', initials: 'GA', href: '#', members: 16, bgColor: 'bg-pink-600' },
@@ -69,31 +28,7 @@ const projects = [
   { name: 'React Components', initials: 'RC', href: '#', members: 8, bgColor: 'bg-green-500' },
 ]
 const files = [
-  // {
-  //   title: 'IMG_4985.HEIC',
-  //   size: '3.9 MB',
-  //   source:
-  //     'https://images.unsplash.com/photo-1582053433976-25c00369fc93?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80',
-  // },
-  // {
-  //   title: 'IMG_4985.HEIC',
-  //   size: '3.9 MB',
-  //   source:
-  //     'https://images.unsplash.com/photo-1582053433976-25c00369fc93?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80',
-  // },
-  // {
-  //   title: 'IMG_4985.HEIC',
-  //   size: '3.9 MB',
-  //   source:
-  //     'https://images.unsplash.com/photo-1582053433976-25c00369fc93?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80',
-  // },
-  // {
-  //   title: 'IMG_4985.HEIC',
-  //   size: '3.9 MB',
-  //   source:
-  //     'https://images.unsplash.com/photo-1582053433976-25c00369fc93?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80',
-  // },
-  // More files...
+
 ]
 
 export function Thumbnails() {
@@ -116,15 +51,13 @@ export function Thumbnails() {
           ))}
         </ul>
         :
-        <VideoModal />
+        // <VideoModal />
+        <div></div>
       }
     </div>
   )
 }
-export function Links(user) {
 
-
-}
 export function Calendar() {
   var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -279,59 +212,62 @@ const dummyUser = {
   avatar: "https://images.unsplash.com/photo-1608237652484-b478fac3bf7c?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80"
 }
 
-export default function Profile() {
+export default function PublicProfile() {
+  const router = useRouter();
   const { currentUser } = useAuth();
-  const [user, setUser] = useState(dummyUser);
-  const [showModal, setModal] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  async function handleLogout() {
-    try {
-      setError("")
-      setLoading(true)
-      await logout()
-      //   history.push("/")
-    } catch (error) {
-      setError(error)
-    }
-    setLoading(false)
-    Router.push('/')
-  }
+  const [user, setUser] = useState("");
+  // const { profile } = useParams();
 
-  console.log(showModal);
+
   useEffect(() => {
+    const getUser = async () => {
 
-    const { pathname } = Router
+      if (router && router.query.profile) {
+        const userCollection = await firestore.collection('users').where('username', '==', router.query.profile).get();
+        console.log(router.query);
+        //console.log(userCollection);
+        if (userCollection.empty) {
 
-    if (pathname == '/profile' && !currentUser) {
-      Router.push('/')
-    }
-    else {
-
-      const getUser = async () => {
-        const userCollection = await firestore.doc(`users/${currentUser.uid}`).get()
-        setUser(await userCollection.data());
-        if (user === undefined) {
-          console.log("STUPIDDDDDDDDDD")
-          handleLogout();
+        } else {
+          if (!user) {
+            setUser(await userCollection.docs[0].data());
+          }
+          //console.log("user", user.username);
         }
       }
-      try {
-        setError("")
-        setLoading(true)
-        getUser()
-      } catch (error) {
-        setError(error)
-        handleLogout();
-      }
-      setLoading(false)
     }
-  }, [])
+    getUser()
+  }, [router])
 
   return (
     <div>
-      {!currentUser ? <br></br> :
-        <div >
+      {!user ? <main
+        className="min-h-screen bg-cover bg-top sm:bg-top"
+        style={{
+          backgroundImage:
+            'url("https://images.unsplash.com/photo-1606422699425-f7122890005f?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2555&q=80")',
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-4 py-16 text-center sm:px-6 sm:py-24 lg:px-8 lg:py-48">
+          <p className="text-sm font-semibold text-white text-opacity-50 uppercase tracking-wide">404 error</p>
+          <h1 className="mt-2 text-4xl font-extrabold text-white tracking-tight sm:text-5xl">
+            Sorry looks like this profile doesn't exist yet!
+          </h1>
+          <p className="mt-2 text-lg font-medium text-white text-opacity-50">
+            Consider asking them to sign up or creating the account yourself 
+          </p>
+          <div className="mt-6">
+            <Link href="/">
+            <a
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white text-opacity-75 bg-pink-400 bg-opacity-75 sm:bg-opacity-25 sm:hover:bg-opacity-50"
+            >
+              Go back home
+            </a>
+            </Link>
+          </div>
+        </div>
+      </main> :
+        <div>
           <section className="inset-y-2  h-500-px">
             <div
               className="top-auto bottom-0 left-0 right-0 w-full absolute pointer-events-none overflow-hidden h-70-px"
@@ -380,26 +316,26 @@ export default function Profile() {
                       </div>
                       <div className="justify-center lg:mr-4 p-3 items-stretch flex text-center">
                         {/* <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
-                          69
-                          <br />
-                          <span className="text-sm text-blueGray-400">
-                            🐸 Pepe's
+                            69
+                            <br />
+                            <span className="text-sm text-blueGray-400">
+                              🐸 Pepe's
+                            </span>
                           </span>
-                        </span>
-                        <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
-                          420
-                          <br />
-                          <span className="text-sm text-blueGray-400">
-                            Posts
+                          <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
+                            420
+                            <br />
+                            <span className="text-sm text-blueGray-400">
+                              Posts
+                            </span>
                           </span>
-                        </span>
-                        <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
-                          0
-                          <br />
-                          <span className="text-sm text-blueGray-400">
-                            Likes
-                          </span>
-                        </span> */}
+                          <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
+                            0
+                            <br />
+                            <span className="text-sm text-blueGray-400">
+                              Likes
+                            </span>
+                          </span> */}
                       </div>
                       <div className="justify-center lg:mr-4 p-3 items-stretch flex text-center">
                         <div
@@ -452,7 +388,7 @@ export default function Profile() {
                                       </div>
                                     </div>
                                   </li>
-                                  : <div><LinkModal/></div>}
+                                  : <div></div>}
                                 {/* YOUTUBE */}
                                 {user.youtube !== undefined ?
                                   <li className="flex shadow-sm rounded-md">
@@ -672,7 +608,7 @@ export default function Profile() {
                                     <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
                                       <div className="flex-1 px-4 py-2 text-sm truncate">
                                         <a href={user.linkedin} className="text-xl text-blue-600 font-medium hover:text-pink-200">
-                                            Warlok
+                                          Warlok
                                         </a>
                                         {/* <p className="text-gray-500">{link.members} Members</p> */}
                                       </div>

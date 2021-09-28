@@ -344,7 +344,7 @@ export default function Settings() {
                     </div>
                     </a>
                   </button>
-                  <button onClick={() => setRole("/settings#calendar")}>
+                  {/* <button onClick={() => setRole("/settings#calendar")}>
                     <a className={classNames(
                       role === "/settings#calendar" ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
                       'group flex items-center px-2 py-2 text-sm font-medium rounded-md'
@@ -355,7 +355,7 @@ export default function Settings() {
                         <p className="mt-1 text-blue-gray-500">Set stream and content release schedule.</p>
                     </div>
                     </a>
-                  </button>
+                  </button> */}
                   <button onClick={() => setRole("/settings#links")}>
                     <a className={classNames(
                       role === "/settings#links" ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',

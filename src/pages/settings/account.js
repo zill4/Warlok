@@ -57,6 +57,7 @@ export default function Account() {
   const { currentUser } = useAuth();
   const [ user, setUser ] = useState(""); 
   const bioRef = useRef();
+  const userDocRef = firestore.doc(`users/${currentUser.uid}`);
 
   const updateProfile = (event) => {
 
@@ -67,14 +68,14 @@ export default function Account() {
     if (!name) { return }
     if (fileUrl !== undefined) {
 
-    firestore.doc(`users/${currentUser.uid}`).set({
+    userDocRef.update({
       username: usernameRef.current.value.toLowerCase(),
       avatar: fileUrl,
       bio: bioRef.current.value
     })
 
     } else {
-      firestore.doc(`users/${currentUser.uid}`).set({
+      userDocRef.update({
         username: usernameRef.current.value.toLowerCase(),
         bio: bioRef.current.value
       })
@@ -190,7 +191,7 @@ export default function Account() {
                 name="bio"
                 ref={bioRef}
                 rows={4}
-                defaultValue={user.bio === undefined ? "Change your bio!" : user.bio}
+                defaultValue={user.bio === undefined ? "" : user.bio}
                 className="block w-full border border-blue-gray-300 rounded-md shadow-xl xl:text-xl focus:ring-blue-500 focus:border-blue-500"
               />
             </div>

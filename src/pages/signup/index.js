@@ -171,13 +171,13 @@ export default function SignUpPage() {
                       </label>
                     </div>
   
-                    <div className="text-sm">
+                    {/* <div className="text-sm">
                       <Link href="forgotPassword">
                       <a className="font-medium text-indigo-600 hover:text-indigo-500">
                           Forgot your password?
                       </a>
                       </Link>
-                    </div>
+                    </div> */}
                   </div>
   
                   <div>
