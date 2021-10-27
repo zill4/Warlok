@@ -24,7 +24,8 @@ export default function Login() {
         await login(emailRef.current.value, passwordRef.current.value)
         Router.push('/profile')
     } catch (error) {
-      setError(error)
+            console.log("ERROR PRINGINT")
+      setError("Password or Email is incorrect")
     }
 
     setLoading(false)

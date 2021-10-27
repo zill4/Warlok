@@ -35,7 +35,10 @@ export function useAuth() {
     return currentUser.updatePassword(password)
   }
   
+  function verifyEmail(){
+    return currentUser.sendEmailVerification()
 
+  }
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
@@ -52,7 +55,8 @@ export function useAuth() {
     logout,
     resetPassword,
     updateEmail,
-    updatePassword
+    updatePassword,
+    verifyEmail
   }
 
   return (

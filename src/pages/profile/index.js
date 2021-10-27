@@ -314,6 +314,7 @@ export default function Profile() {
         const userVideoCollection = await firestore.doc(`users/${currentUser.uid}`).collection('videos').get()
         setUser(await userCollection.data());
         setUserVideos(await userVideoCollection);
+        console.log(currentUser);
         if (user === undefined) {
           handleLogout();
         }
@@ -333,6 +334,9 @@ export default function Profile() {
   return (
     <div>
       {!currentUser ? <br></br> :
+        <div>
+          { !currentUser.emailVerified ? <div><h1>Please verify your email at {currentUser.email}</h1> </div> : 
+        
         <div >
           <section className="inset-y-2  h-500-px">
             <div
@@ -728,6 +732,8 @@ export default function Profile() {
               </div>
             </div>
           </section>
+        </div>
+        }
         </div>
       }
     </div>
