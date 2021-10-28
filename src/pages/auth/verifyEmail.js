@@ -3,7 +3,8 @@ import React, {useEffect, useState} from "react";
 import Router from 'next/router'
 import { auth } from "../../firebase";
 import { checkActionCode, applyActionCode, sendPasswordResetEmail } from "firebase/auth";
-
+// components
+import OnboardUser from '../../components/onboardUser'
 
 export default function VerifyEmail(props) {
     const [error, setError] = useState("")
@@ -25,10 +26,10 @@ export default function VerifyEmail(props) {
 
 
     return (
-        <div>
-            {valid ? 
+        <div >
+            {!valid ? 
                 <div>
-                    <h1> Account verified! </h1>
+                    <OnboardUser />
                 </div>
             :
                <h1> Link is invalid </h1> 

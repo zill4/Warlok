@@ -286,6 +286,8 @@ export default function Profile() {
   const [showModal, setModal] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [buttonLock, setButtonLock] = useState(false);
+
   async function handleLogout() {
     try {
       setError("")
@@ -299,7 +301,7 @@ export default function Profile() {
     Router.push('/')
   }
 
-  console.log(showModal);
+  //console.log(showModal);
   useEffect(() => {
 
     const { pathname } = Router
@@ -335,57 +337,80 @@ export default function Profile() {
     <div>
       {!currentUser ? <br></br> :
         <div>
-          { !currentUser.emailVerified ? <div><h1>Please verify your email at {currentUser.email}</h1> </div> : 
-        
-        <div >
-          <section className="inset-y-2  h-500-px">
-            <div
-              className="top-auto bottom-0 left-0 right-0 w-full absolute pointer-events-none overflow-hidden h-70-px"
-              style={{ transform: "translateZ(0)" }}
-            >
-              <svg
-                className="absolute bottom-0 overflow-hidden"
-                xmlns="http://www.w3.org/2000/svg"
-                preserveAspectRatio="none"
-                version="1.1"
-                viewBox="0 0 2560 100"
-                x="0"
-                y="0"
-              >
-                <polygon
-                  className="text-blueGray-200 fill-current"
-                  points="2560 0 2560 100 0 100"
-                ></polygon>
-              </svg>
-            </div>
-          </section>
-          <section className="relative py-16 bg-blueGray-200">
-            <div className="container mx-auto px-4">
-              <div className="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-xl rounded-lg -mt-10">
-                <div className="px-6 ">
-                  <div className="mb-6 mt-6 rounded flex flex-wrap justify-center bk bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
-                    <div className="w-full lg:w-3/12 px-4 lg:order-2 flex justify-center mt-6 mb-5">
-                      <div className="relative">
-                        <img
-                          alt="avatar"
-                          src={user === undefined ? '' : user.avatar}
-                          className="shadow-xl rounded-full h-auto align-middle border-none "
-                        />
-                      </div>
-                    </div>
-                    <div className="w-full lg:w-4/12 px-4 lg:order-3 lg:text-right lg:self-center">
-                    </div>
-                    <div className="w-full lg:w-4/12 px-4 lg:order-1">
-                      <div className="flex justify-center py-4 lg:pt-4 pt-8">
+          {!currentUser.emailVerified ?
+            <div className="bg-white shadow sm:rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">Please verify your email at {currentUser.email}</h3>
+                <div className="mt-2 max-w-xl text-sm text-gray-500">
+                  <p>You can resend the verification email here.</p>
+                </div>
+                {!buttonLock ?
+                  <div className="mt-5">
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center px-4 py-2 border border-transparent font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:text-sm"
+                      onClick={() => {
+                        currentUser.sendEmailVerification()
+                        setButtonLock(true)
+                      }}>
+                      Resend Email
+                    </button>
+                  </div>
+                  : <div className="mt-2 max-w-xl text-sm text-purple-500">
+                    <h1> Email Sent! </h1>
+                  </div>}
+                  </div>
+              </div> :
 
-                        <div className="mr-4 p-3 text-center" >
-                          <h5 className="text-6xl font-semibold leading-normal text-blueGray-700 mb-2 " >
-                            {user === undefined ? '' : user.username}
-                          </h5>
-                        </div>
-                      </div>
-                      <div className="justify-center lg:mr-4 p-3 items-stretch flex text-center">
-                        {/* <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
+              <div >
+                <section className="inset-y-2  h-500-px">
+                  <div
+                    className="top-auto bottom-0 left-0 right-0 w-full absolute pointer-events-none overflow-hidden h-70-px"
+                    style={{ transform: "translateZ(0)" }}
+                  >
+                    <svg
+                      className="absolute bottom-0 overflow-hidden"
+                      xmlns="http://www.w3.org/2000/svg"
+                      preserveAspectRatio="none"
+                      version="1.1"
+                      viewBox="0 0 2560 100"
+                      x="0"
+                      y="0"
+                    >
+                      <polygon
+                        className="text-blueGray-200 fill-current"
+                        points="2560 0 2560 100 0 100"
+                      ></polygon>
+                    </svg>
+                  </div>
+                </section>
+                <section className="relative py-16 bg-blueGray-200">
+                  <div className="container mx-auto px-4">
+                    <div className="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-xl rounded-lg -mt-10">
+                      <div className="px-6 ">
+                        <div className="mb-6 mt-6 rounded flex flex-wrap justify-center bk bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
+                          <div className="w-full lg:w-3/12 px-4 lg:order-2 flex justify-center mt-6 mb-5">
+                            <div className="relative">
+                              <img
+                                alt="avatar"
+                                src={user === undefined ? '' : user.avatar}
+                                className="shadow-xl rounded-full h-auto align-middle border-none "
+                              />
+                            </div>
+                          </div>
+                          <div className="w-full lg:w-4/12 px-4 lg:order-3 lg:text-right lg:self-center">
+                          </div>
+                          <div className="w-full lg:w-4/12 px-4 lg:order-1">
+                            <div className="flex justify-center py-4 lg:pt-4 pt-8">
+
+                              <div className="mr-4 p-3 text-center" >
+                                <h5 className="text-6xl font-semibold leading-normal text-blueGray-700 mb-2 " >
+                                  {user === undefined ? '' : user.username}
+                                </h5>
+                              </div>
+                            </div>
+                            <div className="justify-center lg:mr-4 p-3 items-stretch flex text-center">
+                              {/* <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600 mr-2 ml-2">
                           69
                           <br />
                           <span className="text-sm text-blueGray-400">
@@ -406,336 +431,336 @@ export default function Profile() {
                             Likes
                           </span>
                         </span> */}
-                      </div>
-                      <div className="justify-center lg:mr-4 p-3 items-stretch flex text-center">
-                        <div
-                          className="bg-purple-500 active:bg-lightBlue-600 uppercase text-white font-bold hover:shadow-md shadow text-xs px-4 py-2 rounded outline-none focus:outline-none sm:mr-2 mb-1 ease-linear transition-all duration-150"
-                          type="button"
-                        >
-                          <Link href="/settings">
-                            <a> Edit Profile</a>
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-center mt-2">
-
-                    <p className="text-black text-lg font-medium">
-                      {user.bio === undefined ? "set up bio in settings!" : user.bio}
-                    </p>
-                    <div className="border-t border-blueGray-200 mb-6 mt-6 rounded flex justify-around flex-wrap">
-                      <div className="w-1/2">
-                        <div>
-                          {userVideos !== undefined ?
-  
-                            <ul role="list" className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8 mb-6 mt-6">
-                              {userVideos.docs.map((file) => (
-                                <li className="relative">
-                                  {console.log(file.data())}
-                                  <div className="group block w-full aspect-w-16 aspect-h-9 rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-indigo-500 overflow-hidden">
-                                    <img src={file.data().videoThumbnail} alt="video thumbnail" className="object-cover pointer-events-none group-hover:opacity-75" />
-                                  </div>
-                                  <a href={file.data().videoLink} className="mt-2 block text-sm font-medium text-gray-900">{file.data().videoTitle}</a>
-                                  {/* <p className="block text-sm font-medium text-gray-500 pointer-events-none">{file.size}</p> */}
-                                </li>
-                              ))}
-                              {userVideos.docs.length < 6 ?
-                              <li className="relative">
-                                <VideoModal /> 
-                              </li>
-                                : 
-                                <div></div>}
-                            </ul>
-                            :
-                            <VideoModal />
-                          }
-                        </div>
-                      </div>
-                      <div className="w-1/2">
-                        <div>
-                          {user !== undefined ?
-                            <div>
-                              <h2 className="text-gray-500 text-xs font-medium uppercase tracking-wide">Pinned Links</h2>
-                              <ul role="list" className="mt-3 grid grid-cols-1 gap-5 sm:gap-6 sm:grid-cols-1 lg:grid-cols-1">
-                                {/* TWITCH */}
-                                {user.twitch !== undefined ?
-                                  <li className="flex shadow-sm rounded-md">
-                                    <div
-                                      className='flex-shrink-0 flex items-center justify-center w-16 text-white bg-purple-600 text-xl font-medium rounded-l-md'>
-                                      <FontAwesomeIcon icon={faTwitch} />
-                                    </div>
-
-                                    <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
-                                      <div className="flex-1 px-4 py-2 text-sm truncate">
-                                        <a href={user.twitch} className="text-xl text-blue-600 font-medium hover:text-pink-200">
-                                          {user.twitchId}
-                                        </a>
-                                        {/* <p className="text-gray-500">{link.members} Members</p> */}
-                                      </div>
-                                      <div className="flex-shrink-0 pr-2">
-                                        <button
-                                          type="button"
-                                          className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                        >
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </li>
-                                  : <div><LinkModal /></div>}
-                                {/* YOUTUBE */}
-                                {user.youtube !== undefined ?
-                                  <li className="flex shadow-sm rounded-md">
-                                    <div
-                                      className='flex-shrink-0 flex items-center justify-center w-16 text-pink bg-red-600 text-xl font-medium rounded-l-md'>
-                                      <FontAwesomeIcon icon={faYoutube} />
-                                    </div>
-
-                                    <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
-                                      <div className="flex-1 px-4 py-2 text-sm truncate">
-                                        <a href={user.youtube} className="text-xl text-blue-600 font-medium hover:text-pink-200">
-                                          {user.youtubeId}
-                                        </a>
-                                        {/* <p className="text-gray-500">{link.members} Members</p> */}
-                                      </div>
-                                      <div className="flex-shrink-0 pr-2">
-                                        <button
-                                          type="button"
-                                          className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                        >
-
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </li>
-                                  : <div></div>}
-                                {/* tiktok */}
-                                {user.tiktok !== undefined ?
-                                  <li className="flex shadow-sm rounded-md">
-                                    <div
-                                      className='flex-shrink-0 flex items-center justify-center w-16 text-white bg-gradient-to-r from-blue-400 via-black to-red-500 text-xl font-medium rounded-l-md'>
-                                      <FontAwesomeIcon icon={faTiktok} />
-                                    </div>
-
-                                    <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
-                                      <div className="flex-1 px-4 py-2 text-sm truncate">
-                                        <a href={user.tiktok} className="text-xl text-blue-600 font-medium hover:text-pink-200">
-                                          {user.tiktokId}
-                                        </a>
-                                        {/* <p className="text-gray-500">{link.members} Members</p> */}
-                                      </div>
-                                      <div className="flex-shrink-0 pr-2">
-                                        <button
-                                          type="button"
-                                          className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                        >
-
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </li>
-                                  : <div></div>}
-                                {/* website */}
-                                {user.website !== undefined ?
-                                  <li className="flex shadow-sm rounded-md">
-                                    <div
-                                      className='flex-shrink-0 flex items-center justify-center w-16 text-white bg-indigo-400 text-xl font-medium rounded-l-md'>
-                                      <FontAwesomeIcon icon={faGlobe} />
-                                    </div>
-
-                                    <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
-                                      <div className="flex-1 px-4 py-2 text-sm truncate">
-                                        <a href={user.webste} className="text-xl text-blue-600 font-medium hover:text-pink-200">
-                                          {user.websiteId}
-                                        </a>
-                                        {/* <p className="text-gray-500">{link.members} Members</p> */}
-                                      </div>
-                                      <div className="flex-shrink-0 pr-2">
-                                        <button
-                                          type="button"
-                                          className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                        >
-
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </li>
-                                  : <div></div>}
-                                {/* twitter */}
-                                {user.twitter !== undefined ?
-                                  <li className="flex shadow-sm rounded-md">
-                                    <div
-                                      className='flex-shrink-0 flex items-center justify-center w-16 text-pink bg-blue-400 text-xl font-medium rounded-l-md'>
-                                      <FontAwesomeIcon icon={faTwitter} />
-                                    </div>
-
-                                    <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
-                                      <div className="flex-1 px-4 py-2 text-sm truncate">
-                                        <a href={user.twitter} className="text-xl text-blue-600 font-medium hover:text-pink-200">
-                                          {user.twitterId}
-                                        </a>
-                                        {/* <p className="text-gray-500">{link.members} Members</p> */}
-                                      </div>
-                                      <div className="flex-shrink-0 pr-2">
-                                        <button
-                                          type="button"
-                                          className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                        >
-
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </li>
-                                  : <div></div>}
-                                {/* merch */}
-                                {user.merch !== undefined ?
-                                  <li className="flex shadow-sm rounded-md">
-                                    <div
-                                      className='flex-shrink-0 flex items-center justify-center w-16 text-pink bg-pink-600 text-xl font-medium rounded-l-md'>
-                                      <FontAwesomeIcon icon={faTshirt} />
-                                    </div>
-
-                                    <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
-                                      <div className="flex-1 px-4 py-2 text-sm truncate">
-                                        <a href={user.merch} className="text-xl text-blue-600 font-medium hover:text-pink-200">
-                                          Merch
-                                        </a>
-                                        {/* <p className="text-gray-500">{link.members} Members</p> */}
-                                      </div>
-                                      <div className="flex-shrink-0 pr-2">
-                                        <button
-                                          type="button"
-                                          className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                        >
-
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </li>
-                                  : <div></div>}
-                                {/* facebook */}
-                                {user.facebook !== undefined ?
-                                  <li className="flex shadow-sm rounded-md">
-                                    <div
-                                      className='flex-shrink-0 flex items-center justify-center w-16 text-pink bg-blue-300 text-xl font-medium rounded-l-md'>
-                                      <FontAwesomeIcon icon={faFacebook} />
-                                    </div>
-
-                                    <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
-                                      <div className="flex-1 px-4 py-2 text-sm truncate">
-                                        <a href={user.facebook} className="text-xl text-blue-600 font-medium hover:text-pink-200">
-                                          {user.facebookId}
-                                        </a>
-                                        {/* <p className="text-gray-500">{link.members} Members</p> */}
-                                      </div>
-                                      <div className="flex-shrink-0 pr-2">
-                                        <button
-                                          type="button"
-                                          className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                        >
-
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </li>
-                                  : <div></div>}
-                                {/* reddit */}
-                                {user.reddit !== undefined ?
-                                  <li className="flex shadow-sm rounded-md">
-                                    <div
-                                      className='flex-shrink-0 flex items-center justify-center w-16 text-pink bg-orange-400 text-xl font-medium rounded-l-md'>
-                                      <FontAwesomeIcon icon={faReddit} />
-                                    </div>
-
-                                    <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
-                                      <div className="flex-1 px-4 py-2 text-sm truncate">
-                                        <a href={user.reddit} className="text-xl text-blue-600 font-medium hover:text-pink-200">
-                                          {user.redditId}
-                                        </a>
-                                        {/* <p className="text-gray-500">{link.members} Members</p> */}
-                                      </div>
-                                      <div className="flex-shrink-0 pr-2">
-                                        <button
-                                          type="button"
-                                          className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                        >
-
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </li>
-                                  : <div></div>}
-                                {/* discord */}
-                                {user.discord !== undefined ?
-                                  <li className="flex shadow-sm rounded-md">
-                                    <div
-                                      className='flex-shrink-0 flex items-center justify-center w-16 text-pink bg-purple-600 text-xl font-medium rounded-l-md'>
-                                      <FontAwesomeIcon icon={faDiscord} />
-                                    </div>
-
-                                    <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
-                                      <div className="flex-1 px-4 py-2 text-sm truncate">
-                                        <a href={user.discord} className="text-xl text-blue-600 font-medium hover:text-pink-200">
-                                          Discord Channel Invite
-                                        </a>
-                                        {/* <p className="text-gray-500">{link.members} Members</p> */}
-                                      </div>
-                                      <div className="flex-shrink-0 pr-2">
-                                        <button
-                                          type="button"
-                                          className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                        >
-
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </li>
-                                  : <div></div>}
-                                {/* LinkedIn */}
-                                {user.linkedin !== undefined ?
-                                  <li className="flex shadow-sm rounded-md">
-                                    <div
-                                      className='flex-shrink-0 flex items-center justify-center w-16 text-pink bg-indigo-400 text-xl font-medium rounded-l-md'>
-                                      <FontAwesomeIcon icon={faLinkedin} />
-                                    </div>
-
-                                    <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
-                                      <div className="flex-1 px-4 py-2 text-sm truncate">
-                                        <a href={user.linkedin} className="text-xl text-blue-600 font-medium hover:text-pink-200">
-                                          {user.linkedinId}
-                                        </a>
-                                        {/* <p className="text-gray-500">{link.members} Members</p> */}
-                                      </div>
-                                      <div className="flex-shrink-0 pr-2">
-                                        <button
-                                          type="button"
-                                          className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                        >
-
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </li>
-                                  : <div></div>}
-
-                              </ul>
                             </div>
-                            :
-                            <LinkModal />
-                          }
+                            <div className="justify-center lg:mr-4 p-3 items-stretch flex text-center">
+                              <div
+                                className="bg-purple-500 active:bg-lightBlue-600 uppercase text-white font-bold hover:shadow-md shadow text-xs px-4 py-2 rounded outline-none focus:outline-none sm:mr-2 mb-1 ease-linear transition-all duration-150"
+                                type="button"
+                              >
+                                <Link href="/settings">
+                                  <a> Edit Profile</a>
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-center mt-2">
+
+                          <p className="text-black text-lg font-medium">
+                            {user.bio === undefined ? "set up bio in settings!" : user.bio}
+                          </p>
+                          <div className="border-t border-blueGray-200 mb-6 mt-6 rounded flex justify-around flex-wrap">
+                            <div className="w-1/2">
+                              <div>
+                                {userVideos !== undefined ?
+
+                                  <ul role="list" className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8 mb-6 mt-6">
+                                    {userVideos.docs.map((file) => (
+                                      <li className="relative">
+                                        {console.log(file.data())}
+                                        <div className="group block w-full aspect-w-16 aspect-h-9 rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-indigo-500 overflow-hidden">
+                                          <img src={file.data().videoThumbnail} alt="video thumbnail" className="object-cover pointer-events-none group-hover:opacity-75" />
+                                        </div>
+                                        <a href={file.data().videoLink} className="mt-2 block text-sm font-medium text-gray-900">{file.data().videoTitle}</a>
+                                        {/* <p className="block text-sm font-medium text-gray-500 pointer-events-none">{file.size}</p> */}
+                                      </li>
+                                    ))}
+                                    {userVideos.docs.length < 6 ?
+                                      <li className="relative">
+                                        <VideoModal />
+                                      </li>
+                                      :
+                                      <div></div>}
+                                  </ul>
+                                  :
+                                  <VideoModal />
+                                }
+                              </div>
+                            </div>
+                            <div className="w-1/2">
+                              <div>
+                                {user !== undefined ?
+                                  <div>
+                                    <h2 className="text-gray-500 text-xs font-medium uppercase tracking-wide">Pinned Links</h2>
+                                    <ul role="list" className="mt-3 grid grid-cols-1 gap-5 sm:gap-6 sm:grid-cols-1 lg:grid-cols-1">
+                                      {/* TWITCH */}
+                                      {user.twitch !== undefined ?
+                                        <li className="flex shadow-sm rounded-md">
+                                          <div
+                                            className='flex-shrink-0 flex items-center justify-center w-16 text-white bg-purple-600 text-xl font-medium rounded-l-md'>
+                                            <FontAwesomeIcon icon={faTwitch} />
+                                          </div>
+
+                                          <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
+                                            <div className="flex-1 px-4 py-2 text-sm truncate">
+                                              <a href={user.twitch} className="text-xl text-blue-600 font-medium hover:text-pink-200">
+                                                {user.twitchId}
+                                              </a>
+                                              {/* <p className="text-gray-500">{link.members} Members</p> */}
+                                            </div>
+                                            <div className="flex-shrink-0 pr-2">
+                                              <button
+                                                type="button"
+                                                className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                              >
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </li>
+                                        : <div><LinkModal /></div>}
+                                      {/* YOUTUBE */}
+                                      {user.youtube !== undefined ?
+                                        <li className="flex shadow-sm rounded-md">
+                                          <div
+                                            className='flex-shrink-0 flex items-center justify-center w-16 text-pink bg-red-600 text-xl font-medium rounded-l-md'>
+                                            <FontAwesomeIcon icon={faYoutube} />
+                                          </div>
+
+                                          <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
+                                            <div className="flex-1 px-4 py-2 text-sm truncate">
+                                              <a href={user.youtube} className="text-xl text-blue-600 font-medium hover:text-pink-200">
+                                                {user.youtubeId}
+                                              </a>
+                                              {/* <p className="text-gray-500">{link.members} Members</p> */}
+                                            </div>
+                                            <div className="flex-shrink-0 pr-2">
+                                              <button
+                                                type="button"
+                                                className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                              >
+
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </li>
+                                        : <div></div>}
+                                      {/* tiktok */}
+                                      {user.tiktok !== undefined ?
+                                        <li className="flex shadow-sm rounded-md">
+                                          <div
+                                            className='flex-shrink-0 flex items-center justify-center w-16 text-white bg-gradient-to-r from-blue-400 via-black to-red-500 text-xl font-medium rounded-l-md'>
+                                            <FontAwesomeIcon icon={faTiktok} />
+                                          </div>
+
+                                          <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
+                                            <div className="flex-1 px-4 py-2 text-sm truncate">
+                                              <a href={user.tiktok} className="text-xl text-blue-600 font-medium hover:text-pink-200">
+                                                {user.tiktokId}
+                                              </a>
+                                              {/* <p className="text-gray-500">{link.members} Members</p> */}
+                                            </div>
+                                            <div className="flex-shrink-0 pr-2">
+                                              <button
+                                                type="button"
+                                                className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                              >
+
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </li>
+                                        : <div></div>}
+                                      {/* website */}
+                                      {user.website !== undefined ?
+                                        <li className="flex shadow-sm rounded-md">
+                                          <div
+                                            className='flex-shrink-0 flex items-center justify-center w-16 text-white bg-indigo-400 text-xl font-medium rounded-l-md'>
+                                            <FontAwesomeIcon icon={faGlobe} />
+                                          </div>
+
+                                          <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
+                                            <div className="flex-1 px-4 py-2 text-sm truncate">
+                                              <a href={user.webste} className="text-xl text-blue-600 font-medium hover:text-pink-200">
+                                                {user.websiteId}
+                                              </a>
+                                              {/* <p className="text-gray-500">{link.members} Members</p> */}
+                                            </div>
+                                            <div className="flex-shrink-0 pr-2">
+                                              <button
+                                                type="button"
+                                                className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                              >
+
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </li>
+                                        : <div></div>}
+                                      {/* twitter */}
+                                      {user.twitter !== undefined ?
+                                        <li className="flex shadow-sm rounded-md">
+                                          <div
+                                            className='flex-shrink-0 flex items-center justify-center w-16 text-pink bg-blue-400 text-xl font-medium rounded-l-md'>
+                                            <FontAwesomeIcon icon={faTwitter} />
+                                          </div>
+
+                                          <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
+                                            <div className="flex-1 px-4 py-2 text-sm truncate">
+                                              <a href={user.twitter} className="text-xl text-blue-600 font-medium hover:text-pink-200">
+                                                {user.twitterId}
+                                              </a>
+                                              {/* <p className="text-gray-500">{link.members} Members</p> */}
+                                            </div>
+                                            <div className="flex-shrink-0 pr-2">
+                                              <button
+                                                type="button"
+                                                className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                              >
+
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </li>
+                                        : <div></div>}
+                                      {/* merch */}
+                                      {user.merch !== undefined ?
+                                        <li className="flex shadow-sm rounded-md">
+                                          <div
+                                            className='flex-shrink-0 flex items-center justify-center w-16 text-pink bg-pink-600 text-xl font-medium rounded-l-md'>
+                                            <FontAwesomeIcon icon={faTshirt} />
+                                          </div>
+
+                                          <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
+                                            <div className="flex-1 px-4 py-2 text-sm truncate">
+                                              <a href={user.merch} className="text-xl text-blue-600 font-medium hover:text-pink-200">
+                                                Merch
+                                              </a>
+                                              {/* <p className="text-gray-500">{link.members} Members</p> */}
+                                            </div>
+                                            <div className="flex-shrink-0 pr-2">
+                                              <button
+                                                type="button"
+                                                className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                              >
+
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </li>
+                                        : <div></div>}
+                                      {/* facebook */}
+                                      {user.facebook !== undefined ?
+                                        <li className="flex shadow-sm rounded-md">
+                                          <div
+                                            className='flex-shrink-0 flex items-center justify-center w-16 text-pink bg-blue-300 text-xl font-medium rounded-l-md'>
+                                            <FontAwesomeIcon icon={faFacebook} />
+                                          </div>
+
+                                          <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
+                                            <div className="flex-1 px-4 py-2 text-sm truncate">
+                                              <a href={user.facebook} className="text-xl text-blue-600 font-medium hover:text-pink-200">
+                                                {user.facebookId}
+                                              </a>
+                                              {/* <p className="text-gray-500">{link.members} Members</p> */}
+                                            </div>
+                                            <div className="flex-shrink-0 pr-2">
+                                              <button
+                                                type="button"
+                                                className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                              >
+
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </li>
+                                        : <div></div>}
+                                      {/* reddit */}
+                                      {user.reddit !== undefined ?
+                                        <li className="flex shadow-sm rounded-md">
+                                          <div
+                                            className='flex-shrink-0 flex items-center justify-center w-16 text-pink bg-orange-400 text-xl font-medium rounded-l-md'>
+                                            <FontAwesomeIcon icon={faReddit} />
+                                          </div>
+
+                                          <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
+                                            <div className="flex-1 px-4 py-2 text-sm truncate">
+                                              <a href={user.reddit} className="text-xl text-blue-600 font-medium hover:text-pink-200">
+                                                {user.redditId}
+                                              </a>
+                                              {/* <p className="text-gray-500">{link.members} Members</p> */}
+                                            </div>
+                                            <div className="flex-shrink-0 pr-2">
+                                              <button
+                                                type="button"
+                                                className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                              >
+
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </li>
+                                        : <div></div>}
+                                      {/* discord */}
+                                      {user.discord !== undefined ?
+                                        <li className="flex shadow-sm rounded-md">
+                                          <div
+                                            className='flex-shrink-0 flex items-center justify-center w-16 text-pink bg-purple-600 text-xl font-medium rounded-l-md'>
+                                            <FontAwesomeIcon icon={faDiscord} />
+                                          </div>
+
+                                          <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
+                                            <div className="flex-1 px-4 py-2 text-sm truncate">
+                                              <a href={user.discord} className="text-xl text-blue-600 font-medium hover:text-pink-200">
+                                                Discord Channel Invite
+                                              </a>
+                                              {/* <p className="text-gray-500">{link.members} Members</p> */}
+                                            </div>
+                                            <div className="flex-shrink-0 pr-2">
+                                              <button
+                                                type="button"
+                                                className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                              >
+
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </li>
+                                        : <div></div>}
+                                      {/* LinkedIn */}
+                                      {user.linkedin !== undefined ?
+                                        <li className="flex shadow-sm rounded-md">
+                                          <div
+                                            className='flex-shrink-0 flex items-center justify-center w-16 text-pink bg-indigo-400 text-xl font-medium rounded-l-md'>
+                                            <FontAwesomeIcon icon={faLinkedin} />
+                                          </div>
+
+                                          <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
+                                            <div className="flex-1 px-4 py-2 text-sm truncate">
+                                              <a href={user.linkedin} className="text-xl text-blue-600 font-medium hover:text-pink-200">
+                                                {user.linkedinId}
+                                              </a>
+                                              {/* <p className="text-gray-500">{link.members} Members</p> */}
+                                            </div>
+                                            <div className="flex-shrink-0 pr-2">
+                                              <button
+                                                type="button"
+                                                className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                              >
+
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </li>
+                                        : <div></div>}
+
+                                    </ul>
+                                  </div>
+                                  :
+                                  <LinkModal />
+                                }
+                              </div>
+                            </div>
+                          </div>
+                          {/* <Calendar /> */}
                         </div>
                       </div>
                     </div>
-                    {/* <Calendar /> */}
                   </div>
-                </div>
+                </section>
               </div>
+          }
             </div>
-          </section>
-        </div>
-        }
-        </div>
       }
-    </div>
+        </div>
   );
 }

@@ -25,10 +25,7 @@ export default function SignUpPage() {
     if (passwordRef.current.value !== passwordConfirmRef.current.value) {
       return setError("Passwords do not match")
     }
-    // Check for alphanumeric only
-    if (!usernameRef.current.value.match(/^[a-z0-9]+$/i)) {
-      return setError("User name must contain only alphanumeric characters")
-    }
+
     // Check if username does not exist
     try {
       setError("")
