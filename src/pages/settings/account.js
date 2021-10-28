@@ -92,11 +92,7 @@ export default function Account() {
     setFileUrl(await fileRef.getDownloadURL());
   }
 
-
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
-
-
 
   useEffect(() => {
     const {pathname} = Router

@@ -21,13 +21,14 @@ export default function VerifyEmail(props) {
           }).catch((error) => {
             // Invalid code.
             setError("incorrect code", error)
+            Router.push('/profile')
           });
       }, [])
 
 
     return (
         <div >
-            {!valid ? 
+            {valid ? 
                 <div>
                     <OnboardUser />
                 </div>
