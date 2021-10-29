@@ -24,7 +24,6 @@ export default function Login() {
         await login(emailRef.current.value, passwordRef.current.value)
         Router.push('/profile')
     } catch (error) {
-            console.log("ERROR PRINGINT")
       setError("Password or Email is incorrect")
     }
 
@@ -36,10 +35,10 @@ export default function Login() {
         <div className="flex-1 flex flex-col justify-center py-12 px-7 sm:px-6 lg:flex-none lg:px-80 xl:px-96">
           <div className="mx-auto w-full max-w-9/12 lg:w-96">
          {/* Error if login fails */}
-          {error && <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                    <strong class="font-bold"></strong>
-                    <span class="block sm:inline">{error}</span>
-                    <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+          {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <strong className="font-bold"></strong>
+                    <span className="block sm:inline">{error}</span>
+                    <span className="absolute top-0 bottom-0 right-0 px-4 py-3">
                     </span>
           </div>}
 

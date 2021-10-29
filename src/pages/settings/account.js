@@ -59,7 +59,8 @@ export default function Account() {
   const [ user, setUser ] = useState(""); 
   const bioRef = useRef();
   const userDocRef = firestore.doc(`users/${currentUser.uid}`);
-  
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
   const updateProfile = (event) => {
 
     event.preventDefault();
@@ -92,7 +93,6 @@ export default function Account() {
     setFileUrl(await fileRef.getDownloadURL());
   }
 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     const {pathname} = Router

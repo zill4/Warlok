@@ -313,13 +313,11 @@ export default function Profile() {
       Router.push('/')
     }
     else {
-
       const getUser = async () => {
         const userCollection = await firestore.doc(`users/${currentUser.uid}`).get()
         const userVideoCollection = await firestore.doc(`users/${currentUser.uid}`).collection('videos').get()
         setUser(await userCollection.data());
         setUserVideos(await userVideoCollection);
-        console.log(currentUser);
         if (user === undefined) {
           handleLogout();
         }
@@ -569,32 +567,33 @@ export default function Profile() {
                                         </div>
                                       </li>
                                       : <div></div>}
-                                    {/* website */}
-                                    {user.website !== undefined ?
-                                      <li className="flex shadow-sm rounded-md">
-                                        <div
-                                          className='flex-shrink-0 flex items-center justify-center w-16 text-white bg-indigo-400 text-xl font-medium rounded-l-md'>
-                                          <FontAwesomeIcon icon={faGlobe} />
-                                        </div>
+                                   {/* Website 2 */}
+                                {user.website !== undefined ?
+                                  <li className="flex shadow-sm rounded-md">
+                                    <div
+                                      className='flex-shrink-0 flex items-center justify-center w-16 text-white bg-indigo-400 text-xl font-medium rounded-l-md'>
+                                      <FontAwesomeIcon icon={faGlobe} />
+                                    </div>
 
-                                        <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
-                                          <div className="flex-1 px-4 py-2 text-sm truncate">
-                                            <a href={user.webste} className="text-xl text-blue-600 font-medium hover:text-pink-200">
-                                              {user.websiteId}
-                                            </a>
-                                            {/* <p className="text-gray-500">{link.members} Members</p> */}
-                                          </div>
-                                          <div className="flex-shrink-0 pr-2">
-                                            <button
-                                              type="button"
-                                              className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                            >
+                                    <div className="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
+                                      <div className="flex-1 px-4 py-2 text-sm truncate">
+                                        <a href={user.website} className="text-xl text-blue-600 font-medium hover:text-pink-200">
+                                          {user.websiteId}
+                                        </a>
+                                        {/* <p className="text-gray-500">{link.members} Members</p> */}
+                                      </div>
+                                      <div className="flex-shrink-0 pr-2">
+                                        <button
+                                          type="button"
+                                          className="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full bg-transparent hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        >
 
-                                            </button>
-                                          </div>
-                                        </div>
-                                      </li>
-                                      : <div></div>}
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </li>
+                                  : <div></div>}
+
                                     {/* twitter */}
                                     {user.twitter !== undefined ?
                                       <li className="flex shadow-sm rounded-md">

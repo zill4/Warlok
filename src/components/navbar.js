@@ -52,7 +52,6 @@ export default function Navbar() {
       setUser(await userCollection.data());
       if (user === undefined)
       {
-        console.log("STUPIDDDDDDDDDD")
         handleLogout();
       }
     }
@@ -183,8 +182,7 @@ export default function Navbar() {
 
     <Disclosure as="nav" className="bg-white shadow">
       {currentUser ?
-        <div>
-          { currentUser.verifiedEmail ? 
+            currentUser.emailVerified ?
             ({ open }) => (
               <div>
                 <div className="max-w-full mx-auto px-2 sm:px-6 lg:px-8">
@@ -295,13 +293,8 @@ export default function Navbar() {
                 </Disclosure.Panel>
               </div>
             )
-            : 
-            <div></div>
-            }
-          </div>
-          : <br></br>
-          }
-      
+          : <br></br>  : <div></div>}
+              
     </Disclosure>
   )
 
