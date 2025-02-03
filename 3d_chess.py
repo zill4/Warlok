@@ -23,7 +23,7 @@ class Board:
 
 # Camera constants
 class Camera:
-    ROTATION_SPEED = 100
+    ROTATION_SPEED = 4
     MIN_ROTATION_X = -85
     MAX_ROTATION_X = 85
     MOUSE_SENSITIVITY = 40
@@ -32,6 +32,9 @@ class Camera:
     START_DISTANCE = -20
     PIVOT_HEIGHT = 0
     START_ROTATION = 30
+    BLACK_ROTATION_Y = 0      # Swapped: Camera Y rotation for black's turn
+    WHITE_ROTATION_Y = 180    # Swapped: Camera Y rotation for white's turn
+    ROTATION_SMOOTHING = 6    # Smoothing factor for rotation
 
 # Piece position constants
 class Position:
@@ -434,7 +437,8 @@ def start_game():
     # Add this class before start_game()
     class GameRules:
         def __init__(self):
-            self.current_turn = Turn.WHITE  # Use enum
+            self.current_turn = Turn.WHITE
+            self.target_rotation = Camera.WHITE_ROTATION_Y
             print(f"\n=== Game Initialization ===")
             print(f"Starting turn: {self.current_turn}")
             self.print_board_state()
@@ -506,8 +510,10 @@ def start_game():
             return valid_moves
 
         def switch_turn(self):
-            """Switch turns using enum"""
+            """Switch turns and rotate camera"""
             self.current_turn = Turn.BLACK if self.current_turn == Turn.WHITE else Turn.WHITE
+            # Set target rotation based on turn
+            self.target_rotation = Camera.BLACK_ROTATION_Y if self.current_turn == Turn.BLACK else Camera.WHITE_ROTATION_Y
             print(f"\n=== Turn Change: Now {self.current_turn.value}'s turn ===\n")
 
     # Modify ChessActions to use GameRules
@@ -696,6 +702,17 @@ def start_game():
                 # Release piece and attempt move
                 actions.target_square = (target_x, target_z)
                 actions.release_piece()
+
+        # Add camera rotation update
+        if camera_pivot.rotation_y != game_rules.target_rotation:
+            # Calculate shortest rotation direction
+            diff = (game_rules.target_rotation - camera_pivot.rotation_y + 180) % 360 - 180
+            # Smooth rotation
+            camera_pivot.rotation_y += diff * time.dt * Camera.ROTATION_SPEED / Camera.ROTATION_SMOOTHING
+            
+            # Snap to target if very close
+            if abs(diff) < 0.1:
+                camera_pivot.rotation_y = game_rules.target_rotation
 
     # Attach the update function to the game entity
     game.update = game_update
