@@ -260,13 +260,15 @@ def start_game():
             direction = 1 if self.is_black else -1  # Fix direction: white moves up (-z), black moves down (+z)
             new_z = self.grid_z + direction
             
-            print(f"Calculating moves for {self.__class__.__name__} at ({self.grid_x}, {self.grid_z})")
-            print(f"Direction: {direction}, New z: {new_z}")
-            
-            # Forward move
+            # Forward move one space
             if 0 <= new_z < Board.SIZE and not grid[new_z][self.grid_x]:
                 valid.append((self.grid_x, new_z))
-                print(f"Added forward move to {(self.grid_x, new_z)}")
+                
+                # First move can be two spaces if path is clear
+                if (self.is_black and self.grid_z == 1) or (not self.is_black and self.grid_z == 6):  # Starting positions
+                    two_spaces_z = new_z + direction  # One more space in same direction
+                    if 0 <= two_spaces_z < Board.SIZE and not grid[two_spaces_z][self.grid_x]:
+                        valid.append((self.grid_x, two_spaces_z))
             
             # Captures
             for dx in [-1, 1]:
@@ -275,9 +277,7 @@ def start_game():
                     target = grid[new_z][new_x]
                     if target and target.is_black != self.is_black:
                         valid.append((new_x, new_z))
-                        print(f"Added capture move to {(new_x, new_z)}")
             
-            print(f"Final valid moves for pawn: {valid}")
             return valid
 
     class Rook(ChessPiece):
@@ -555,6 +555,16 @@ def start_game():
                 print(f"Valid move: {valid_move}")
                 
                 if valid_move:
+                    # Check if there's a piece to capture
+                    captured_piece = VIRTUAL_GRID[new_z][new_x]
+                    if captured_piece:
+                        print(f"Capturing piece at ({new_x}, {new_z})")
+                        # Remove captured piece from the scene
+                        destroy(captured_piece)
+                        # Remove from piece_entities list
+                        if captured_piece in piece_entities:
+                            piece_entities.remove(captured_piece)
+                    
                     # Update virtual grid
                     VIRTUAL_GRID[current_z][current_x] = None
                     VIRTUAL_GRID[new_z][new_x] = self.selected_piece
