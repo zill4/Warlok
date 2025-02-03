@@ -107,10 +107,19 @@ class CardUI:
     CARD_WIDTH = 0.1
     CARD_HEIGHT = 0.15
     CARD_SPACING = 0.11
-    BOTTOM_MARGIN = -0.35    # Keep current card position
-    CARD_COLOR = color.white
-    DECK_COLOR = color.blue
+    BOTTOM_MARGIN = -0.35
+    CARD_TEXTURE = './images/Normal_card.png'
     MAX_CARDS = 8
+
+class PlayerCards:
+    WHITE = {
+        'dragon_image': './images/blue_eyes_w_dragon.png',
+        'deck_color': color.blue
+    }
+    BLACK = {
+        'dragon_image': './images/RedEyesBDragon.jpg',
+        'deck_color': color.red
+    }
 
 def start_game():
     global piece_entities
@@ -527,6 +536,8 @@ def start_game():
             self.current_turn = Turn.BLACK if self.current_turn == Turn.WHITE else Turn.WHITE
             # Set target rotation based on turn
             self.target_rotation = Camera.BLACK_ROTATION_Y if self.current_turn == Turn.BLACK else Camera.WHITE_ROTATION_Y
+            # Update cards for new turn
+            update_cards_for_turn(cards, deck, self.current_turn == Turn.BLACK)
             print(f"\n=== Turn Change: Now {self.current_turn.value}'s turn ===\n")
 
     # Modify ChessActions to use GameRules
@@ -781,36 +792,57 @@ def input(key):
                 break
 
 def create_card_ui():
-    # Create parent entity for all cards (attached to camera UI)
+    # Create parent entity for all cards
     card_holder = Entity(parent=camera.ui)
     
     # Calculate total width of displayed cards
     total_width = CardUI.CARD_SPACING * (CardUI.MAX_CARDS - 1) + CardUI.CARD_WIDTH
-    start_x = -total_width/2  # Center the cards
+    start_x = -total_width/2
     
-    # Create visible cards
     cards = []
     for i in range(CardUI.MAX_CARDS):
-        card = Entity(
+        # Create card image (dragon) first
+        card_image = Entity(
             parent=card_holder,
             model='quad',
-            color=CardUI.CARD_COLOR,
-            scale=(CardUI.CARD_WIDTH, CardUI.CARD_HEIGHT),
-            position=(start_x + (i * CardUI.CARD_SPACING), CardUI.BOTTOM_MARGIN),
+            texture=PlayerCards.WHITE['dragon_image'],  # Start with Blue Eyes
+            scale=(CardUI.CARD_WIDTH * 0.85, CardUI.CARD_HEIGHT * 0.5),
+            position=(start_x + (i * CardUI.CARD_SPACING), CardUI.BOTTOM_MARGIN + 0.02),
             z=-0.1
         )
-        cards.append(card)
+        
+        # Card template on top
+        card_template = Entity(
+            parent=card_holder,
+            model='quad',
+            texture=CardUI.CARD_TEXTURE,
+            scale=(CardUI.CARD_WIDTH, CardUI.CARD_HEIGHT),
+            position=(start_x + (i * CardUI.CARD_SPACING), CardUI.BOTTOM_MARGIN),
+            z=-0.05
+        )
+        cards.append((card_template, card_image))
     
-    # Add deck on the right
+    # Add deck with initial color
     deck = Entity(
         parent=card_holder,
         model='quad',
-        color=CardUI.DECK_COLOR,
+        color=PlayerCards.WHITE['deck_color'],  # Start with blue
         scale=(CardUI.CARD_WIDTH, CardUI.CARD_HEIGHT),
         position=(start_x + (CardUI.MAX_CARDS * CardUI.CARD_SPACING), CardUI.BOTTOM_MARGIN),
         z=-0.1
     )
     
     return card_holder, cards, deck
+
+def update_cards_for_turn(cards, deck, is_black_turn):
+    """Update card images and deck color based on turn"""
+    player = PlayerCards.BLACK if is_black_turn else PlayerCards.WHITE
+    
+    # Update all card images
+    for _, card_image in cards:
+        card_image.texture = player['dragon_image']
+    
+    # Update deck color
+    deck.color = player['deck_color']
 
 app.run() 
