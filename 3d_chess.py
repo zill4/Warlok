@@ -23,18 +23,21 @@ class Board:
 
 # Camera constants
 class Camera:
+    START_HEIGHT = 12         # Lower height for more natural view
+    START_DISTANCE = -20     # Closer to board
+    START_ROTATION = 30     # Less steep angle (more like sitting at table)
+    PIVOT_HEIGHT = 0
+    MIN_ROTATION_X = 15
+    MAX_ROTATION_X = 89
     ROTATION_SPEED = 4
-    MIN_ROTATION_X = -85
-    MAX_ROTATION_X = 85
+
+
+
     MOUSE_SENSITIVITY = 40
     LERP_SPEED = 0.1
-    START_HEIGHT = 12
-    START_DISTANCE = -20
-    PIVOT_HEIGHT = 0
-    START_ROTATION = 30
-    BLACK_ROTATION_Y = 0      # Swapped: Camera Y rotation for black's turn
-    WHITE_ROTATION_Y = 180    # Swapped: Camera Y rotation for white's turn
-    ROTATION_SMOOTHING = 6    # Smoothing factor for rotation
+    BLACK_ROTATION_Y = 0
+    WHITE_ROTATION_Y = 180
+    ROTATION_SMOOTHING = 6
 
 # Piece position constants
 class Position:
@@ -98,6 +101,16 @@ class PieceColors:
     BLACK_HIGHLIGHT = color.orange  # Orange highlight for black
     SELECTED_WHITE = color.cyan  # For selected white piece
     SELECTED_BLACK = color.yellow  # For selected black piece
+
+# Add to your constants section
+class CardUI:
+    CARD_WIDTH = 0.1
+    CARD_HEIGHT = 0.15
+    CARD_SPACING = 0.11
+    BOTTOM_MARGIN = -0.35    # Keep current card position
+    CARD_COLOR = color.white
+    DECK_COLOR = color.blue
+    MAX_CARDS = 8
 
 def start_game():
     global piece_entities
@@ -427,7 +440,7 @@ def start_game():
                 VIRTUAL_GRID[grid_z][grid_x] = piece
                 piece_entities.append(piece)
 
-    # Update the camera setup
+    # Update the camera setup - ensure proper initialization
     camera_pivot = Entity()
     camera.parent = camera_pivot
     camera_pivot.position = (BoardCenter.X, Camera.PIVOT_HEIGHT, BoardCenter.Z)
@@ -644,7 +657,7 @@ def start_game():
                 camera.rotation_x = lerp(camera.rotation_x, target_rotation_x, Camera.LERP_SPEED)
         
         # Handle piece hovering and selection
-        if mouse.hovered_entity is not None:
+        if mouse.hovered_entity and mouse.hovered_entity in board_entities + piece_entities:
             board_x = mouse.hovered_entity.position.x
             board_z = mouse.hovered_entity.position.z
             
@@ -656,7 +669,7 @@ def start_game():
                     hovered_piece = piece
                     if not actions.dragging and piece != actions.selected_piece:
                         piece.y = Position.HOVER_HEIGHT
-                        piece.highlight()  # Add highlight
+                        piece.highlight()
                     break
             
             # Reset non-hovered pieces
@@ -717,6 +730,9 @@ def start_game():
     # Attach the update function to the game entity
     game.update = game_update
 
+    # Create card UI
+    card_holder, cards, deck = create_card_ui()
+
 def exit_game():
     application.quit()
 
@@ -763,5 +779,38 @@ def input(key):
                 destroy(p)
                 piece_entities.remove(p)
                 break
+
+def create_card_ui():
+    # Create parent entity for all cards (attached to camera UI)
+    card_holder = Entity(parent=camera.ui)
+    
+    # Calculate total width of displayed cards
+    total_width = CardUI.CARD_SPACING * (CardUI.MAX_CARDS - 1) + CardUI.CARD_WIDTH
+    start_x = -total_width/2  # Center the cards
+    
+    # Create visible cards
+    cards = []
+    for i in range(CardUI.MAX_CARDS):
+        card = Entity(
+            parent=card_holder,
+            model='quad',
+            color=CardUI.CARD_COLOR,
+            scale=(CardUI.CARD_WIDTH, CardUI.CARD_HEIGHT),
+            position=(start_x + (i * CardUI.CARD_SPACING), CardUI.BOTTOM_MARGIN),
+            z=-0.1
+        )
+        cards.append(card)
+    
+    # Add deck on the right
+    deck = Entity(
+        parent=card_holder,
+        model='quad',
+        color=CardUI.DECK_COLOR,
+        scale=(CardUI.CARD_WIDTH, CardUI.CARD_HEIGHT),
+        position=(start_x + (CardUI.MAX_CARDS * CardUI.CARD_SPACING), CardUI.BOTTOM_MARGIN),
+        z=-0.1
+    )
+    
+    return card_holder, cards, deck
 
 app.run() 
