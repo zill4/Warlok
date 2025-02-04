@@ -2,7 +2,8 @@ from enum import Enum
 from ursina import *
 from ursina.prefabs.first_person_controller import FirstPersonController
 from ursina.shaders import lit_with_shadows_shader, basic_lighting_shader
-from random import uniform
+from random import uniform, randint
+import os
 
 app = Ursina()
 window.title = '3D Chess'
@@ -182,70 +183,79 @@ class CardState:
         return None
 
 class CardEntity:
-    def __init__(self, template, image, index, original_position, original_z):
+    def __init__(self, parent, template, image, symbol, index, original_position, original_z):
+        self.parent = parent
         self.template = template
         self.image = image
+        self.symbol = symbol
         self.index = index
         self.original_position = original_position
         self.original_z = original_z
         self.is_hovered = False
         
+        # Add update method to check for hover
+        def update():
+            if self.template.hovered:
+                if not self.is_hovered:
+                    self.hover()
+            elif self.is_hovered:
+                self.unhover()
+        
+        self.template.update = update
+    
     def hover(self):
         if not self.is_hovered:
             self.is_hovered = True
             print(f"Hovering card {self.index}")  # Debug print
-            # Lift card up and forward
-            self.template.animate_position(
+            self.parent.animate_position(
                 self.original_position + Vec3(0, CardUI.HOVER_LIFT, CardUI.HOVER_FORWARD),
                 duration=0.1
             )
-            self.image.animate_position(
-                self.original_position + Vec3(0, CardUI.HOVER_LIFT + 0.02, CardUI.HOVER_FORWARD),
-                duration=0.1
-            )
-            # Separate from adjacent cards
             self._adjust_adjacent_cards(True)
     
     def unhover(self):
         if self.is_hovered:
             self.is_hovered = False
             print(f"Unhovering card {self.index}")  # Debug print
-            # Return to original position
-            self.template.animate_position(
+            self.parent.animate_position(
                 self.original_position,
                 duration=0.1
             )
-            self.image.animate_position(
-                self.original_position + Vec3(0, 0.02, 0),
-                duration=0.1
-            )
-            # Return adjacent cards
             self._adjust_adjacent_cards(False)
     
     def _adjust_adjacent_cards(self, hovering):
         separation = CardUI.HOVER_SEPARATION if hovering else 0
-        # Find and move adjacent cards
         if self.index > 0:  # Left card
             left_card = card_entities[self.index - 1]
-            left_card.template.animate_position(
+            left_card.parent.animate_position(
                 left_card.original_position + Vec3(-separation, 0, 0),
-                duration=0.1
-            )
-            left_card.image.animate_position(
-                left_card.original_position + Vec3(-separation, 0.02, 0),
                 duration=0.1
             )
         
         if self.index < CardUI.MAX_CARDS - 1:  # Right card
             right_card = card_entities[self.index + 1]
-            right_card.template.animate_position(
+            right_card.parent.animate_position(
                 right_card.original_position + Vec3(separation, 0, 0),
                 duration=0.1
             )
-            right_card.image.animate_position(
-                right_card.original_position + Vec3(separation, 0.02, 0),
-                duration=0.1
-            )
+
+class ChessSymbols:
+    TEXTURE = './images/chess_symbols.png'
+    SPRITE_COUNT = 7
+    UV_WIDTH = 1/7  # Each piece takes 1/7 of the width
+    UV_HEIGHT = 0.5  # Each row takes half the height
+    SYMBOL_SCALE = 0.025  # Made slightly smaller
+    
+    @staticmethod
+    def get_random_symbol_uvs(is_black=False):
+        piece_index = randint(0, ChessSymbols.SPRITE_COUNT - 1)
+        # Calculate UV coordinates
+        u = piece_index * ChessSymbols.UV_WIDTH
+        v = 0.5 if not is_black else 0
+        return {
+            'offset': Vec2(u, v),
+            'scale': Vec2(ChessSymbols.UV_WIDTH, ChessSymbols.UV_HEIGHT)
+        }
 
 def start_game():
     global piece_entities
@@ -939,39 +949,60 @@ def create_card_ui():
         base_y = CardUI.BOTTOM_MARGIN
         base_position = Vec3(base_x + offset_x, base_y + offset_y, 0)
         
-        # Create card template and image with colliders
-        card_template = Entity(
+        # Create parent entity to control all card components
+        card_parent = Entity(
             parent=card_holder,
+            position=base_position,
+            rotation=(0, 0, uniform(-CardUI.MAX_ROTATION, CardUI.MAX_ROTATION))
+        )
+        
+        # Card template (bottom layer)
+        card_template = Entity(
+            parent=card_parent,
             model='quad',
             texture=CardUI.CARD_TEXTURE,
             scale=(CardUI.CARD_WIDTH, CardUI.CARD_HEIGHT),
-            position=base_position,
-            rotation=(0, 0, uniform(-CardUI.MAX_ROTATION, CardUI.MAX_ROTATION)),
-            z=-0.05 - (i * CardUI.STACK_HEIGHT),
-            collider='box'  # Add collider for hover detection
+            z=-0.3 - (i * CardUI.STACK_HEIGHT),  # Moved back
+            collider='box'
         )
         
+        # Dragon image (middle layer)
         card_image = Entity(
-            parent=card_holder,
+            parent=card_parent,
             model='quad',
             texture=PlayerCards.WHITE['dragon_image'],
             scale=(CardUI.CARD_WIDTH * 0.85, CardUI.CARD_HEIGHT * 0.5),
-            position=base_position + Vec3(0, 0.02, 0),
-            rotation=card_template.rotation,
-            z=-0.1 - (i * CardUI.STACK_HEIGHT),
-            collider='box'  # Add collider for hover detection
+            z=-0.2 - (i * CardUI.STACK_HEIGHT)  # Between template and symbol
         )
         
-        # Create and store CardEntity
+        # Symbol (top layer)
+        uvs = ChessSymbols.get_random_symbol_uvs(False)
+        symbol = Entity(
+            parent=card_parent,
+            model='quad',
+            texture=ChessSymbols.TEXTURE,
+            scale=(ChessSymbols.SYMBOL_SCALE, ChessSymbols.SYMBOL_SCALE),
+            position=(
+                CardUI.CARD_WIDTH/2 - ChessSymbols.SYMBOL_SCALE * 0.8,
+                CardUI.CARD_HEIGHT/2 - ChessSymbols.SYMBOL_SCALE * 0.8,
+                -0.5 - (i * CardUI.STACK_HEIGHT)  # Closest to camera
+            ),
+            z=-0.5 - (i * CardUI.STACK_HEIGHT),
+            texture_scale=uvs['scale'],
+            texture_offset=uvs['offset']
+        )
+        
         card_entity = CardEntity(
+            card_parent,  # Pass the parent entity
             card_template,
             card_image,
+            symbol,
             i,
             base_position,
             -0.1 - (i * CardUI.STACK_HEIGHT)
         )
         card_entities.append(card_entity)
-        cards.append((card_template, card_image))
+        cards.append((card_template, card_image, symbol))
 
     # Create enhanced 3D deck
     deck_cards = []
@@ -1040,15 +1071,25 @@ def create_card_ui():
     # Add the update function to the card holder
     card_holder.update = update_cards
     
+    # Verify texture loading
+    if not os.path.exists(ChessSymbols.TEXTURE):
+        print(f"Error: Could not find texture file at {ChessSymbols.TEXTURE}")
+        return
+    
     return card_holder, cards, deck_cards, card_state
 
 def update_cards_for_turn(cards, deck_cards, card_state):
     """Update card images and deck color based on turn"""
     player_data = card_state.get_current_player_data()
+    is_black_turn = player_data == PlayerCards.BLACK
     
-    # Update all card images
-    for _, card_image in cards:
+    # Update all card images and symbols
+    for _, card_image, symbol in cards:
         card_image.texture = player_data['dragon_image']
+        # Update symbol UVs for current turn
+        uvs = ChessSymbols.get_random_symbol_uvs(is_black_turn)
+        symbol.texture_scale = uvs['scale']
+        symbol.texture_offset = uvs['offset']
     
     # Update deck appearance
     base_color = player_data['deck_color']
