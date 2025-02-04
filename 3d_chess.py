@@ -2,6 +2,7 @@ from enum import Enum
 from ursina import *
 from ursina.prefabs.first_person_controller import FirstPersonController
 from ursina.shaders import lit_with_shadows_shader, basic_lighting_shader
+from random import uniform
 
 app = Ursina()
 window.title = '3D Chess'
@@ -106,20 +107,145 @@ class PieceColors:
 class CardUI:
     CARD_WIDTH = 0.1
     CARD_HEIGHT = 0.15
-    CARD_SPACING = 0.11
+    CARD_SPACING = 0.08  # Reduced from 0.11 to create overlap
     BOTTOM_MARGIN = -0.35
     CARD_TEXTURE = './images/Normal_card.png'
     MAX_CARDS = 8
+    # 3D effect constants
+    MAX_ROTATION = 3
+    STACK_HEIGHT = 0.001
+    POSITION_VARIANCE = 0.002
+    # Deck appearance constants
+    DECK_CARDS = 30          # Increased number of visible cards
+    DECK_SPACING = 0.0003    # Tighter spacing between cards
+    DECK_SIDE_WIDTH = 0.01
+    DECK_EXTRA_SPACING = 0.15  # Additional spacing between hand and deck
+    HOVER_LIFT = 0.05       # How high the card lifts on hover
+    HOVER_FORWARD = -0.05   # How far forward (towards screen) the card moves
+    HOVER_SEPARATION = 0.03 # How far the card separates from others
 
 class PlayerCards:
     WHITE = {
         'dragon_image': './images/blue_eyes_w_dragon.png',
-        'deck_color': color.blue
+        'deck_color': color.blue,
+        'hand': [],
+        'deck': [],
+        'played': []
     }
     BLACK = {
         'dragon_image': './images/RedEyesBDragon.jpg',
-        'deck_color': color.red
+        'deck_color': color.red,
+        'hand': [],
+        'deck': [],
+        'played': []
     }
+
+class CardState:
+    def __init__(self):
+        self.current_player = 'WHITE'
+        self.white_cards = {
+            'hand': [True] * CardUI.MAX_CARDS,  # Cards currently visible
+            'deck': [True] * 40,  # Cards remaining in deck
+            'played': []  # Cards that have been used
+        }
+        self.black_cards = {
+            'hand': [True] * CardUI.MAX_CARDS,
+            'deck': [True] * 40,
+            'played': []
+        }
+    
+    def switch_turn(self):
+        self.current_player = 'BLACK' if self.current_player == 'WHITE' else 'WHITE'
+        return self.get_current_player_data()
+    
+    def get_current_player_data(self):
+        return PlayerCards.BLACK if self.current_player == 'BLACK' else PlayerCards.WHITE
+    
+    def play_card(self, card_index):
+        cards = self.black_cards if self.current_player == 'BLACK' else self.white_cards
+        if cards['hand'][card_index]:
+            cards['hand'][card_index] = False
+            cards['played'].append(card_index)
+            return True
+        return False
+    
+    def draw_card(self):
+        cards = self.black_cards if self.current_player == 'BLACK' else self.white_cards
+        for i, card in enumerate(cards['deck']):
+            if card:
+                cards['deck'][i] = False
+                # Find first empty slot in hand
+                for j, hand_card in enumerate(cards['hand']):
+                    if not hand_card:
+                        cards['hand'][j] = True
+                        return j
+        return None
+
+class CardEntity:
+    def __init__(self, template, image, index, original_position, original_z):
+        self.template = template
+        self.image = image
+        self.index = index
+        self.original_position = original_position
+        self.original_z = original_z
+        self.is_hovered = False
+        
+    def hover(self):
+        if not self.is_hovered:
+            self.is_hovered = True
+            print(f"Hovering card {self.index}")  # Debug print
+            # Lift card up and forward
+            self.template.animate_position(
+                self.original_position + Vec3(0, CardUI.HOVER_LIFT, CardUI.HOVER_FORWARD),
+                duration=0.1
+            )
+            self.image.animate_position(
+                self.original_position + Vec3(0, CardUI.HOVER_LIFT + 0.02, CardUI.HOVER_FORWARD),
+                duration=0.1
+            )
+            # Separate from adjacent cards
+            self._adjust_adjacent_cards(True)
+    
+    def unhover(self):
+        if self.is_hovered:
+            self.is_hovered = False
+            print(f"Unhovering card {self.index}")  # Debug print
+            # Return to original position
+            self.template.animate_position(
+                self.original_position,
+                duration=0.1
+            )
+            self.image.animate_position(
+                self.original_position + Vec3(0, 0.02, 0),
+                duration=0.1
+            )
+            # Return adjacent cards
+            self._adjust_adjacent_cards(False)
+    
+    def _adjust_adjacent_cards(self, hovering):
+        separation = CardUI.HOVER_SEPARATION if hovering else 0
+        # Find and move adjacent cards
+        if self.index > 0:  # Left card
+            left_card = card_entities[self.index - 1]
+            left_card.template.animate_position(
+                left_card.original_position + Vec3(-separation, 0, 0),
+                duration=0.1
+            )
+            left_card.image.animate_position(
+                left_card.original_position + Vec3(-separation, 0.02, 0),
+                duration=0.1
+            )
+        
+        if self.index < CardUI.MAX_CARDS - 1:  # Right card
+            right_card = card_entities[self.index + 1]
+            right_card.template.animate_position(
+                right_card.original_position + Vec3(separation, 0, 0),
+                duration=0.1
+            )
+            right_card.image.animate_position(
+                right_card.original_position + Vec3(separation, 0.02, 0),
+                duration=0.1
+            )
 
 def start_game():
     global piece_entities
@@ -461,6 +587,7 @@ def start_game():
         def __init__(self):
             self.current_turn = Turn.WHITE
             self.target_rotation = Camera.WHITE_ROTATION_Y
+            self.card_state = CardState()  # Add card state to GameRules
             print(f"\n=== Game Initialization ===")
             print(f"Starting turn: {self.current_turn}")
             self.print_board_state()
@@ -532,12 +659,14 @@ def start_game():
             return valid_moves
 
         def switch_turn(self):
-            """Switch turns and rotate camera"""
+            """Switch turns and update game state"""
             self.current_turn = Turn.BLACK if self.current_turn == Turn.WHITE else Turn.WHITE
-            # Set target rotation based on turn
             self.target_rotation = Camera.BLACK_ROTATION_Y if self.current_turn == Turn.BLACK else Camera.WHITE_ROTATION_Y
-            # Update cards for new turn
-            update_cards_for_turn(cards, deck, self.current_turn == Turn.BLACK)
+            
+            # Update card state and UI
+            self.card_state.switch_turn()
+            update_cards_for_turn(cards, deck_cards, self.card_state)  # Pass card_state object
+            
             print(f"\n=== Turn Change: Now {self.current_turn.value}'s turn ===\n")
 
     # Modify ChessActions to use GameRules
@@ -742,7 +871,7 @@ def start_game():
     game.update = game_update
 
     # Create card UI
-    card_holder, cards, deck = create_card_ui()
+    card_holder, cards, deck_cards, card_state = create_card_ui()
 
 def exit_game():
     application.quit()
@@ -792,57 +921,141 @@ def input(key):
                 break
 
 def create_card_ui():
-    # Create parent entity for all cards
+    global card_entities  # Ensure we're modifying the global list
     card_holder = Entity(parent=camera.ui)
+    card_state = CardState()
     
-    # Calculate total width of displayed cards
+    # Clear existing card entities
+    card_entities.clear()
+    
     total_width = CardUI.CARD_SPACING * (CardUI.MAX_CARDS - 1) + CardUI.CARD_WIDTH
     start_x = -total_width/2
     
     cards = []
     for i in range(CardUI.MAX_CARDS):
-        # Create card image (dragon) first
-        card_image = Entity(
-            parent=card_holder,
-            model='quad',
-            texture=PlayerCards.WHITE['dragon_image'],  # Start with Blue Eyes
-            scale=(CardUI.CARD_WIDTH * 0.85, CardUI.CARD_HEIGHT * 0.5),
-            position=(start_x + (i * CardUI.CARD_SPACING), CardUI.BOTTOM_MARGIN + 0.02),
-            z=-0.1
-        )
+        offset_x = uniform(-CardUI.POSITION_VARIANCE, CardUI.POSITION_VARIANCE)
+        offset_y = uniform(-CardUI.POSITION_VARIANCE, CardUI.POSITION_VARIANCE)
+        base_x = start_x + (i * CardUI.CARD_SPACING)
+        base_y = CardUI.BOTTOM_MARGIN
+        base_position = Vec3(base_x + offset_x, base_y + offset_y, 0)
         
-        # Card template on top
+        # Create card template and image with colliders
         card_template = Entity(
             parent=card_holder,
             model='quad',
             texture=CardUI.CARD_TEXTURE,
             scale=(CardUI.CARD_WIDTH, CardUI.CARD_HEIGHT),
-            position=(start_x + (i * CardUI.CARD_SPACING), CardUI.BOTTOM_MARGIN),
-            z=-0.05
+            position=base_position,
+            rotation=(0, 0, uniform(-CardUI.MAX_ROTATION, CardUI.MAX_ROTATION)),
+            z=-0.05 - (i * CardUI.STACK_HEIGHT),
+            collider='box'  # Add collider for hover detection
         )
+        
+        card_image = Entity(
+            parent=card_holder,
+            model='quad',
+            texture=PlayerCards.WHITE['dragon_image'],
+            scale=(CardUI.CARD_WIDTH * 0.85, CardUI.CARD_HEIGHT * 0.5),
+            position=base_position + Vec3(0, 0.02, 0),
+            rotation=card_template.rotation,
+            z=-0.1 - (i * CardUI.STACK_HEIGHT),
+            collider='box'  # Add collider for hover detection
+        )
+        
+        # Create and store CardEntity
+        card_entity = CardEntity(
+            card_template,
+            card_image,
+            i,
+            base_position,
+            -0.1 - (i * CardUI.STACK_HEIGHT)
+        )
+        card_entities.append(card_entity)
         cards.append((card_template, card_image))
+
+    # Create enhanced 3D deck
+    deck_cards = []
+    base_x = start_x + (CardUI.MAX_CARDS * CardUI.CARD_SPACING) + CardUI.DECK_EXTRA_SPACING
     
-    # Add deck with initial color
-    deck = Entity(
-        parent=card_holder,
-        model='quad',
-        color=PlayerCards.WHITE['deck_color'],  # Start with blue
-        scale=(CardUI.CARD_WIDTH, CardUI.CARD_HEIGHT),
-        position=(start_x + (CardUI.MAX_CARDS * CardUI.CARD_SPACING), CardUI.BOTTOM_MARGIN),
-        z=-0.1
+    # Create main deck cards with progressive offset
+    for i in range(CardUI.DECK_CARDS):
+        x_offset = uniform(-0.0005, 0.0005) * i  # Progressive variance
+        y_offset = uniform(-0.0005, 0.0005) * i
+        z_rotation = uniform(-0.5, 0.5)  # Slight random rotation
+        
+        deck_card = Entity(
+            parent=card_holder,
+            model='quad',
+            color=PlayerCards.WHITE['deck_color'],
+            scale=(CardUI.CARD_WIDTH, CardUI.CARD_HEIGHT),
+            position=(
+                base_x + x_offset,
+                CardUI.BOTTOM_MARGIN + (i * CardUI.DECK_SPACING) + y_offset
+            ),
+            rotation=(0, 0, z_rotation),
+            z=-0.1 - (i * CardUI.STACK_HEIGHT)
+        )
+        deck_cards.append(deck_card)
+    
+    # Add side edges for 3D effect
+    edge_color = color.rgb(
+        PlayerCards.WHITE['deck_color'].r * 0.7,
+        PlayerCards.WHITE['deck_color'].g * 0.7,
+        PlayerCards.WHITE['deck_color'].b * 0.7
     )
     
-    return card_holder, cards, deck
+    # Right edge
+    right_edge = Entity(
+        parent=card_holder,
+        model='quad',
+        color=edge_color,
+        scale=(CardUI.DECK_SPACING * CardUI.DECK_CARDS, CardUI.CARD_HEIGHT),
+        position=(base_x + CardUI.CARD_WIDTH/2, CardUI.BOTTOM_MARGIN + (CardUI.DECK_CARDS * CardUI.DECK_SPACING)/2),
+        rotation=(0, 90, 0),
+        z=-0.1 - (CardUI.DECK_CARDS * CardUI.STACK_HEIGHT)/2
+    )
+    deck_cards.append(right_edge)
+    
+    # Bottom edge
+    bottom_edge = Entity(
+        parent=card_holder,
+        model='quad',
+        color=edge_color,
+        scale=(CardUI.CARD_WIDTH, CardUI.DECK_SPACING * CardUI.DECK_CARDS),
+        position=(base_x, CardUI.BOTTOM_MARGIN - CardUI.CARD_HEIGHT/2),
+        rotation=(90, 0, 0),
+        z=-0.1 - (CardUI.DECK_CARDS * CardUI.STACK_HEIGHT)/2
+    )
+    deck_cards.append(bottom_edge)
+    
+    # Create update function for this specific UI
+    def update_cards():
+        if mouse.hovered_entity:
+            for card_entity in card_entities:
+                if mouse.hovered_entity in (card_entity.template, card_entity.image):
+                    card_entity.hover()
+                else:
+                    card_entity.unhover()
+    
+    # Add the update function to the card holder
+    card_holder.update = update_cards
+    
+    return card_holder, cards, deck_cards, card_state
 
-def update_cards_for_turn(cards, deck, is_black_turn):
+def update_cards_for_turn(cards, deck_cards, card_state):
     """Update card images and deck color based on turn"""
-    player = PlayerCards.BLACK if is_black_turn else PlayerCards.WHITE
+    player_data = card_state.get_current_player_data()
     
     # Update all card images
     for _, card_image in cards:
-        card_image.texture = player['dragon_image']
+        card_image.texture = player_data['dragon_image']
     
-    # Update deck color
-    deck.color = player['deck_color']
+    # Update deck appearance
+    base_color = player_data['deck_color']
+    for deck_card in deck_cards:
+        deck_card.color = base_color
+
+# Make card_entities global so it can be accessed by CardEntity methods
+card_entities = []
 
 app.run() 
