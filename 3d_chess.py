@@ -32,13 +32,10 @@ class Camera:
     MIN_ROTATION_X = 15
     MAX_ROTATION_X = 89
     ROTATION_SPEED = 4
-
-
-
     MOUSE_SENSITIVITY = 40
     LERP_SPEED = 0.1
-    BLACK_ROTATION_Y = 0
-    WHITE_ROTATION_Y = 180
+    BLACK_ROTATION_Y = 180  # Facing black's side (top of board)
+    WHITE_ROTATION_Y = 0    # Facing white's side (bottom of board)
     ROTATION_SMOOTHING = 6
 
 # Piece position constants
@@ -144,43 +141,59 @@ class PlayerCards:
 class CardState:
     def __init__(self):
         self.current_player = 'WHITE'
+        self.max_hand_size = 7  # Fixed hand size
         self.white_cards = {
-            'hand': [True] * CardUI.MAX_CARDS,  # Cards currently visible
+            'hand': [],  # List of actual card entities
             'deck': [True] * 40,  # Cards remaining in deck
             'played': []  # Cards that have been used
         }
         self.black_cards = {
-            'hand': [True] * CardUI.MAX_CARDS,
+            'hand': [],
             'deck': [True] * 40,
             'played': []
         }
+        print("Card state initialized")
     
     def switch_turn(self):
+        """Switch turns and draw a card for the new player"""
         self.current_player = 'BLACK' if self.current_player == 'WHITE' else 'WHITE'
+        # Draw a card for the new player if their hand isn't full
+        self.draw_card()
         return self.get_current_player_data()
     
     def get_current_player_data(self):
         return PlayerCards.BLACK if self.current_player == 'BLACK' else PlayerCards.WHITE
     
-    def play_card(self, card_index):
-        cards = self.black_cards if self.current_player == 'BLACK' else self.white_cards
-        if cards['hand'][card_index]:
-            cards['hand'][card_index] = False
-            cards['played'].append(card_index)
-            return True
-        return False
-    
     def draw_card(self):
+        """Draw a card if hand isn't full"""
         cards = self.black_cards if self.current_player == 'BLACK' else self.white_cards
+        
+        if len(cards['hand']) >= self.max_hand_size:
+            print(f"{self.current_player}'s hand is full")
+            return None
+            
+        # Check if there are cards in the deck
+        if not any(cards['deck']):
+            print(f"{self.current_player}'s deck is empty")
+            return None
+            
+        # Find first available card in deck
         for i, card in enumerate(cards['deck']):
             if card:
-                cards['deck'][i] = False
-                # Find first empty slot in hand
-                for j, hand_card in enumerate(cards['hand']):
-                    if not hand_card:
-                        cards['hand'][j] = True
-                        return j
+                cards['deck'][i] = False  # Remove from deck
+                print(f"{self.current_player} drew a card")
+                return True  # Signal to create new card in hand
         return None
+    
+    def remove_card_from_hand(self, card_entity):
+        """Remove a card after it's played"""
+        cards = self.black_cards if self.current_player == 'BLACK' else self.white_cards
+        if card_entity in cards['hand']:
+            cards['hand'].remove(card_entity)
+            cards['played'].append(card_entity)
+            print(f"Card removed from {self.current_player}'s hand")
+            return True
+        return False
 
 class CardEntity:
     def __init__(self, parent, template, image, symbol, index, original_position, original_z):
@@ -192,21 +205,24 @@ class CardEntity:
         self.original_position = original_position
         self.original_z = original_z
         self.is_hovered = False
+        self.is_selected = False
         
-        # Add update method to check for hover
         def update():
             if self.template.hovered:
                 if not self.is_hovered:
                     self.hover()
-            elif self.is_hovered:
-                self.unhover()
+                # Handle click selection
+                if mouse.left and not self.is_selected:
+                    self.select_card()
+            elif not self.template.hovered and not mouse.left:
+                if self.is_hovered:
+                    self.unhover()
         
         self.template.update = update
     
     def hover(self):
-        if not self.is_hovered:
+        if not self.is_hovered and not self.is_selected:  # Don't hover if selected
             self.is_hovered = True
-            print(f"Hovering card {self.index}")  # Debug print
             self.parent.animate_position(
                 self.original_position + Vec3(0, CardUI.HOVER_LIFT, CardUI.HOVER_FORWARD),
                 duration=0.1
@@ -214,9 +230,8 @@ class CardEntity:
             self._adjust_adjacent_cards(True)
     
     def unhover(self):
-        if self.is_hovered:
+        if self.is_hovered and not self.is_selected:  # Don't unhover if selected
             self.is_hovered = False
-            print(f"Unhovering card {self.index}")  # Debug print
             self.parent.animate_position(
                 self.original_position,
                 duration=0.1
@@ -224,20 +239,381 @@ class CardEntity:
             self._adjust_adjacent_cards(False)
     
     def _adjust_adjacent_cards(self, hovering):
-        separation = CardUI.HOVER_SEPARATION if hovering else 0
-        if self.index > 0:  # Left card
-            left_card = card_entities[self.index - 1]
-            left_card.parent.animate_position(
-                left_card.original_position + Vec3(-separation, 0, 0),
-                duration=0.1
-            )
+        """Adjust positions of adjacent cards, with bounds checking"""
+        if not card_entities:  # Add safety check
+            return
         
-        if self.index < CardUI.MAX_CARDS - 1:  # Right card
-            right_card = card_entities[self.index + 1]
-            right_card.parent.animate_position(
-                right_card.original_position + Vec3(separation, 0, 0),
-                duration=0.1
+        try:
+            separation = CardUI.HOVER_SEPARATION if hovering else 0
+            
+            # Only adjust left card if we're not the first card and index is valid
+            if self.index > 0 and self.index - 1 < len(card_entities):
+                try:
+                    left_card = card_entities[self.index - 1]
+                    left_card.parent.animate_position(
+                        left_card.original_position + Vec3(-separation, 0, 0),
+                        duration=0.1
+                    )
+                except Exception as e:
+                    print(f"Error adjusting left card: {e}")
+            
+            # Only adjust right card if we're not the last card and index is valid
+            if self.index < len(card_entities) - 1:
+                try:
+                    right_card = card_entities[self.index + 1]
+                    right_card.parent.animate_position(
+                        right_card.original_position + Vec3(separation, 0, 0),
+                        duration=0.1
+                    )
+                except Exception as e:
+                    print(f"Error adjusting right card: {e}")
+                    
+        except Exception as e:
+            print(f"Error in _adjust_adjacent_cards: {e}")
+    
+    def select_card(self):
+        global selected_card
+        self.is_selected = True
+        selected_card = self
+        # Lift card higher to show it's selected
+        self.parent.animate_position(
+            self.original_position + Vec3(0, CardUI.HOVER_LIFT * 2, CardUI.HOVER_FORWARD),
+            duration=0.1
+        )
+        print("Card selected")
+    
+    def get_piece_type_from_symbol(self):
+        """Convert the card's chess symbol to a piece type"""
+        # Get UV offset to determine which piece it represents
+        uv_offset = self.symbol.texture_offset
+        
+        # Calculate piece index based on UV offset
+        piece_index = int(uv_offset.x * ChessSymbols.SPRITE_COUNT)
+        
+        # Map piece index to piece type
+        piece_types = ['pawn', 'rook', 'knight', 'bishop', 'queen', 'king']
+        if 0 <= piece_index < len(piece_types):
+            return piece_types[piece_index]
+        
+        print(f"Unknown piece type for UV offset: {uv_offset}")
+        return None
+    
+    def place_on_board(self, grid_x, grid_z):
+        try:
+            # Create a 3D card entity at the board position
+            card_3d = Entity(
+                model='quad',
+                texture=self.template.texture,
+                scale=(1, 1.4, 1),
+                position=(grid_x, Position.GROUND_HEIGHT + 0.01, grid_z),
+                rotation_x=-90,
+                double_sided=True,
+                shader=lit_with_shadows_shader,
+                color=color.rgb(255, 255, 255),
+                always_on_top=True
             )
+            
+            # Add required attributes to prevent crashes in game logic
+            card_3d.is_card = True
+            card_3d.is_black = False  # Default value
+            card_3d.grid_x = grid_x
+            card_3d.grid_z = grid_z
+            card_3d.valid_moves = []
+            card_3d.valid_move_markers = []
+            card_3d.highlight = lambda: None  # Empty function
+            card_3d.reset_color = lambda: None  # Empty function
+            card_3d.select = lambda: None  # Empty function
+            card_3d.clear_markers = lambda: None  # Empty function
+            
+            # Create the dragon image on the card
+            dragon_image = Entity(
+                parent=card_3d,
+                model='quad',
+                texture=self.image.texture,
+                scale=(0.8, 0.8, 1),
+                position=(0, 0.002, 0),
+                rotation_x=0,
+                double_sided=True,
+                shader=lit_with_shadows_shader,
+                color=color.rgb(255, 255, 255),
+                always_on_top=True
+            )
+            
+            # Create the chess symbol on top
+            symbol_3d = Entity(
+                parent=card_3d,
+                model='quad',
+                texture=ChessSymbols.TEXTURE,
+                texture_scale=self.symbol.texture_scale,
+                texture_offset=self.symbol.texture_offset,
+                scale=(0.3, 0.3, 1),
+                position=(0, 0.003, 0),
+                rotation_x=0,
+                double_sided=True,
+                shader=lit_with_shadows_shader,
+                color=color.rgb(255, 255, 255),
+                always_on_top=True
+            )
+            
+            # Remove card from card_entities list before destroying
+            if self in card_entities:
+                card_entities.remove(self)
+            
+            # Remove the original card from the hand
+            destroy(self.parent)
+            
+            # Update the game state
+            VIRTUAL_GRID[grid_z][grid_x] = card_3d
+            
+            print(f"Successfully placed card at ({grid_x}, {grid_z})")
+            return True
+            
+        except Exception as e:
+            print(f"Error placing card: {e}")
+            return False
+
+# First define all piece classes
+class ChessPiece(Entity):
+    def __init__(self, is_black, grid_x, grid_z, **kwargs):
+        super().__init__(**kwargs)
+        self.is_black = is_black
+        self.grid_x = grid_x
+        self.grid_z = grid_z
+        self.original_color = PieceColors.BLACK if is_black else PieceColors.WHITE
+        self.color = self.original_color
+        self.valid_move_markers = []
+        self.valid_moves = []
+        self.original_y = Position.GROUND_HEIGHT
+    
+    def highlight(self):
+        """Highlight piece when hovered"""
+        if self.is_black:
+            self.color = PieceColors.BLACK_HIGHLIGHT
+        else:
+            self.color = PieceColors.WHITE_HIGHLIGHT
+    
+    def reset_color(self):
+        """Reset piece to original color"""
+        self.color = self.original_color
+    
+    def select(self):
+        """Highlight piece when selected"""
+        if self.is_black:
+            self.color = PieceColors.SELECTED_BLACK
+        else:
+            self.color = PieceColors.SELECTED_WHITE
+    
+    def update_visual_position(self):
+        """Update the piece's visual position based on grid coordinates"""
+        self.position = Vec3(self.grid_x, self.y, self.grid_z)
+    
+    def show_valid_moves(self, valid_moves):
+        """Show markers for valid moves"""
+        self.valid_moves = valid_moves
+        self.clear_markers()
+        
+        for x, z in valid_moves:
+            marker = Entity(
+                model='sphere',
+                color=color.rgba(0, 1, 0, 0.5),
+                position=(x, Position.MARKER_HEIGHT, z),
+                scale=Position.MARKER_SCALE
+            )
+            self.valid_move_markers.append(marker)
+    
+    def clear_markers(self):
+        """Clear all valid move markers"""
+        for marker in self.valid_move_markers:
+            destroy(marker)
+        self.valid_move_markers.clear()
+
+class Pawn(ChessPiece):
+    def get_valid_moves(self, grid):
+        valid = []
+        direction = 1 if self.is_black else -1  # Fix direction: white moves up (-z), black moves down (+z)
+        new_z = self.grid_z + direction
+        
+        # Forward move one space
+        if 0 <= new_z < Board.SIZE and not grid[new_z][self.grid_x]:
+            valid.append((self.grid_x, new_z))
+            
+            # First move can be two spaces if path is clear
+            if (self.is_black and self.grid_z == 1) or (not self.is_black and self.grid_z == 6):  # Starting positions
+                two_spaces_z = new_z + direction  # One more space in same direction
+                if 0 <= two_spaces_z < Board.SIZE and not grid[two_spaces_z][self.grid_x]:
+                    valid.append((self.grid_x, two_spaces_z))
+        
+        # Captures
+        for dx in [-1, 1]:
+            new_x = self.grid_x + dx
+            if 0 <= new_x < Board.SIZE and 0 <= new_z < Board.SIZE:
+                target = grid[new_z][new_x]
+                if target and target.is_black != self.is_black:
+                    valid.append((new_x, new_z))
+        
+        return valid
+
+class Rook(ChessPiece):
+    def get_valid_moves(self, board_state):
+        valid_positions = []
+        x, z = int(self.grid_x), int(self.grid_z)
+        
+        # Horizontal and vertical moves
+        for dx, dz in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+            curr_x, curr_z = x, z
+            while True:
+                curr_x, curr_z = curr_x + dx, curr_z + dz
+                if not (0 <= curr_x < Board.SIZE and 0 <= curr_z < Board.SIZE):
+                    break
+                
+                target = board_state[curr_z][curr_x]
+                valid_positions.append((curr_x, curr_z))
+                if target:  # Stop if we hit a piece (after adding the position for capture)
+                    break
+        
+        print(f"Rook at ({x}, {z}) valid moves: {valid_positions}")
+        return valid_positions
+
+class Knight(ChessPiece):
+    def get_valid_moves(self, board_state):
+        valid_positions = []
+        x, z = int(self.grid_x), int(self.grid_z)
+        
+        moves = [
+            (1, 2), (2, 1), (2, -1), (1, -2),
+            (-1, -2), (-2, -1), (-2, 1), (-1, 2)
+        ]
+        for dx, dz in moves:
+            new_x, new_z = x + dx, z + dz
+            if 0 <= new_x < Board.SIZE and 0 <= new_z < Board.SIZE:
+                target = board_state[new_z][new_x]
+                if not target or target.is_black != self.is_black:
+                    valid_positions.append((new_x, new_z))
+        
+        print(f"Knight at ({x}, {z}) valid moves: {valid_positions}")
+        return valid_positions
+
+class Bishop(ChessPiece):
+    def get_valid_moves(self, board_state):
+        valid_positions = []
+        x, z = int(self.grid_x), int(self.grid_z)
+        
+        # Diagonal moves
+        for dx, dz in [(1, 1), (1, -1), (-1, 1), (-1, -1)]:
+            curr_x, curr_z = x, z
+            while True:
+                curr_x, curr_z = curr_x + dx, curr_z + dz
+                if not (0 <= curr_x < Board.SIZE and 0 <= curr_z < Board.SIZE):
+                    break
+                
+                target = board_state[curr_z][curr_x]
+                valid_positions.append((curr_x, curr_z))
+                if target:  # Stop if we hit a piece (after adding the position for capture)
+                    break
+        
+        print(f"Bishop at ({x}, {z}) valid moves: {valid_positions}")
+        return valid_positions
+
+class Queen(ChessPiece):
+    def get_valid_moves(self, board_state):
+        valid_positions = []
+        x, z = int(self.grid_x), int(self.grid_z)
+        
+        # Combine rook and bishop moves
+        directions = [
+            (0, 1), (0, -1), (1, 0), (-1, 0),  # Rook moves
+            (1, 1), (1, -1), (-1, 1), (-1, -1)  # Bishop moves
+        ]
+        
+        for dx, dz in directions:
+            curr_x, curr_z = x, z
+            while True:
+                curr_x, curr_z = curr_x + dx, curr_z + dz
+                if not (0 <= curr_x < Board.SIZE and 0 <= curr_z < Board.SIZE):
+                    break
+                
+                target = board_state[curr_z][curr_x]
+                valid_positions.append((curr_x, curr_z))
+                if target:  # Stop if we hit a piece (after adding the position for capture)
+                    break
+        
+        print(f"Queen at ({x}, {z}) valid moves: {valid_positions}")
+        return valid_positions
+
+class King(ChessPiece):
+    def get_valid_moves(self, board_state):
+        valid_positions = []
+        x, z = int(self.grid_x), int(self.grid_z)
+        
+        # All adjacent squares
+        directions = [
+            (0, 1), (0, -1), (1, 0), (-1, 0),  # Orthogonal
+            (1, 1), (1, -1), (-1, 1), (-1, -1)  # Diagonal
+        ]
+        
+        for dx, dz in directions:
+            new_x, new_z = x + dx, z + dz
+            if 0 <= new_x < Board.SIZE and 0 <= new_z < Board.SIZE:
+                target = board_state[new_z][new_x]
+                if not target or target.is_black != self.is_black:
+                    valid_positions.append((new_x, new_z))
+        
+        print(f"King at ({x}, {z}) valid moves: {valid_positions}")
+        return valid_positions
+
+# Then define the piece_classes dictionary AFTER all classes are defined
+piece_classes = {
+    'pawn': Pawn,
+    'rook': Rook,
+    'knight': Knight,
+    'bishop': Bishop,
+    'queen': Queen,
+    'king': King
+}
+
+def create_piece_at_position(piece_type, grid_x, grid_z):
+    """Create a new chess piece at the specified grid position"""
+    try:
+        # Get model path
+        model_path = piece_models[piece_type]['black' if z <= PieceRows.WHITE_PAWN else piece_models[piece_type]['white']]
+        
+        # Verify model file exists
+        if not os.path.exists(model_path):
+            print(f"Error: Could not find model file at {model_path}")
+            return None
+            
+        # Load model with error handling
+        model = load_model(model_path)
+        if not model:
+            print(f"Error: Failed to load model from {model_path}")
+            return None
+            
+        # Determine piece color based on position
+        is_black = grid_z >= Board.SIZE / 2  # Top half of board for black pieces
+        
+        # Create the piece
+        piece = piece_classes[piece_type](
+            is_black=is_black,
+            grid_x=grid_x,
+            grid_z=grid_z,
+            model=model,
+            scale=piece_models[piece_type]['scale'],
+            rotation=PieceRotation.BLACK if is_black else PieceRotation.WHITE,
+            position=(grid_x, Position.GROUND_HEIGHT, grid_z),
+            shader=basic_lighting_shader,
+            double_sided=True,
+        )
+        
+        # Update virtual grid
+        VIRTUAL_GRID[grid_z][grid_x] = piece
+        piece_entities.append(piece)
+        
+        print(f"Successfully created {piece_type} at ({grid_x}, {grid_z})")
+        return piece
+        
+    except Exception as e:
+        print(f"Error creating piece: {e}")
+        return None
 
 class ChessSymbols:
     TEXTURE = './images/chess_symbols.png'
@@ -257,8 +633,41 @@ class ChessSymbols:
             'scale': Vec2(ChessSymbols.UV_WIDTH, ChessSymbols.UV_HEIGHT)
         }
 
+class GameRules:
+    def __init__(self, card_state, camera_pivot):
+        self.card_state = card_state
+        self.camera_pivot = camera_pivot
+        self.camera_rotation_x = Camera.START_ROTATION
+        self.camera_rotation_y = Camera.WHITE_ROTATION_Y
+        self.manual_control = False
+
+    def update_camera(self):
+        """Handle both automatic and manual camera rotation"""
+        # Automatic rotation based on turn
+        if not self.manual_control:
+            target_rotation_y = Camera.BLACK_ROTATION_Y if self.card_state.current_player == 'BLACK' else Camera.WHITE_ROTATION_Y
+            self.camera_rotation_y = lerp(self.camera_rotation_y, target_rotation_y, time.dt * Camera.ROTATION_SMOOTHING)
+
+        # Manual rotation with right mouse drag
+        if mouse.right:
+            self.manual_control = True
+            self.camera_rotation_x -= mouse.velocity[1] * Camera.MOUSE_SENSITIVITY
+            self.camera_rotation_x = clamp(self.camera_rotation_x, Camera.MIN_ROTATION_X, Camera.MAX_ROTATION_X)
+            self.camera_rotation_y += mouse.velocity[0] * Camera.MOUSE_SENSITIVITY
+        else:
+            self.manual_control = False
+
+        # Apply rotation to camera pivot
+        self.camera_pivot.rotation = (
+            lerp(self.camera_pivot.rotation_x, self.camera_rotation_x, time.dt * Camera.ROTATION_SMOOTHING),
+            lerp(self.camera_pivot.rotation_y, self.camera_rotation_y, time.dt * Camera.ROTATION_SMOOTHING),
+            0
+        )
+
 def start_game():
-    global piece_entities
+    global piece_entities, board_entities, selected_card, card_entities
+    selected_card = None  # Initialize selected_card as None
+    
     # Clear any existing entities from the menu
     for entity in scene.entities:
         destroy(entity)
@@ -277,7 +686,7 @@ def start_game():
     game = Entity()
     
     # Chess board setup
-    board_entities = []
+    board_entities = []  # Initialize the list
     selected_piece = None
     current_turn = 'white'
 
@@ -301,16 +710,16 @@ def start_game():
             )
             board_entities.append(board)
 
-    # Initialize piece positions (using standard chess layout)
+    # Initialize empty piece positions with just kings
     piece_positions = [
-        ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'],
-        ['pawn']*8,
+        ['', '', '', 'king', '', '', '', ''],  # Black king on e8 (index 4)
         ['']*8,
         ['']*8,
         ['']*8,
         ['']*8,
-        ['pawn']*8,
-        ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook']
+        ['']*8,
+        ['']*8,
+        ['', '', '', 'king', '', '', '', '']   # White king on e1 (index 4)
     ]
 
     # Update piece models configuration.
@@ -348,207 +757,6 @@ def start_game():
         }
     }
 
-    # Add these class definitions before the start_game function
-    class ChessPiece(Entity):
-        def __init__(self, is_black, grid_x, grid_z, **kwargs):
-            super().__init__(**kwargs)
-            self.is_black = is_black
-            self.grid_x = grid_x
-            self.grid_z = grid_z
-            self.original_color = PieceColors.BLACK if is_black else PieceColors.WHITE
-            self.color = self.original_color
-            self.valid_move_markers = []
-            self.valid_moves = []  # Store valid moves here
-            self.original_y = Position.GROUND_HEIGHT
-
-        def highlight(self):
-            """Highlight piece on hover"""
-            self.color = PieceColors.BLACK_HIGHLIGHT if self.is_black else PieceColors.WHITE_HIGHLIGHT
-        
-        def select(self):
-            """Highlight piece when selected"""
-            self.color = PieceColors.SELECTED_BLACK if self.is_black else PieceColors.SELECTED_WHITE
-        
-        def reset_color(self):
-            """Reset to original color"""
-            self.color = self.original_color
-
-        def get_valid_moves(self, board_state):
-            raise NotImplementedError("Each piece must implement its own movement rules")
-
-        def can_capture(self, target_piece):
-            return target_piece.is_black != self.is_black
-
-        def show_valid_moves(self, valid_positions):
-            """Show and store valid moves"""
-            self.valid_moves = valid_positions  # Store the valid moves
-            self.reset_color()
-            # Clear old markers
-            for marker in self.valid_move_markers:
-                destroy(marker)
-            self.valid_move_markers.clear()
-            
-            # Create new markers
-            for x, z in valid_positions:
-                marker = Entity(
-                    model='sphere',
-                    color=BoardColors.HOVER,
-                    position=(x, Position.MARKER_HEIGHT, z),
-                    scale=Position.MARKER_SCALE,
-                    shader=lit_with_shadows_shader,
-                    billboard=True
-                )
-                self.valid_move_markers.append(marker)
-
-        def update_visual_position(self):
-            """Correctly converts grid coordinates to world positions"""
-            self.position = (
-                self.grid_x, 
-                self.position.y, 
-                self.grid_z  # Direct mapping without flipping
-            )
-
-        def clear_markers(self):
-            """Clear all valid move markers"""
-            for marker in self.valid_move_markers:
-                destroy(marker)
-            self.valid_move_markers.clear()
-            self.valid_moves = []
-
-    class Pawn(ChessPiece):
-        def get_valid_moves(self, grid):
-            valid = []
-            direction = 1 if self.is_black else -1  # Fix direction: white moves up (-z), black moves down (+z)
-            new_z = self.grid_z + direction
-            
-            # Forward move one space
-            if 0 <= new_z < Board.SIZE and not grid[new_z][self.grid_x]:
-                valid.append((self.grid_x, new_z))
-                
-                # First move can be two spaces if path is clear
-                if (self.is_black and self.grid_z == 1) or (not self.is_black and self.grid_z == 6):  # Starting positions
-                    two_spaces_z = new_z + direction  # One more space in same direction
-                    if 0 <= two_spaces_z < Board.SIZE and not grid[two_spaces_z][self.grid_x]:
-                        valid.append((self.grid_x, two_spaces_z))
-            
-            # Captures
-            for dx in [-1, 1]:
-                new_x = self.grid_x + dx
-                if 0 <= new_x < Board.SIZE and 0 <= new_z < Board.SIZE:
-                    target = grid[new_z][new_x]
-                    if target and target.is_black != self.is_black:
-                        valid.append((new_x, new_z))
-            
-            return valid
-
-    class Rook(ChessPiece):
-        def get_valid_moves(self, board_state):
-            valid_positions = []
-            x, z = int(self.grid_x), int(self.grid_z)
-            
-            # Horizontal and vertical moves
-            for dx, dz in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
-                curr_x, curr_z = x, z
-                while True:
-                    curr_x, curr_z = curr_x + dx, curr_z + dz
-                    if not (0 <= curr_x < Board.SIZE and 0 <= curr_z < Board.SIZE):
-                        break
-                    
-                    target = board_state[curr_z][curr_x]
-                    valid_positions.append((curr_x, curr_z))
-                    if target:  # Stop if we hit a piece (after adding the position for capture)
-                        break
-            
-            print(f"Rook at ({x}, {z}) valid moves: {valid_positions}")
-            return valid_positions
-
-    class Knight(ChessPiece):
-        def get_valid_moves(self, board_state):
-            valid_positions = []
-            x, z = int(self.grid_x), int(self.grid_z)
-            
-            moves = [
-                (1, 2), (2, 1), (2, -1), (1, -2),
-                (-1, -2), (-2, -1), (-2, 1), (-1, 2)
-            ]
-            for dx, dz in moves:
-                new_x, new_z = x + dx, z + dz
-                if 0 <= new_x < Board.SIZE and 0 <= new_z < Board.SIZE:
-                    target = board_state[new_z][new_x]
-                    if not target or target.is_black != self.is_black:
-                        valid_positions.append((new_x, new_z))
-            
-            print(f"Knight at ({x}, {z}) valid moves: {valid_positions}")
-            return valid_positions
-
-    class Bishop(ChessPiece):
-        def get_valid_moves(self, board_state):
-            valid_positions = []
-            x, z = int(self.grid_x), int(self.grid_z)
-            
-            # Diagonal moves
-            for dx, dz in [(1, 1), (1, -1), (-1, 1), (-1, -1)]:
-                curr_x, curr_z = x, z
-                while True:
-                    curr_x, curr_z = curr_x + dx, curr_z + dz
-                    if not (0 <= curr_x < Board.SIZE and 0 <= curr_z < Board.SIZE):
-                        break
-                    
-                    target = board_state[curr_z][curr_x]
-                    valid_positions.append((curr_x, curr_z))
-                    if target:  # Stop if we hit a piece (after adding the position for capture)
-                        break
-            
-            print(f"Bishop at ({x}, {z}) valid moves: {valid_positions}")
-            return valid_positions
-
-    class Queen(ChessPiece):
-        def get_valid_moves(self, board_state):
-            valid_positions = []
-            x, z = int(self.grid_x), int(self.grid_z)
-            
-            # Combine rook and bishop moves
-            directions = [
-                (0, 1), (0, -1), (1, 0), (-1, 0),  # Rook moves
-                (1, 1), (1, -1), (-1, 1), (-1, -1)  # Bishop moves
-            ]
-            
-            for dx, dz in directions:
-                curr_x, curr_z = x, z
-                while True:
-                    curr_x, curr_z = curr_x + dx, curr_z + dz
-                    if not (0 <= curr_x < Board.SIZE and 0 <= curr_z < Board.SIZE):
-                        break
-                    
-                    target = board_state[curr_z][curr_x]
-                    valid_positions.append((curr_x, curr_z))
-                    if target:  # Stop if we hit a piece (after adding the position for capture)
-                        break
-            
-            print(f"Queen at ({x}, {z}) valid moves: {valid_positions}")
-            return valid_positions
-
-    class King(ChessPiece):
-        def get_valid_moves(self, board_state):
-            valid_positions = []
-            x, z = int(self.grid_x), int(self.grid_z)
-            
-            # All adjacent squares
-            directions = [
-                (0, 1), (0, -1), (1, 0), (-1, 0),  # Orthogonal
-                (1, 1), (1, -1), (-1, 1), (-1, -1)  # Diagonal
-            ]
-            
-            for dx, dz in directions:
-                new_x, new_z = x + dx, z + dz
-                if 0 <= new_x < Board.SIZE and 0 <= new_z < Board.SIZE:
-                    target = board_state[new_z][new_x]
-                    if not target or target.is_black != self.is_black:
-                        valid_positions.append((new_x, new_z))
-            
-            print(f"King at ({x}, {z}) valid moves: {valid_positions}")
-            return valid_positions
-
     # Modify the piece creation code to use the new classes
     piece_classes = {
         'pawn': Pawn,
@@ -585,303 +793,52 @@ def start_game():
                 VIRTUAL_GRID[grid_z][grid_x] = piece
                 piece_entities.append(piece)
 
-    # Update the camera setup - ensure proper initialization
+    # Create card UI and get state before creating GameRules
+    card_holder, cards, deck_cards, card_state = create_card_ui()
+    
+    # Create camera pivot and pass it to GameRules
     camera_pivot = Entity()
+    game_rules = GameRules(card_state, camera_pivot)
+    
+    # Rest of camera setup remains the same
     camera.parent = camera_pivot
     camera_pivot.position = (BoardCenter.X, Camera.PIVOT_HEIGHT, BoardCenter.Z)
     camera.position = (0, Camera.START_HEIGHT, Camera.START_DISTANCE)
     camera.rotation_x = Camera.START_ROTATION
 
-    # Add this class before start_game()
-    class GameRules:
-        def __init__(self):
-            self.current_turn = Turn.WHITE
-            self.target_rotation = Camera.WHITE_ROTATION_Y
-            self.card_state = CardState()  # Add card state to GameRules
-            print(f"\n=== Game Initialization ===")
-            print(f"Starting turn: {self.current_turn}")
-            self.print_board_state()
-            
-        def print_board_state(self):
-            """Debug print both virtual and visual board states"""
-            print("\nVirtual Board State (VIRTUAL_GRID):")
-            for z in range(8):
-                row = []
-                for x in range(8):
-                    piece = VIRTUAL_GRID[z][x]
-                    if piece:
-                        row.append(f"{'B' if piece.is_black else 'W'}{piece.__class__.__name__[0]}")
-                    else:
-                        row.append('--')
-                print(f"Row {z}: {row}")
-            
-            print("\nVisual Piece Positions:")
-            for piece in piece_entities:
-                print(f"Piece: {piece.__class__.__name__} "
-                      f"Color: {'Black' if piece.is_black else 'White'} "
-                      f"Grid: ({piece.grid_x}, {piece.grid_z}) "
-                      f"World: ({piece.position.x}, {piece.position.y}, {piece.position.z})")
-
-        def can_move(self, piece):
-            """Check if piece color matches current turn"""
-            can_move = (self.current_turn == Turn.WHITE and not piece.is_black) or \
-                       (self.current_turn == Turn.BLACK and piece.is_black)
-            print(f"Move check: {piece.__class__.__name__} at ({piece.grid_x}, {piece.grid_z})")
-            print(f"Is black: {piece.is_black}, Current turn: {self.current_turn}, Can move: {can_move}")
-            return can_move
-
-        def can_move_to_position(self, piece, target_pos, board_state):
-            """Validate if a piece can move to the target position"""
-            target_x, target_z = target_pos
-            
-            # Check if position is within board bounds
-            if not (0 <= target_x < Board.SIZE and 0 <= target_z < Board.SIZE):
-                print(f"Invalid move: Position ({target_x}, {target_z}) out of bounds")
-                return False
-            
-            # Check if there's a piece at the target position
-            target_piece = board_state[target_z][target_x]
-            if target_piece:
-                can_capture = piece.can_capture(target_piece)
-                print(f"Target square occupied, can capture: {can_capture}")
-                return can_capture
-            
-            print(f"Valid move to empty square ({target_x}, {target_z})")
-            return True
-
-        def get_valid_moves(self, piece, board_state):
-            """Get valid moves considering game state"""
-            if not self.can_move(piece):
-                print(f"Piece cannot move: wrong turn or invalid piece")
-                return []
-            
-            # Get the basic moves for the piece type
-            potential_moves = piece.get_valid_moves(board_state)
-            print(f"Potential moves for {piece.__class__.__name__} at ({piece.grid_x}, {piece.grid_z}): {potential_moves}")
-            
-            # Filter out invalid moves
-            valid_moves = []
-            for move in potential_moves:
-                if self.can_move_to_position(piece, move, board_state):
-                    valid_moves.append(move)
-            
-            print(f"Final filtered valid moves: {valid_moves}")
-            return valid_moves
-
-        def switch_turn(self):
-            """Switch turns and update game state"""
-            self.current_turn = Turn.BLACK if self.current_turn == Turn.WHITE else Turn.WHITE
-            self.target_rotation = Camera.BLACK_ROTATION_Y if self.current_turn == Turn.BLACK else Camera.WHITE_ROTATION_Y
-            
-            # Update card state and UI
-            self.card_state.switch_turn()
-            update_cards_for_turn(cards, deck_cards, self.card_state)  # Pass card_state object
-            
-            print(f"\n=== Turn Change: Now {self.current_turn.value}'s turn ===\n")
-
-    # Modify ChessActions to use GameRules
-    class ChessActions:
-        def __init__(self, game_rules):
-            self.selected_piece = None
-            self.game_rules = game_rules
-            self.target_square = None
-            self.dragging = False
-            self.last_hover_pos = None
-            self.mouse_pressed = False  # Add this to track mouse state
-
-        def select_piece(self, piece):
-            """Only allow selection of pieces matching current turn"""
-            if not held_keys['left mouse'] or self.mouse_pressed:
-                return
-            
-            self.mouse_pressed = True
-            
-            if piece and self.game_rules.can_move(piece):
-                print(f"\n=== Piece Selection ===")
-                print(f"Current turn: {self.game_rules.current_turn}")
-                print(f"Selected: {piece.__class__.__name__} at ({piece.grid_x}, {piece.grid_z}) - {'Black' if piece.is_black else 'White'}")
-                
-                self.selected_piece = piece
-                self.dragging = True
-                piece.y = Position.SELECTED_HEIGHT
-                valid_moves = self.game_rules.get_valid_moves(piece, VIRTUAL_GRID)  # Get moves from GameRules
-                piece.show_valid_moves(valid_moves)
-                print(f"Valid moves: {valid_moves}")
-
-        def release_piece(self):
-            """Handle piece release and movement"""
-            self.mouse_pressed = False  # Reset mouse state
-            
-            if self.selected_piece and self.target_square:
-                new_x, new_z = self.target_square
-                current_x, current_z = self.selected_piece.grid_x, self.selected_piece.grid_z
-                
-                # Validate the move is in valid_moves
-                valid_move = (new_x, new_z) in self.selected_piece.valid_moves
-                
-                print(f"\n=== Move Attempt ===")
-                print(f"From: ({current_x}, {current_z}) To: ({new_x}, {new_z})")
-                print(f"Valid move: {valid_move}")
-                
-                if valid_move:
-                    # Check if there's a piece to capture
-                    captured_piece = VIRTUAL_GRID[new_z][new_x]
-                    if captured_piece:
-                        print(f"Capturing piece at ({new_x}, {new_z})")
-                        # Remove captured piece from the scene
-                        destroy(captured_piece)
-                        # Remove from piece_entities list
-                        if captured_piece in piece_entities:
-                            piece_entities.remove(captured_piece)
-                    
-                    # Update virtual grid
-                    VIRTUAL_GRID[current_z][current_x] = None
-                    VIRTUAL_GRID[new_z][new_x] = self.selected_piece
-                    
-                    # Update piece position
-                    self.selected_piece.grid_x = new_x
-                    self.selected_piece.grid_z = new_z
-                    self.selected_piece.update_visual_position()
-                    self.selected_piece.y = Position.GROUND_HEIGHT
-                    
-                    # Clear markers after successful move
-                    self.selected_piece.clear_markers()
-                    
-                    print(f"Move completed: {self.selected_piece.__class__.__name__} to ({new_x}, {new_z})")
-                    self.game_rules.switch_turn()
-                else:
-                    print(f"Invalid move - returning to ({current_x}, {current_z})")
-                    # Return piece to original position
-                    self.selected_piece.grid_x = current_x
-                    self.selected_piece.grid_z = current_z
-                    self.selected_piece.update_visual_position()
-                    self.selected_piece.y = Position.GROUND_HEIGHT
-                    # Clear markers on invalid move
-                    self.selected_piece.clear_markers()
-
-            # Reset selection state
-            if self.selected_piece:
-                self.selected_piece.reset_color()
-            self.selected_piece = None
-            self.target_square = None
-            self.dragging = False
-
-    # Create game rules and actions manager
-    game_rules = GameRules()
-    actions = ChessActions(game_rules)
-
     def game_update():
-        nonlocal selected_piece, current_turn
-        
-        # Add debug output for board state
-        if held_keys['shift']:  # Press shift to print board state
-            board_state = [[None for _ in range(Board.SIZE)] for _ in range(Board.SIZE)]
-            for p in piece_entities:
-                x = int(round(p.grid_x))
-                z = int(round(p.grid_z))
-                if 0 <= x < 8 and 0 <= z < 8:
-                    board_state[z][x] = p
-            print("Current Board State:")
-            for row in board_state:
-                print([f"{'B' if p.is_black else 'W'}{p.__class__.__name__[0]}" if p else '--' for p in row])
-        
-        # Camera rotation with middle mouse button or WASD
-        rotation_speed = Camera.ROTATION_SPEED * time.dt
-        if held_keys['middle mouse']:
-            camera_pivot.rotation_y += mouse.velocity[0] * Camera.MOUSE_SENSITIVITY
-            target_rotation_x = min(Camera.MAX_ROTATION_X, 
-                                  max(Camera.MIN_ROTATION_X, 
-                                      camera.rotation_x - mouse.velocity[1] * Camera.MOUSE_SENSITIVITY))
-            camera.rotation_x = lerp(camera.rotation_x, target_rotation_x, Camera.LERP_SPEED)
-        else:
-            # WASD for rotation
-            if held_keys['d']:
-                camera_pivot.rotation_y += rotation_speed
-            if held_keys['a']:
-                camera_pivot.rotation_y -= rotation_speed
-            if held_keys['w']:
-                target_rotation_x = min(Camera.MAX_ROTATION_X, camera.rotation_x + rotation_speed)
-                camera.rotation_x = lerp(camera.rotation_x, target_rotation_x, Camera.LERP_SPEED)
-            if held_keys['s']:
-                target_rotation_x = max(Camera.MIN_ROTATION_X, camera.rotation_x - rotation_speed)
-                camera.rotation_x = lerp(camera.rotation_x, target_rotation_x, Camera.LERP_SPEED)
-        
-        # Handle piece hovering and selection
-        if mouse.hovered_entity and mouse.hovered_entity in board_entities + piece_entities:
-            board_x = mouse.hovered_entity.position.x
-            board_z = mouse.hovered_entity.position.z
-            
-            # Find piece under mouse
-            hovered_piece = None
-            for piece in piece_entities:
-                if (abs(piece.position.x - board_x) <= Position.HOVER_X_THRESHOLD and 
-                    abs(piece.position.z - board_z) <= Position.HOVER_Z_THRESHOLD):
-                    hovered_piece = piece
-                    if not actions.dragging and piece != actions.selected_piece:
-                        piece.y = Position.HOVER_HEIGHT
-                        piece.highlight()
-                    break
-            
-            # Reset non-hovered pieces
-            for piece in piece_entities:
-                if piece != hovered_piece and piece != actions.selected_piece:
-                    piece.y = Position.GROUND_HEIGHT
-                    piece.reset_color()
-
-        else:
-            # Mouse not over board - reset all non-selected pieces
-            for piece in piece_entities:
-                if piece != actions.selected_piece:
-                    piece.y = Position.GROUND_HEIGHT
-                    piece.reset_color()
-
-        if held_keys['shift']:
-            print("\nCurrent Valid Moves:")
-            if actions.selected_piece:
-                print(f"Selected {type(actions.selected_piece).__name__} at ({actions.selected_piece.grid_x}, {actions.selected_piece.grid_z})")
-                print("Valid moves:", actions.selected_piece.valid_moves)
-
-        # Piece movement handling
-        if mouse.hovered_entity and mouse.hovered_entity in board_entities:
-            board_entity = mouse.hovered_entity
-            # Convert board position to grid coordinates directly
-            target_x = int(board_entity.position.x)
-            target_z = int(board_entity.position.z)  # Remove the flip
-            
-            if held_keys['left mouse']:
-                if not actions.selected_piece:
-                    piece = VIRTUAL_GRID[target_z][target_x]
-                    if piece and actions.game_rules.can_move(piece):
-                        actions.select_piece(piece)
-                else:
-                    # Update both visual and target grid position
-                    actions.target_square = (target_x, target_z)
-                    actions.selected_piece.position = (
-                        board_entity.position.x,
-                        Position.SELECTED_HEIGHT,
-                        board_entity.position.z
-                    )
-            elif actions.selected_piece:
-                # Release piece and attempt move
-                actions.target_square = (target_x, target_z)
-                actions.release_piece()
-
-        # Add camera rotation update
-        if camera_pivot.rotation_y != game_rules.target_rotation:
-            # Calculate shortest rotation direction
-            diff = (game_rules.target_rotation - camera_pivot.rotation_y + 180) % 360 - 180
-            # Smooth rotation
-            camera_pivot.rotation_y += diff * time.dt * Camera.ROTATION_SPEED / Camera.ROTATION_SMOOTHING
-            
-            # Snap to target if very close
-            if abs(diff) < 0.1:
-                camera_pivot.rotation_y = game_rules.target_rotation
-
-    # Attach the update function to the game entity
+        game_rules.update_camera()  # Update camera every frame
+    
     game.update = game_update
 
-    # Create card UI
-    card_holder, cards, deck_cards, card_state = create_card_ui()
+    def on_board_click():
+        global selected_card
+        if selected_card and mouse.hovered_entity in board_entities:
+            board_pos = mouse.hovered_entity.position
+            grid_x = int(board_pos.x)
+            grid_z = int(board_pos.z)
+            print(f"Attempting to place card at ({grid_x}, {grid_z})")
+            
+            # Place the card on the board
+            if selected_card.place_on_board(grid_x, grid_z):
+                print("Card placed successfully")
+                selected_card = None  # Reset selection
+            else:
+                print("Failed to place card")
+                # Return card to original position if placement failed
+                selected_card.parent.animate_position(
+                    selected_card.original_position,
+                    duration=0.2
+                )
+                selected_card.is_selected = False
+                selected_card = None
+    
+    def input(key):
+        if key == 'left mouse down' and mouse.hovered_entity in board_entities:
+            on_board_click()
+    
+    # Attach input handler to game entity
+    game.input = input
 
 def exit_game():
     application.quit()
@@ -931,6 +888,20 @@ def input(key):
                 break
 
 def create_card_ui():
+    # Add at start of function
+    # Verify required textures exist
+    required_textures = [
+        CardUI.CARD_TEXTURE,
+        PlayerCards.WHITE['dragon_image'],
+        PlayerCards.BLACK['dragon_image'],
+        ChessSymbols.TEXTURE
+    ]
+    
+    for texture_path in required_textures:
+        if not os.path.exists(texture_path):
+            print(f"Error: Missing required texture: {texture_path}")
+            return None, None, None, None
+    
     global card_entities  # Ensure we're modifying the global list
     card_holder = Entity(parent=camera.ui)
     card_state = CardState()
@@ -993,7 +964,7 @@ def create_card_ui():
         )
         
         card_entity = CardEntity(
-            card_parent,  # Pass the parent entity
+            card_parent,
             card_template,
             card_image,
             symbol,
