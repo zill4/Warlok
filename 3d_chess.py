@@ -25,18 +25,16 @@ class Board:
 
 # Camera constants
 class Camera:
-    START_HEIGHT = 12         # Lower height for more natural view
-    START_DISTANCE = -20     # Closer to board
-    START_ROTATION = 30     # Less steep angle (more like sitting at table)
-    PIVOT_HEIGHT = 0
-    MIN_ROTATION_X = 15
-    MAX_ROTATION_X = 89
-    ROTATION_SPEED = 4
+    PIVOT_HEIGHT = 12  # Lower height
+    START_HEIGHT = 3  # Lower camera position
+    START_DISTANCE = -25  # Not as far back
+    START_ROTATION = 25  # Less steep angle
+    WHITE_ROTATION_Y = 180
+    BLACK_ROTATION_Y = 0
+    ROTATION_SMOOTHING = 8
     MOUSE_SENSITIVITY = 40
-    LERP_SPEED = 0.1
-    BLACK_ROTATION_Y = 180  # Facing black's side (top of board)
-    WHITE_ROTATION_Y = 0    # Facing white's side (bottom of board)
-    ROTATION_SMOOTHING = 6
+    MIN_ROTATION_X = 15
+    MAX_ROTATION_X = 70
 
 # Piece position constants
 class Position:
@@ -642,27 +640,38 @@ class GameRules:
         self.manual_control = False
 
     def update_camera(self):
-        """Handle both automatic and manual camera rotation"""
-        # Automatic rotation based on turn
+        """Handle camera rotation while maintaining manual control"""
+        # Automatic rotation when not manually controlled
         if not self.manual_control:
+            # Target rotation based on current player
             target_rotation_y = Camera.BLACK_ROTATION_Y if self.card_state.current_player == 'BLACK' else Camera.WHITE_ROTATION_Y
+            target_rotation_x = Camera.START_ROTATION
+            
+            # Smoothly interpolate towards target
+            self.camera_rotation_x = lerp(self.camera_rotation_x, target_rotation_x, time.dt * Camera.ROTATION_SMOOTHING)
             self.camera_rotation_y = lerp(self.camera_rotation_y, target_rotation_y, time.dt * Camera.ROTATION_SMOOTHING)
 
-        # Manual rotation with right mouse drag
-        if mouse.right:
+        # Middle mouse drag manual control
+        if mouse.middle:
             self.manual_control = True
             self.camera_rotation_x -= mouse.velocity[1] * Camera.MOUSE_SENSITIVITY
             self.camera_rotation_x = clamp(self.camera_rotation_x, Camera.MIN_ROTATION_X, Camera.MAX_ROTATION_X)
             self.camera_rotation_y += mouse.velocity[0] * Camera.MOUSE_SENSITIVITY
-        else:
-            self.manual_control = False
 
-        # Apply rotation to camera pivot
+        # Directly set rotation without lerp when manual control is active
         self.camera_pivot.rotation = (
-            lerp(self.camera_pivot.rotation_x, self.camera_rotation_x, time.dt * Camera.ROTATION_SMOOTHING),
-            lerp(self.camera_pivot.rotation_y, self.camera_rotation_y, time.dt * Camera.ROTATION_SMOOTHING),
+            self.camera_rotation_x,
+            self.camera_rotation_y,
             0
         )
+
+    def setup_camera(self):
+        """Initialize camera settings with better view of board"""
+        camera.parent = self.camera_pivot
+        self.camera_pivot.position = (BoardCenter.X, Camera.PIVOT_HEIGHT, BoardCenter.Z)
+        camera.position = (0, Camera.START_HEIGHT, Camera.START_DISTANCE)
+        camera.rotation_x = Camera.START_ROTATION
+        self.camera_pivot.rotation_y = Camera.WHITE_ROTATION_Y
 
 def start_game():
     global piece_entities, board_entities, selected_card, card_entities
@@ -801,10 +810,7 @@ def start_game():
     game_rules = GameRules(card_state, camera_pivot)
     
     # Rest of camera setup remains the same
-    camera.parent = camera_pivot
-    camera_pivot.position = (BoardCenter.X, Camera.PIVOT_HEIGHT, BoardCenter.Z)
-    camera.position = (0, Camera.START_HEIGHT, Camera.START_DISTANCE)
-    camera.rotation_x = Camera.START_ROTATION
+    game_rules.setup_camera()
 
     def game_update():
         game_rules.update_camera()  # Update camera every frame
