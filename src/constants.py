@@ -57,18 +57,30 @@ class PieceColors:
     SELECTED_BLACK = color.rgb(0, 200, 0)
 
 class CardUI:
-    CARD_HEIGHT = 0.15
-    CARD_WIDTH = 0.1
-    CARD_SPACING = 0.12
-    BOTTOM_MARGIN = -0.45    # Lower position
-    HORIZONTAL_OFFSET = 0    # Center cards
-    CARD_TEXTURE = './src/assets/images/Normal_card.png'
+    # Keep current card size
+    CARD_WIDTH = 0.08
+    CARD_HEIGHT = 0.12
+    CARD_SPACING = 0.085
+    BOTTOM_MARGIN = -0.42
+    HORIZONTAL_OFFSET = 0
+    Z_POSITION = 0
+    CARD_TEXTURE = 'assets/images/Normal_card.png'
     MAX_CARDS = 8
-    HOVER_LIFT = 0.05
-    HOVER_SEPARATION = 0.03
-    STACK_HEIGHT = 0.001
-    Z_POSITION = 0.1
+    HOVER_LIFT = 0.02
+    HOVER_FORWARD = -0.02
+    HOVER_SEPARATION = 0.01
     CARD_ROTATION = (0, 0, 0)
+    
+    # Larger size and more to the right
+    SYMBOL_SCALE = 0.08      # Increased size
+    SYMBOL_X_OFFSET = 0.35   # More to the right
+    SYMBOL_Y_OFFSET = 0.4    # Keep same height
+    SYMBOL_Z_OFFSET = -0.2   
+
+    # Z-ordering for card layers
+    BASE_Z = 0
+    OVERLAY_Z = -0.1
+    SYMBOL_Z = -0.2
 
 class Light:
     HEIGHT = 15            # Higher light position
@@ -101,37 +113,29 @@ class InitialSetup:
     ]
 
 class ChessSymbols:
-    TEXTURE = './src/assets/images/chess_symbols.png'
-    SPRITE_WIDTH = 1280
-    SPRITE_HEIGHT = 388
+    TEXTURE = 'assets/images/chess_symbols.png'
     SYMBOLS_PER_ROW = 6
-    SYMBOLS_PER_COL = 2
     SYMBOL_WIDTH = 1/6
-    SYMBOL_HEIGHT = 1/2
+    SYMBOL_HEIGHT = 0.5
     
     @staticmethod
-    def get_random_symbol_uvs(is_black):
-        """Get UV coordinates for a random chess symbol"""
-        # Define UV coordinates for each symbol in the texture atlas
-        symbols = {
-            'pawn': {'white': (0, 0), 'black': (0, 0.5)},
-            'rook': {'white': (0.2, 0), 'black': (0.2, 0.5)},
-            'knight': {'white': (0.4, 0), 'black': (0.4, 0.5)},
-            'bishop': {'white': (0.6, 0), 'black': (0.6, 0.5)},
-            'queen': {'white': (0.8, 0), 'black': (0.8, 0.5)},
-            'king': {'white': (1.0, 0), 'black': (1.0, 0.5)}
+    def get_symbol_uvs(piece_type, is_black):
+        """Get UV coordinates for a specific chess symbol"""
+        positions = {
+            'pawn': 0,
+            'rook': 1,
+            'knight': 2,
+            'bishop': 3,
+            'queen': 4,
+            'king': 5
         }
         
-        # Select a random piece type
-        piece_type = choice(list(symbols.keys()))
-        color = 'black' if is_black else 'white'
-        
-        # Get the UV coordinates for the selected piece
-        uv_pos = symbols[piece_type][color]
+        x_offset = positions[piece_type] / ChessSymbols.SYMBOLS_PER_ROW
+        y_offset = 0.5 if is_black else 0.0
         
         return {
-            'scale': (0.2, 0.5),  # Each symbol takes up 1/5 width, 1/2 height of texture
-            'offset': uv_pos
+            'scale': (1/ChessSymbols.SYMBOLS_PER_ROW, 0.5),
+            'offset': (x_offset, y_offset)
         }
 
 class PieceScale:
@@ -144,14 +148,14 @@ class PieceScale:
 
 class PlayerCards:
     WHITE = {
-        'dragon_image': './src/assets/images/blue_eyes_w_dragon.png',  # Updated path
+        'dragon_image': 'assets/images/blue_eyes_w_dragon.png',
         'deck_color': color.blue,
         'hand': [],
         'deck': [],
         'played': []
     }
     BLACK = {
-        'dragon_image': './src/assets/images/RedEyesBDragon.jpg',  # Updated path
+        'dragon_image': 'assets/images/RedEyesBDragon.jpg',
         'deck_color': color.red,
         'hand': [],
         'deck': [],

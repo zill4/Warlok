@@ -1,7 +1,7 @@
-from ursina import Entity, Vec3, mouse, camera, color, os
-from random import uniform, randint
+from ursina import Entity, Vec3, mouse, camera, color, os, Text, Texture
+from random import uniform, randint, choice
 from constants import CardUI, PlayerCards, BoardCenter, ChessSymbols
-from entities.cards import CardEntity
+from entities.cards import CardEntity, CardBase
 
 
 # Global variable to store card entities
@@ -22,83 +22,79 @@ def get_random_symbol_uvs(is_black):
         'offset': (u, v)
     }
 
-def create_card_ui(card_state):
-    """Create UI for a new card"""
-    global card_entities
+def create_card_ui():
+    """Create the UI elements for cards"""
+    cards_parent = Entity(parent=camera.ui)
+    cards = []
     
-    # Calculate card position based on current hand size
-    cards = card_state.black_cards if card_state.current_player == 'BLACK' else card_state.white_cards
-    card_index = len(cards['hand'])
+    # Define available piece types
+    piece_types = ['pawn', 'rook', 'knight', 'bishop', 'queen', 'king']
     
-    # Get player data for textures
-    player_data = card_state.get_current_player_data()
+    for i in range(CardUI.MAX_CARDS):
+        # Randomly select a piece type for this card
+        random_piece_type = choice(piece_types)
+        card_data = CardBase(False, 0, 0)
+        card_data.piece_type = random_piece_type  # Assign the random piece type
+        is_black = False  # Start with white symbols
+        
+        # Base card entity (Dragon)
+        card = Entity(
+            parent=cards_parent,
+            model='quad',
+            texture=PlayerCards.BLACK['dragon_image'],
+            scale=(CardUI.CARD_WIDTH, CardUI.CARD_HEIGHT),
+            position=Vec3(
+                (i - CardUI.MAX_CARDS/2) * CardUI.CARD_SPACING + CardUI.HORIZONTAL_OFFSET,
+                CardUI.BOTTOM_MARGIN,
+                CardUI.BASE_Z
+            ),
+            rotation=CardUI.CARD_ROTATION
+        )
+        
+        # Normal card overlay
+        card_overlay = Entity(
+            parent=card,
+            model='quad',
+            texture=CardUI.CARD_TEXTURE,
+            scale=(1, 1),
+            position=(0, 0, CardUI.OVERLAY_Z)
+        )
+        
+        # Background for symbol
+        symbol_bg = Entity(
+            parent=card,
+            model='quad',
+            color=color.red if is_black else color.black,  # Contrasting background
+            scale=(CardUI.SYMBOL_SCALE, CardUI.SYMBOL_SCALE),
+            position=(
+                CardUI.SYMBOL_X_OFFSET,
+                CardUI.SYMBOL_Y_OFFSET,
+                CardUI.SYMBOL_Z
+            ),
+            always_on_top=True
+        )
+        
+        # Chess symbol
+        symbol = Entity(
+            parent=symbol_bg,
+            model='quad',
+            texture=ChessSymbols.TEXTURE,
+            scale=(1, 1),
+            position=(0, 0, -0.01),
+            color=color.white,
+            always_on_top=True
+        )
+        
+        # Set UV coordinates for the random piece type
+        symbol_data = ChessSymbols.get_symbol_uvs(random_piece_type, is_black)
+        symbol.texture_scale = symbol_data['scale']
+        symbol.texture_offset = symbol_data['offset']
+        
+        print(f"Card {i} assigned piece type: {random_piece_type}")  # Debug print
+        
+        cards.append((card, card_overlay, symbol, card_data))
     
-    # Calculate base position - center the cards
-    total_width = CardUI.CARD_SPACING * (CardUI.MAX_CARDS - 1)
-    start_x = -(total_width/2)
-    
-    base_position = Vec3(
-        start_x + (card_index * CardUI.CARD_SPACING),
-        CardUI.BOTTOM_MARGIN,
-        0
-    )
-    
-    # Create card parent entity
-    card_parent = Entity(
-        parent=camera.ui,
-        position=base_position,
-        scale=Vec3(CardUI.CARD_WIDTH, CardUI.CARD_HEIGHT, 1),
-        rotation=(0, 0, 0),
-        always_on_top=True
-    )
-    
-    # Dragon artwork (background)
-    dragon_image = Entity(
-        parent=card_parent,
-        model='quad',
-        texture=player_data['dragon_image'],
-        color=color.white,
-        scale=(0.9, 0.9, 1),  # Slightly smaller than frame
-        z=0.01
-    )
-    
-    # Card frame overlay
-    card_frame = Entity(
-        parent=card_parent,
-        model='quad',
-        texture=CardUI.CARD_TEXTURE,
-        color=color.white,
-        scale=(1, 1, 1),
-        z=0
-    )
-    
-    # Chess symbol (top right)
-    symbol = Entity(
-        parent=card_parent,
-        model='quad',
-        texture=ChessSymbols.TEXTURE,
-        scale=(0.2, 0.2, 1),
-        position=(0.35, 0.35, -0.01),
-        z=-0.01
-    )
-    
-    # Set up symbol texture coordinates with fixed UV mapping
-    uvs = get_random_symbol_uvs(card_state.current_player == 'BLACK')
-    symbol.texture_scale = uvs['scale']
-    symbol.texture_offset = uvs['offset']
-    
-    # Create card entity
-    card_entity = CardEntity(
-        card_parent,
-        dragon_image,
-        symbol,
-        card_index,
-        base_position,
-        0
-    )
-    
-    card_entities.append(card_entity)
-    return card_entity
+    return cards
 
 def create_deck(card_holder, start_x):
     """Create the 3D deck of cards"""
@@ -162,6 +158,52 @@ def create_deck_edges(card_holder, base_x, deck_cards):
     )
     deck_cards.append(bottom_edge)
 
+def update_cards(card_state):
+    """Update card positions and appearance"""
+    if not card_state:
+        return
+        
+    player_data = card_state.get_current_player_data()
+    hand = player_data['hand']
+    
+    # Update card positions and visibility
+    for i, card in enumerate(hand):
+        if i < CardUI.MAX_CARDS:
+            card.visible = True
+            # Calculate new position with hover effect if needed
+            base_pos = Vec3(
+                (i - len(hand)/2) * CardUI.CARD_SPACING,
+                CardUI.BOTTOM_MARGIN,
+                CardUI.Z_POSITION
+            )
+            
+            if card.hovered:
+                base_pos.y += CardUI.HOVER_LIFT
+                base_pos.z -= CardUI.HOVER_SEPARATION
+            
+            card.position = base_pos
+        else:
+            card.visible = False
+
+def update_cards_for_turn(card_state):
+    """Update card images and deck color based on turn"""
+    if not card_state:
+        return
+        
+    player_data = card_state.get_current_player_data()
+    is_black = player_data == PlayerCards.BLACK
+    
+    # Get the cards from the card_state's current player
+    current_cards = card_state.black_cards['hand'] if is_black else card_state.white_cards['hand']
+    
+    # Update all card images and symbols
+    for card, overlay, symbol, card_data in current_cards:
+        card.texture = player_data['dragon_image']
+        # Update symbol UVs based on the card's piece type
+        symbol_data = ChessSymbols.get_symbol_uvs(card_data.piece_type, is_black)
+        symbol.texture_scale = symbol_data['scale']
+        symbol.texture_offset = symbol_data['offset']
+
 def update_cards():
     """Update card positions and handle hovering"""
     global card_entities  # Declare we're using the global variable
@@ -179,22 +221,4 @@ def update_cards():
                 card_entity.select_card()
         elif not mouse.left:
             if card_entity.is_hovered:
-                card_entity.unhover()
-
-def update_cards_for_turn(cards, deck_cards, card_state):
-    """Update card images and deck color based on turn"""
-    player_data = card_state.get_current_player_data()
-    is_black_turn = player_data == PlayerCards.BLACK
-    
-    # Update all card images and symbols
-    for _, card_image, symbol in cards:
-        card_image.texture = player_data['dragon_image']
-        # Update symbol UVs for current turn
-        uvs = get_random_symbol_uvs(is_black_turn)
-        symbol.texture_scale = uvs['scale']
-        symbol.texture_offset = uvs['offset']
-    
-    # Update deck appearance
-    base_color = player_data['deck_color']
-    for deck_card in deck_cards:
-        deck_card.color = base_color 
+                card_entity.unhover() 

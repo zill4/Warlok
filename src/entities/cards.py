@@ -1,18 +1,19 @@
 from ursina import Entity, Vec3, color, destroy, mouse, load_model
 from entities.base import GameEntity
-from constants import Position, Board, CardUI, PlayerCards, PieceRotation
+from constants import Position, Board, CardUI, PlayerCards, ChessSymbols, PieceRotation
 from models import piece_models
 from entities.pieces import piece_classes
 from ursina.shaders import basic_lighting_shader
+from random import choice
 
 
 class CardBase(GameEntity):
-    def __init__(self, is_black, grid_x, grid_z, symbol):
+    def __init__(self, is_black, grid_x, grid_z):
         super().__init__(is_black, grid_x, grid_z)
-        self.symbol = symbol
         self.is_card = True
-        self.card_texture = None
-        self.piece_type = None  # The type of chess piece this card represents
+        # Randomly assign a piece type when card is created
+        self.piece_type = choice(['pawn', 'rook', 'knight', 'bishop', 'queen', 'king'])
+        self.card_texture = PlayerCards.BLACK['dragon_image'] if is_black else PlayerCards.WHITE['dragon_image']
     
     def get_valid_moves(self, grid):
         """Implement abstract method from GameEntity"""
