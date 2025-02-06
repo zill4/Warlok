@@ -4,6 +4,19 @@ from ursina.prefabs.first_person_controller import FirstPersonController
 from ursina.shaders import lit_with_shadows_shader, basic_lighting_shader
 from random import uniform, randint
 import os
+from abc import ABC, abstractmethod
+from src.constants import *
+from src.models import piece_models
+from src.entities import (
+    GameEntity,
+    ChessPiece,
+    piece_classes,
+    CardBase,
+    CardEntity
+)
+from src.game.state import CardState
+from src.game.rules import GameRules
+from src.game.ui import create_card_ui, update_cards, update_cards_for_turn
 
 app = Ursina()
 window.title = '3D Chess'
@@ -11,9 +24,14 @@ window.color = color.black  # Set background color to black
 
 # Add this at the top level (right after app = Ursina())
 piece_entities = []
+card_entities = []  # Initialize empty list for card entities
 
 # Add at top level
 VIRTUAL_GRID = [[None for _ in range(8)] for _ in range(8)]
+
+# Add at top level with other globals
+selected_piece = None
+selected_card = None
 
 # Board dimensions
 class Board:
@@ -119,6 +137,9 @@ class CardUI:
     HOVER_LIFT = 0.05       # How high the card lifts on hover
     HOVER_FORWARD = -0.05   # How far forward (towards screen) the card moves
     HOVER_SEPARATION = 0.03 # How far the card separates from others
+    HAND_HEIGHT = 0.5        # Height above ground for cards in hand
+    HAND_DISTANCE = 2        # Distance from board edge
+    CARD_ROTATION = (60, 0, 0)  # Make cards stand more upright
 
 class PlayerCards:
     WHITE = {
@@ -151,6 +172,25 @@ class CardState:
             'played': []
         }
         print("Card state initialized")
+        
+        # Initialize starting hands
+        self.deal_initial_hands()
+    
+    def deal_initial_hands(self):
+        """Deal initial hands to both players"""
+        # Deal to white player
+        self.current_player = 'WHITE'
+        for _ in range(5):  # Start with 5 cards
+            self.draw_card()
+            
+        # Deal to black player
+        self.current_player = 'BLACK'
+        for _ in range(5):  # Start with 5 cards
+            self.draw_card()
+            
+        # Reset to white player's turn
+        self.current_player = 'WHITE'
+        print("Initial hands dealt")
     
     def switch_turn(self):
         """Switch turns and draw a card for the new player"""
@@ -180,7 +220,11 @@ class CardState:
             if card:
                 cards['deck'][i] = False  # Remove from deck
                 print(f"{self.current_player} drew a card")
-                return True  # Signal to create new card in hand
+                # Create the card UI
+                new_card = create_card_ui(self)
+                if new_card:
+                    cards['hand'].append(new_card)
+                return True
         return None
     
     def remove_card_from_hand(self, card_entity):
@@ -193,36 +237,79 @@ class CardState:
             return True
         return False
 
-class CardEntity:
-    def __init__(self, parent, template, image, symbol, index, original_position, original_z):
-        self.parent = parent
-        self.template = template
-        self.image = image
+# First, define the base classes
+class GameEntity(ABC):
+    def __init__(self, is_black, grid_x, grid_z):
+        self.is_black = is_black
+        self.grid_x = grid_x
+        self.grid_z = grid_z
+        self.original_color = None
+        self.valid_moves = []
+        self.valid_move_markers = []
+
+    @abstractmethod
+    def get_valid_moves(self, grid):
+        pass
+
+# Then define CardBase before CardEntity
+class CardBase(GameEntity):
+    def __init__(self, is_black, grid_x, grid_z, symbol):
+        super().__init__(is_black, grid_x, grid_z)
         self.symbol = symbol
+        self.is_card = True
+        self.card_texture = None
+        self.piece_type = None  # The type of chess piece this card represents
+    
+    def get_valid_moves(self, grid):
+        """Implement abstract method from GameEntity"""
+        # Cards don't move on the board, so return empty list
+        return []
+        
+    def create_piece_entity(self):
+        """Factory method to create the corresponding chess piece"""
+        if self.piece_type not in piece_classes:
+            raise ValueError(f"Invalid piece type: {self.piece_type}")
+            
+        return piece_classes[self.piece_type](
+            is_black=self.is_black,
+            grid_x=self.grid_x,
+            grid_z=self.grid_z,
+            model=load_model(piece_models[self.piece_type]['black' if self.is_black else 'white']),
+            scale=piece_models[self.piece_type]['scale'],
+            rotation=PieceRotation.BLACK if self.is_black else PieceRotation.WHITE,
+            position=(self.grid_x, Position.GROUND_HEIGHT, self.grid_z),
+            shader=basic_lighting_shader,
+            double_sided=True,
+        )
+
+# Now we can define CardEntity which uses CardBase
+class CardEntity:
+    def __init__(self, parent, card_data: CardBase, image, index, original_position, original_z, is_hovered=False):
+        self.card_data = card_data
+        self.parent = parent
+        self.image = image
         self.index = index
-        self.original_position = original_position
+        # Convert original_position to Vec3 if it's not already
+        if isinstance(original_position, (int, float)):
+            self.original_position = Vec3(original_position, CardUI.HAND_HEIGHT, BoardCenter.Z + CardUI.HAND_DISTANCE)
+        else:
+            self.original_position = Vec3(original_position) if not isinstance(original_position, Vec3) else original_position
+        
         self.original_z = original_z
-        self.is_hovered = False
+        self.is_hovered = is_hovered
         self.is_selected = False
         
-        def update():
-            if self.template.hovered:
-                if not self.is_hovered:
-                    self.hover()
-                # Handle click selection
-                if mouse.left and not self.is_selected:
-                    self.select_card()
-            elif not self.template.hovered and not mouse.left:
-                if self.is_hovered:
-                    self.unhover()
-        
-        self.template.update = update
-    
+        # Set initial position and rotation
+        self.parent.position = self.original_position
+        self.parent.rotation = CardUI.CARD_ROTATION
+
     def hover(self):
         if not self.is_hovered and not self.is_selected:  # Don't hover if selected
             self.is_hovered = True
+            # Convert original_position to Vec3 if it isn't already
+            target_pos = Vec3(self.original_position) + Vec3(0, CardUI.HOVER_LIFT, CardUI.HOVER_FORWARD)
             self.parent.animate_position(
-                self.original_position + Vec3(0, CardUI.HOVER_LIFT, CardUI.HOVER_FORWARD),
+                target_pos,
                 duration=0.1
             )
             self._adjust_adjacent_cards(True)
@@ -230,41 +317,37 @@ class CardEntity:
     def unhover(self):
         if self.is_hovered and not self.is_selected:  # Don't unhover if selected
             self.is_hovered = False
+            # Ensure original_position is Vec3
+            target_pos = Vec3(self.original_position)
             self.parent.animate_position(
-                self.original_position,
+                target_pos,
                 duration=0.1
             )
             self._adjust_adjacent_cards(False)
     
     def _adjust_adjacent_cards(self, hovering):
-        """Adjust positions of adjacent cards, with bounds checking"""
-        if not card_entities:  # Add safety check
+        """Adjust positions of adjacent cards"""
+        if not card_entities:
             return
         
         try:
             separation = CardUI.HOVER_SEPARATION if hovering else 0
             
-            # Only adjust left card if we're not the first card and index is valid
+            # Only adjust left card if we're not the first card
             if self.index > 0 and self.index - 1 < len(card_entities):
-                try:
-                    left_card = card_entities[self.index - 1]
-                    left_card.parent.animate_position(
-                        left_card.original_position + Vec3(-separation, 0, 0),
-                        duration=0.1
-                    )
-                except Exception as e:
-                    print(f"Error adjusting left card: {e}")
+                left_card = card_entities[self.index - 1]
+                left_target = Vec3(left_card.original_position)
+                if hovering:
+                    left_target += Vec3(-separation, 0, 0)
+                left_card.parent.animate_position(left_target, duration=0.1)
             
-            # Only adjust right card if we're not the last card and index is valid
+            # Only adjust right card if we're not the last card
             if self.index < len(card_entities) - 1:
-                try:
-                    right_card = card_entities[self.index + 1]
-                    right_card.parent.animate_position(
-                        right_card.original_position + Vec3(separation, 0, 0),
-                        duration=0.1
-                    )
-                except Exception as e:
-                    print(f"Error adjusting right card: {e}")
+                right_card = card_entities[self.index + 1]
+                right_target = Vec3(right_card.original_position)
+                if hovering:
+                    right_target += Vec3(separation, 0, 0)
+                right_card.parent.animate_position(right_target, duration=0.1)
                     
         except Exception as e:
             print(f"Error in _adjust_adjacent_cards: {e}")
@@ -280,107 +363,32 @@ class CardEntity:
         )
         print("Card selected")
     
-    def get_piece_type_from_symbol(self):
-        """Convert the card's chess symbol to a piece type"""
-        # Get UV offset to determine which piece it represents
-        uv_offset = self.symbol.texture_offset
-        
-        # Calculate piece index based on UV offset
-        piece_index = int(uv_offset.x * ChessSymbols.SPRITE_COUNT)
-        
-        # Map piece index to piece type
-        piece_types = ['pawn', 'rook', 'knight', 'bishop', 'queen', 'king']
-        if 0 <= piece_index < len(piece_types):
-            return piece_types[piece_index]
-        
-        print(f"Unknown piece type for UV offset: {uv_offset}")
-        return None
-    
     def place_on_board(self, grid_x, grid_z):
+        """Replace this card with the corresponding chess piece"""
         try:
-            # Create a 3D card entity at the board position
-            card_3d = Entity(
-                model='quad',
-                texture=self.template.texture,
-                scale=(1, 1.4, 1),
-                position=(grid_x, Position.GROUND_HEIGHT + 0.01, grid_z),
-                rotation_x=-90,
-                double_sided=True,
-                shader=lit_with_shadows_shader,
-                color=color.rgb(255, 255, 255),
-                always_on_top=True
-            )
+            # Create the actual chess piece
+            piece = self.card_data.create_piece_entity()
             
-            # Add required attributes to prevent crashes in game logic
-            card_3d.is_card = True
-            card_3d.is_black = False  # Default value
-            card_3d.grid_x = grid_x
-            card_3d.grid_z = grid_z
-            card_3d.valid_moves = []
-            card_3d.valid_move_markers = []
-            card_3d.highlight = lambda: None  # Empty function
-            card_3d.reset_color = lambda: None  # Empty function
-            card_3d.select = lambda: None  # Empty function
-            card_3d.clear_markers = lambda: None  # Empty function
+            # Update virtual grid
+            VIRTUAL_GRID[grid_z][grid_x] = piece
+            piece_entities.append(piece)
             
-            # Create the dragon image on the card
-            dragon_image = Entity(
-                parent=card_3d,
-                model='quad',
-                texture=self.image.texture,
-                scale=(0.8, 0.8, 1),
-                position=(0, 0.002, 0),
-                rotation_x=0,
-                double_sided=True,
-                shader=lit_with_shadows_shader,
-                color=color.rgb(255, 255, 255),
-                always_on_top=True
-            )
-            
-            # Create the chess symbol on top
-            symbol_3d = Entity(
-                parent=card_3d,
-                model='quad',
-                texture=ChessSymbols.TEXTURE,
-                texture_scale=self.symbol.texture_scale,
-                texture_offset=self.symbol.texture_offset,
-                scale=(0.3, 0.3, 1),
-                position=(0, 0.003, 0),
-                rotation_x=0,
-                double_sided=True,
-                shader=lit_with_shadows_shader,
-                color=color.rgb(255, 255, 255),
-                always_on_top=True
-            )
-            
-            # Remove card from card_entities list before destroying
+            # Remove card from UI and game state
             if self in card_entities:
                 card_entities.remove(self)
-            
-            # Remove the original card from the hand
             destroy(self.parent)
             
-            # Update the game state
-            VIRTUAL_GRID[grid_z][grid_x] = card_3d
-            
-            print(f"Successfully placed card at ({grid_x}, {grid_z})")
             return True
-            
         except Exception as e:
             print(f"Error placing card: {e}")
             return False
 
-# First define all piece classes
-class ChessPiece(Entity):
+# Modified ChessPiece to inherit from GameEntity
+class ChessPiece(GameEntity):
     def __init__(self, is_black, grid_x, grid_z, **kwargs):
-        super().__init__(**kwargs)
-        self.is_black = is_black
-        self.grid_x = grid_x
-        self.grid_z = grid_z
+        super().__init__(is_black, grid_x, grid_z)
         self.original_color = PieceColors.BLACK if is_black else PieceColors.WHITE
         self.color = self.original_color
-        self.valid_move_markers = []
-        self.valid_moves = []
         self.original_y = Position.GROUND_HEIGHT
     
     def highlight(self):
@@ -421,9 +429,16 @@ class ChessPiece(Entity):
     
     def clear_markers(self):
         """Clear all valid move markers"""
-        for marker in self.valid_move_markers:
+        for marker in self.valid_move_moves:
             destroy(marker)
         self.valid_move_markers.clear()
+
+    def update(self):
+        """Handle hover highlighting"""
+        if mouse.hovered_entity == self:
+            self.highlight()
+        else:
+            self.reset_color()
 
 class Pawn(ChessPiece):
     def get_valid_moves(self, grid):
@@ -569,49 +584,26 @@ piece_classes = {
     'king': King
 }
 
+# Finally define specific card types
+class PawnCard(CardBase):
+    def __init__(self, is_black, grid_x, grid_z, symbol):
+        super().__init__(is_black, grid_x, grid_z, symbol)
+        self.piece_type = 'pawn'
+
+class KnightCard(CardBase):
+    def __init__(self, is_black, grid_x, grid_z, symbol):
+        super().__init__(is_black, grid_x, grid_z, symbol)
+        self.piece_type = 'knight'
+
+# ... add other card types ...
+
+# Update piece creation to use factory method
 def create_piece_at_position(piece_type, grid_x, grid_z):
-    """Create a new chess piece at the specified grid position"""
-    try:
-        # Get model path
-        model_path = piece_models[piece_type]['black' if z <= PieceRows.WHITE_PAWN else piece_models[piece_type]['white']]
-        
-        # Verify model file exists
-        if not os.path.exists(model_path):
-            print(f"Error: Could not find model file at {model_path}")
-            return None
-            
-        # Load model with error handling
-        model = load_model(model_path)
-        if not model:
-            print(f"Error: Failed to load model from {model_path}")
-            return None
-            
-        # Determine piece color based on position
-        is_black = grid_z >= Board.SIZE / 2  # Top half of board for black pieces
-        
-        # Create the piece
-        piece = piece_classes[piece_type](
-            is_black=is_black,
-            grid_x=grid_x,
-            grid_z=grid_z,
-            model=model,
-            scale=piece_models[piece_type]['scale'],
-            rotation=PieceRotation.BLACK if is_black else PieceRotation.WHITE,
-            position=(grid_x, Position.GROUND_HEIGHT, grid_z),
-            shader=basic_lighting_shader,
-            double_sided=True,
-        )
-        
-        # Update virtual grid
-        VIRTUAL_GRID[grid_z][grid_x] = piece
-        piece_entities.append(piece)
-        
-        print(f"Successfully created {piece_type} at ({grid_x}, {grid_z})")
-        return piece
-        
-    except Exception as e:
-        print(f"Error creating piece: {e}")
-        return None
+    # Create temporary card to generate piece
+    temp_card = CardBase(is_black=(grid_z >= Board.SIZE/2), 
+                       grid_x=grid_x, grid_z=grid_z, symbol=None)
+    temp_card.piece_type = piece_type
+    return temp_card.create_piece_entity()
 
 class ChessSymbols:
     TEXTURE = './images/chess_symbols.png'
@@ -673,178 +665,137 @@ class GameRules:
         camera.rotation_x = Camera.START_ROTATION
         self.camera_pivot.rotation_y = Camera.WHITE_ROTATION_Y
 
-def start_game():
-    global piece_entities, board_entities, selected_card, card_entities
-    selected_card = None  # Initialize selected_card as None
+class InitialSetup:
+    WHITE_KING_POS = (4, 0)  # e1
+    BLACK_KING_POS = (4, 7)  # e8
+    # Define starting positions for all pieces
+    PIECE_POSITIONS = [
+        ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'],  # Black back row
+        ['pawn', 'pawn', 'pawn', 'pawn', 'pawn', 'pawn', 'pawn', 'pawn'],          # Black pawns
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+        ['pawn', 'pawn', 'pawn', 'pawn', 'pawn', 'pawn', 'pawn', 'pawn'],          # White pawns
+        ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'],  # White back row
+    ]
+
+# Add near the top with other constants
+piece_models = {
+    'pawn': {
+        'white': './models/pawn_white.obj',
+        'black': './models/pawn_black.obj',
+        'scale': PieceScale.PAWN
+    },
+    'rook': {
+        'white': './models/rook_white.obj',
+        'black': './models/rook_black.obj',
+        'scale': PieceScale.ROOK
+    },
+    'knight': {
+        'white': './models/knight_white.obj',
+        'black': './models/knight_black.obj',
+        'scale': PieceScale.KNIGHT
+    },
+    'bishop': {
+        'white': './models/bishop_white.obj',
+        'black': './models/bishop_black.obj',
+        'scale': PieceScale.BISHOP
+    },
+    'queen': {
+        'white': './models/queen_white.obj',
+        'black': './models/queen_black.obj',
+        'scale': PieceScale.QUEEN
+    },
+    'king': {
+        'white': './models/king_white.obj',
+        'black': './models/king_black.obj',
+        'scale': PieceScale.KING
+    }
+}
+
+def create_board():
+    """Create the chess board"""
+    board_parent = Entity()
     
-    # Clear any existing entities from the menu
+    # Create board squares with more visible colors
+    for row in Board.ROWS:
+        for col in Board.COLS:
+            is_white = (row + col) % 2 == 0
+            Entity(
+                parent=board_parent,
+                model='cube',  # Changed from 'quad' to 'cube' for better visibility
+                scale=(1, Board.THICKNESS, 1),
+                position=(col, 0, row),
+                color=BoardColors.WHITE if is_white else BoardColors.BLACK,
+                shader=lit_with_shadows_shader
+            )
+    
+    return board_parent
+
+def create_pieces():
+    """Create all chess pieces"""
+    pieces_parent = Entity()
+    
+    # Create pieces based on initial positions
+    for row in Board.ROWS:
+        for col in Board.COLS:
+            piece_type = InitialSetup.PIECE_POSITIONS[row][col]  # Use InitialSetup directly
+            if piece_type:
+                is_black = row < 4  # Top half is black pieces
+                
+                piece = piece_classes[piece_type](
+                    is_black=is_black,
+                    grid_x=col,
+                    grid_z=row,
+                    model=load_model(piece_models[piece_type]['black' if is_black else 'white']),
+                    scale=piece_models[piece_type]['scale'],
+                    rotation=PieceRotation.BLACK if is_black else PieceRotation.WHITE,
+                    position=(col, Position.GROUND_HEIGHT, row),
+                    shader=basic_lighting_shader,
+                    double_sided=True
+                )
+                
+                VIRTUAL_GRID[row][col] = piece
+                piece_entities.append(piece)
+    
+    return pieces_parent
+
+def start_game():
+    global piece_entities, card_entities, selected_card
+    selected_card = None
+    
+    # Clear any existing entities
     for entity in scene.entities:
         destroy(entity)
     
-    # Reset piece_entities list
+    # Reset piece_entities and card_entities lists
     piece_entities.clear()
+    card_entities.clear()
     
-    # Enable lighting
-    DirectionalLight(
-        y=Light.HEIGHT,
-        z=Light.DISTANCE,
-        rotation=Light.ROTATION
-    )
+    # Initialize card state
+    card_state = CardState()
     
-    # Create an empty entity to handle game state and updates
-    game = Entity()
-    
-    # Chess board setup
-    board_entities = []  # Initialize the list
-    selected_piece = None
-    current_turn = 'white'
-
-    # Create materials for board (for board purposes only)
-    board_mat = [color.white, color.gray]
-
-    # Define tint colors for pieces.
-    # White pieces will be tinted pure white, and black pieces will be tinted red.
-    white_piece_material = color.white
-    black_piece_material = color.red
-
-    # Create 3D board
-    for z in range(Board.SIZE):
-        for x in range(Board.SIZE):
-            board = Entity(
-                model='cube',
-                color=board_mat[(x+z) % 2],
-                position=(x, 0.1, z),
-                scale=(1, 0.1, 1),
-                collider='box'
-            )
-            board_entities.append(board)
-
-    # Initialize empty piece positions with just kings
-    piece_positions = [
-        ['', '', '', 'king', '', '', '', ''],  # Black king on e8 (index 4)
-        ['']*8,
-        ['']*8,
-        ['']*8,
-        ['']*8,
-        ['']*8,
-        ['']*8,
-        ['', '', '', 'king', '', '', '', '']   # White king on e1 (index 4)
-    ]
-
-    # Update piece models configuration.
-    # Note: scales are scaled down by 400% compared to your original values.
-    piece_models = {
-        'pawn': {
-            'white': 'models/white_pawn.fbx',
-            'black': 'models/black_pawn.fbx',
-            'scale': PieceScale.PAWN
-        },
-        'rook': {
-            'white': 'models/white_rook.fbx',
-            'black': 'models/black_rook.fbx',
-            'scale': PieceScale.ROOK
-        },
-        'knight': {
-            'white': 'models/white_knight.fbx',
-            'black': 'models/black_knight.fbx',
-            'scale': PieceScale.KNIGHT
-        },
-        'bishop': {
-            'white': 'models/white_bishop.fbx',
-            'black': 'models/black_bishop.fbx',
-            'scale': PieceScale.BISHOP
-        },
-        'queen': {
-            'white': 'models/white_queen.fbx',
-            'black': 'models/black_queen.fbx',
-            'scale': PieceScale.QUEEN
-        },
-        'king': {
-            'white': 'models/white_king.fbx',
-            'black': 'models/black_king.fbx',
-            'scale': PieceScale.KING
-        }
-    }
-
-    # Modify the piece creation code to use the new classes
-    piece_classes = {
-        'pawn': Pawn,
-        'rook': Rook,
-        'knight': Knight,
-        'bishop': Bishop,
-        'queen': Queen,
-        'king': King
-    }
-
-    # In your piece creation loop, replace ChessPiece with the appropriate class:
-    for z in range(Board.SIZE):
-        for x in range(Board.SIZE):
-            piece_type = piece_positions[z][x]
-            if piece_type:
-                PieceClass = piece_classes[piece_type]
-                grid_x = x
-                grid_z = z  # Don't flip during initialization - keep natural coordinates
-                
-                # Create piece with correct 3D position
-                piece = PieceClass(
-                    is_black=(z <= PieceRows.WHITE_PAWN),  # First two rows are black
-                    grid_x=grid_x,
-                    grid_z=grid_z,
-                    model=load_model(piece_models[piece_type]['black'] if z <= PieceRows.WHITE_PAWN else piece_models[piece_type]['white']),
-                    scale=piece_models[piece_type]['scale'],
-                    rotation=PieceRotation.BLACK if z <= PieceRows.WHITE_PAWN else PieceRotation.WHITE,
-                    position=(grid_x, Position.GROUND_HEIGHT, grid_z),
-                    shader=basic_lighting_shader,
-                    double_sided=True,
-                )
-                
-                # Update virtual grid with correct coordinates
-                VIRTUAL_GRID[grid_z][grid_x] = piece
-                piece_entities.append(piece)
-
-    # Create card UI and get state before creating GameRules
-    card_holder, cards, deck_cards, card_state = create_card_ui()
-    
-    # Create camera pivot and pass it to GameRules
+    # Create camera pivot
     camera_pivot = Entity()
+    
+    # Initialize game rules with camera pivot
     game_rules = GameRules(card_state, camera_pivot)
-    
-    # Rest of camera setup remains the same
     game_rules.setup_camera()
-
-    def game_update():
-        game_rules.update_camera()  # Update camera every frame
     
-    game.update = game_update
-
-    def on_board_click():
-        global selected_card
-        if selected_card and mouse.hovered_entity in board_entities:
-            board_pos = mouse.hovered_entity.position
-            grid_x = int(board_pos.x)
-            grid_z = int(board_pos.z)
-            print(f"Attempting to place card at ({grid_x}, {grid_z})")
-            
-            # Place the card on the board
-            if selected_card.place_on_board(grid_x, grid_z):
-                print("Card placed successfully")
-                selected_card = None  # Reset selection
-            else:
-                print("Failed to place card")
-                # Return card to original position if placement failed
-                selected_card.parent.animate_position(
-                    selected_card.original_position,
-                    duration=0.2
-                )
-                selected_card.is_selected = False
-                selected_card = None
+    # Create board and pieces
+    board = create_board()
+    pieces = create_pieces()
     
-    def input(key):
-        if key == 'left mouse down' and mouse.hovered_entity in board_entities:
-            on_board_click()
+    # Create update function
+    def update():
+        game_rules.update_camera()  # Make sure this is called every frame
+        update_cards()
     
-    # Attach input handler to game entity
-    game.input = input
+    # Connect the update function to the game
+    app.update = update  # This line is crucial!
+    
+    return game_rules, card_state
 
 def exit_game():
     application.quit()
@@ -893,168 +844,6 @@ def input(key):
                 piece_entities.remove(p)
                 break
 
-def create_card_ui():
-    # Add at start of function
-    # Verify required textures exist
-    required_textures = [
-        CardUI.CARD_TEXTURE,
-        PlayerCards.WHITE['dragon_image'],
-        PlayerCards.BLACK['dragon_image'],
-        ChessSymbols.TEXTURE
-    ]
-    
-    for texture_path in required_textures:
-        if not os.path.exists(texture_path):
-            print(f"Error: Missing required texture: {texture_path}")
-            return None, None, None, None
-    
-    global card_entities  # Ensure we're modifying the global list
-    card_holder = Entity(parent=camera.ui)
-    card_state = CardState()
-    
-    # Clear existing card entities
-    card_entities.clear()
-    
-    total_width = CardUI.CARD_SPACING * (CardUI.MAX_CARDS - 1) + CardUI.CARD_WIDTH
-    start_x = -total_width/2
-    
-    cards = []
-    for i in range(CardUI.MAX_CARDS):
-        offset_x = uniform(-CardUI.POSITION_VARIANCE, CardUI.POSITION_VARIANCE)
-        offset_y = uniform(-CardUI.POSITION_VARIANCE, CardUI.POSITION_VARIANCE)
-        base_x = start_x + (i * CardUI.CARD_SPACING)
-        base_y = CardUI.BOTTOM_MARGIN
-        base_position = Vec3(base_x + offset_x, base_y + offset_y, 0)
-        
-        # Create parent entity to control all card components
-        card_parent = Entity(
-            parent=card_holder,
-            position=base_position,
-            rotation=(0, 0, uniform(-CardUI.MAX_ROTATION, CardUI.MAX_ROTATION))
-        )
-        
-        # Card template (bottom layer)
-        card_template = Entity(
-            parent=card_parent,
-            model='quad',
-            texture=CardUI.CARD_TEXTURE,
-            scale=(CardUI.CARD_WIDTH, CardUI.CARD_HEIGHT),
-            z=-0.3 - (i * CardUI.STACK_HEIGHT),  # Moved back
-            collider='box'
-        )
-        
-        # Dragon image (middle layer)
-        card_image = Entity(
-            parent=card_parent,
-            model='quad',
-            texture=PlayerCards.WHITE['dragon_image'],
-            scale=(CardUI.CARD_WIDTH * 0.85, CardUI.CARD_HEIGHT * 0.5),
-            z=-0.2 - (i * CardUI.STACK_HEIGHT)  # Between template and symbol
-        )
-        
-        # Symbol (top layer)
-        uvs = ChessSymbols.get_random_symbol_uvs(False)
-        symbol = Entity(
-            parent=card_parent,
-            model='quad',
-            texture=ChessSymbols.TEXTURE,
-            scale=(ChessSymbols.SYMBOL_SCALE, ChessSymbols.SYMBOL_SCALE),
-            position=(
-                CardUI.CARD_WIDTH/2 - ChessSymbols.SYMBOL_SCALE * 0.8,
-                CardUI.CARD_HEIGHT/2 - ChessSymbols.SYMBOL_SCALE * 0.8,
-                -0.5 - (i * CardUI.STACK_HEIGHT)  # Closest to camera
-            ),
-            z=-0.5 - (i * CardUI.STACK_HEIGHT),
-            texture_scale=uvs['scale'],
-            texture_offset=uvs['offset']
-        )
-        
-        card_entity = CardEntity(
-            card_parent,
-            card_template,
-            card_image,
-            symbol,
-            i,
-            base_position,
-            -0.1 - (i * CardUI.STACK_HEIGHT)
-        )
-        card_entities.append(card_entity)
-        cards.append((card_template, card_image, symbol))
-
-    # Create enhanced 3D deck
-    deck_cards = []
-    base_x = start_x + (CardUI.MAX_CARDS * CardUI.CARD_SPACING) + CardUI.DECK_EXTRA_SPACING
-    
-    # Create main deck cards with progressive offset
-    for i in range(CardUI.DECK_CARDS):
-        x_offset = uniform(-0.0005, 0.0005) * i  # Progressive variance
-        y_offset = uniform(-0.0005, 0.0005) * i
-        z_rotation = uniform(-0.5, 0.5)  # Slight random rotation
-        
-        deck_card = Entity(
-            parent=card_holder,
-            model='quad',
-            color=PlayerCards.WHITE['deck_color'],
-            scale=(CardUI.CARD_WIDTH, CardUI.CARD_HEIGHT),
-            position=(
-                base_x + x_offset,
-                CardUI.BOTTOM_MARGIN + (i * CardUI.DECK_SPACING) + y_offset
-            ),
-            rotation=(0, 0, z_rotation),
-            z=-0.1 - (i * CardUI.STACK_HEIGHT)
-        )
-        deck_cards.append(deck_card)
-    
-    # Add side edges for 3D effect
-    edge_color = color.rgb(
-        PlayerCards.WHITE['deck_color'].r * 0.7,
-        PlayerCards.WHITE['deck_color'].g * 0.7,
-        PlayerCards.WHITE['deck_color'].b * 0.7
-    )
-    
-    # Right edge
-    right_edge = Entity(
-        parent=card_holder,
-        model='quad',
-        color=edge_color,
-        scale=(CardUI.DECK_SPACING * CardUI.DECK_CARDS, CardUI.CARD_HEIGHT),
-        position=(base_x + CardUI.CARD_WIDTH/2, CardUI.BOTTOM_MARGIN + (CardUI.DECK_CARDS * CardUI.DECK_SPACING)/2),
-        rotation=(0, 90, 0),
-        z=-0.1 - (CardUI.DECK_CARDS * CardUI.STACK_HEIGHT)/2
-    )
-    deck_cards.append(right_edge)
-    
-    # Bottom edge
-    bottom_edge = Entity(
-        parent=card_holder,
-        model='quad',
-        color=edge_color,
-        scale=(CardUI.CARD_WIDTH, CardUI.DECK_SPACING * CardUI.DECK_CARDS),
-        position=(base_x, CardUI.BOTTOM_MARGIN - CardUI.CARD_HEIGHT/2),
-        rotation=(90, 0, 0),
-        z=-0.1 - (CardUI.DECK_CARDS * CardUI.STACK_HEIGHT)/2
-    )
-    deck_cards.append(bottom_edge)
-    
-    # Create update function for this specific UI
-    def update_cards():
-        if mouse.hovered_entity:
-            for card_entity in card_entities:
-                if mouse.hovered_entity in (card_entity.template, card_entity.image):
-                    card_entity.hover()
-                else:
-                    card_entity.unhover()
-    
-    # Add the update function to the card holder
-    card_holder.update = update_cards
-    
-    # Verify texture loading
-    if not os.path.exists(ChessSymbols.TEXTURE):
-        print(f"Error: Could not find texture file at {ChessSymbols.TEXTURE}")
-        return
-    
-    return card_holder, cards, deck_cards, card_state
-
 def update_cards_for_turn(cards, deck_cards, card_state):
     """Update card images and deck color based on turn"""
     player_data = card_state.get_current_player_data()
@@ -1073,7 +862,8 @@ def update_cards_for_turn(cards, deck_cards, card_state):
     for deck_card in deck_cards:
         deck_card.color = base_color
 
-# Make card_entities global so it can be accessed by CardEntity methods
-card_entities = []
+# Start the game
+game_rules, card_state = start_game()
 
+# Run the game
 app.run() 
