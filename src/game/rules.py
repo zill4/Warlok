@@ -12,39 +12,53 @@ class GameRules:
 
     def setup_camera(self):
         """Initialize camera position and settings"""
-        camera.parent = self.camera_pivot
+        # First set up the pivot point at board center
         self.camera_pivot.position = Vec3(
             BoardCenter.X, 
             Camera.PIVOT_HEIGHT,
             BoardCenter.Z
         )
-        camera.position = (0, 0, Camera.START_DISTANCE)
-        camera.rotation = (0, 0, 0)
-
+        self.camera_pivot.rotation = Vec3(
+            self.camera_rotation_x,
+            self.camera_rotation_y,
+            0
+        )
+        
+        # Then set up the camera relative to pivot
+        camera.parent = self.camera_pivot
+        camera.position = Vec3(
+            0,
+            Camera.START_HEIGHT,
+            Camera.START_DISTANCE
+        )
+        camera.rotation = Vec3(0, 0, 0)
+        camera.fov = Camera.FOV
+        
     def update_camera(self):
         """Handle camera movement and rotation"""
-        # Handle WASD movement
-        move_speed = Camera.MOVE_SPEED * time.dt
-        move = Vec3(0, 0, 0)
-        
-        if held_keys['w']: move.z += 1
-        if held_keys['s']: move.z -= 1
-        if held_keys['a']: move.x -= 1
-        if held_keys['d']: move.x += 1
-        
-        if move.length() > 0:
-            move = move.normalized()
-            angle = math.radians(self.camera_rotation_y)
-            rotated_x = move.x * math.cos(angle) - move.z * math.sin(angle)
-            rotated_z = move.x * math.sin(angle) + move.z * math.cos(angle)
-            self.camera_pivot.position += Vec3(rotated_x, 0, rotated_z) * move_speed
-
-        # Handle middle mouse rotation
+        # Mouse rotation control
         if mouse.middle:
             self.manual_control = True
             self.camera_rotation_y += mouse.velocity[0] * Camera.MOUSE_SENSITIVITY
             self.camera_rotation_x -= mouse.velocity[1] * Camera.MOUSE_SENSITIVITY
             self.camera_rotation_x = clamp(self.camera_rotation_x, Camera.MIN_ROTATION_X, Camera.MAX_ROTATION_X)
 
+        # Keyboard movement control
+        move_speed = Camera.MOVE_SPEED * time.dt
+        if held_keys['w']:
+            self.camera_pivot.z -= move_speed
+        if held_keys['s']:
+            self.camera_pivot.z += move_speed
+        if held_keys['a']:
+            self.camera_pivot.x += move_speed
+        if held_keys['d']:
+            self.camera_pivot.x -= move_speed
+        
+        # Optional: Add Q/E for height control
+        if held_keys['q']:  # Move down
+            self.camera_pivot.y += move_speed
+        if held_keys['e']:  # Move up
+            self.camera_pivot.y -= move_speed
+
         # Always update rotation
-        self.camera_pivot.rotation = (self.camera_rotation_x, self.camera_rotation_y, 0) 
+        self.camera_pivot.rotation = Vec3(self.camera_rotation_x, self.camera_rotation_y, 0) 

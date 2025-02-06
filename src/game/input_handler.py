@@ -1,4 +1,5 @@
-from ursina import destroy
+from ursina import destroy, held_keys, mouse
+from constants import Camera
 
 def handle_input(key, game_state):
     """Handle game-specific keyboard inputs"""
@@ -12,3 +13,5 @@ def handle_input(key, game_state):
                 game_state.piece_entities.remove(p)
                 break
     # Add other game-specific keyboard inputs here 
+
+    # Camera controls are handled in GameRules.update_camera() 

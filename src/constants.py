@@ -21,10 +21,10 @@ class Board:
     ]
 
 class Camera:
-    PIVOT_HEIGHT = 12
-    START_HEIGHT = 3
-    START_DISTANCE = -25
-    START_ROTATION = 25
+    PIVOT_HEIGHT = 8        # Lowered significantly
+    START_HEIGHT = -5     # Reset to ground level
+    START_DISTANCE = -20   # Brought much closer
+    START_ROTATION = 35     # More natural viewing angle
     WHITE_ROTATION_Y = 180
     BLACK_ROTATION_Y = 0
     ROTATION_SMOOTHING = 8
@@ -32,7 +32,7 @@ class Camera:
     MIN_ROTATION_X = 15
     MAX_ROTATION_X = 70
     MOVE_SPEED = 20
-    FOV = 50
+    FOV = 60               # Wider field of view
 
 class Position:
     GROUND_HEIGHT = 0
@@ -71,15 +71,15 @@ class CardUI:
     CARD_ROTATION = (0, 0, 0)
 
 class Light:
-    HEIGHT = 2
-    DISTANCE = 3
-    ROTATION = (45, -45, 45)
-    INTENSITY = 1.0
+    HEIGHT = 15            # Higher light position
+    DISTANCE = 10          # Greater light distance
+    ROTATION = (45, -45, 0)  # Simplified rotation
+    INTENSITY = 2.0        # Increased brightness
 
 class BoardCenter:
-    X = 0                   # Center X
-    Y = 0                   # Ground level
-    Z = 8                   # Move board back
+    X = 3.5                # Explicit center value
+    Y = 0                  # Ground level
+    Z = 3.5                # Explicit center value
 
 class PieceRotation:
     WHITE = (0, 180, 0)

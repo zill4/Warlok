@@ -1,4 +1,4 @@
-from ursina import Entity, load_model
+from ursina import Entity, load_model, color, Vec3
 from ursina.shaders import lit_with_shadows_shader, basic_lighting_shader
 from constants import Board, BoardColors, Position, PieceRotation
 from entities.pieces import piece_classes
@@ -9,10 +9,21 @@ def create_board():
     """Create the chess board"""
     board_parent = Entity()
     
+    # Create a base under the board
+    base = Entity(
+        parent=board_parent,
+        model='cube',
+        scale=(9, 0.5, 9),
+        position=(3.5, -0.25, 3.5),  # Center the base under the board
+        color=color.dark_gray,
+        shader=lit_with_shadows_shader
+    )
+    
+    # Create the checkered board
     for row in Board.ROWS:
         for col in Board.COLS:
             is_white = (row + col) % 2 == 0
-            Entity(
+            square = Entity(
                 parent=board_parent,
                 model='cube',
                 scale=(1, Board.THICKNESS, 1),
@@ -21,6 +32,8 @@ def create_board():
                 shader=lit_with_shadows_shader
             )
     
+    # Move the entire board to be centered
+    board_parent.position = Vec3(0, 0, 0)
     return board_parent
 
 def create_pieces(game_state):
@@ -34,6 +47,7 @@ def create_pieces(game_state):
                 is_black = row < 4
                 
                 piece = piece_classes[piece_type](
+                    parent=pieces_parent,
                     is_black=is_black,
                     grid_x=col,
                     grid_z=row,
