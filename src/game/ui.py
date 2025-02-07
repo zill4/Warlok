@@ -1,7 +1,8 @@
-from ursina import Entity, Vec3, mouse, camera, color, os, Text, Texture
+from ursina import Entity, Vec3, mouse, camera, color, os, Text, Texture, Button, destroy
 from random import uniform, randint, choice
-from constants import CardUI, PlayerCards, BoardCenter, ChessSymbols
-from entities.cards import CardEntity, CardBase
+from constants import CardUI, PlayerCards, BoardCenter, ChessSymbols, Board
+from entities import CardBase
+from game.board import place_card_on_board
 
 
 # Global variable to store card entities
@@ -22,34 +23,44 @@ def get_random_symbol_uvs(is_black):
         'offset': (u, v)
     }
 
-def create_card_ui():
+def create_card_ui(game_state):
     """Create the UI elements for cards"""
     cards_parent = Entity(parent=camera.ui)
     cards = []
     
-    # Define available piece types
     piece_types = ['pawn', 'rook', 'knight', 'bishop', 'queen', 'king']
     
     for i in range(CardUI.MAX_CARDS):
-        # Randomly select a piece type for this card
         random_piece_type = choice(piece_types)
         card_data = CardBase(False, 0, 0)
-        card_data.piece_type = random_piece_type  # Assign the random piece type
-        is_black = False  # Start with white symbols
+        card_data.piece_type = random_piece_type
         
-        # Base card entity (Dragon)
-        card = Entity(
+        # Calculate base position
+        base_position = Vec3(
+            (i - CardUI.MAX_CARDS/2) * CardUI.CARD_SPACING + CardUI.HORIZONTAL_OFFSET,
+            CardUI.BOTTOM_MARGIN,
+            CardUI.Z_POSITION
+        )
+        
+        # Create card as a Button instead of Entity for better interaction
+        card = Button(
             parent=cards_parent,
             model='quad',
             texture=PlayerCards.BLACK['dragon_image'],
             scale=(CardUI.CARD_WIDTH, CardUI.CARD_HEIGHT),
-            position=Vec3(
-                (i - CardUI.MAX_CARDS/2) * CardUI.CARD_SPACING + CardUI.HORIZONTAL_OFFSET,
-                CardUI.BOTTOM_MARGIN,
-                CardUI.BASE_Z
-            ),
-            rotation=CardUI.CARD_ROTATION
+            position=base_position,
+            rotation=CardUI.CARD_ROTATION,
+            z=CardUI.Z_POSITION + (i * CardUI.STACK_HEIGHT),
+            color=color.white,
+            highlight_color=color.white,  # Keep same color when hovering
+            pressed_color=color.white     # Keep same color when clicking
         )
+        
+        # Store original position and data
+        card.original_position = base_position
+        card.is_selected = False
+        card.card_data = card_data
+        card.piece_type = random_piece_type
         
         # Normal card overlay
         card_overlay = Entity(
@@ -60,11 +71,11 @@ def create_card_ui():
             position=(0, 0, CardUI.OVERLAY_Z)
         )
         
-        # Background for symbol
-        symbol_bg = Entity(
+        # Chess symbol
+        symbol = Entity(
             parent=card,
             model='quad',
-            color=color.red if is_black else color.black,  # Contrasting background
+            texture=ChessSymbols.TEXTURE,
             scale=(CardUI.SYMBOL_SCALE, CardUI.SYMBOL_SCALE),
             position=(
                 CardUI.SYMBOL_X_OFFSET,
@@ -74,25 +85,46 @@ def create_card_ui():
             always_on_top=True
         )
         
-        # Chess symbol
-        symbol = Entity(
-            parent=symbol_bg,
-            model='quad',
-            texture=ChessSymbols.TEXTURE,
-            scale=(1, 1),
-            position=(0, 0, -0.01),
-            color=color.white,
-            always_on_top=True
-        )
-        
-        # Set UV coordinates for the random piece type
-        symbol_data = ChessSymbols.get_symbol_uvs(random_piece_type, is_black)
+        # Set UV coordinates for the specific piece
+        symbol_data = ChessSymbols.get_symbol_uvs(random_piece_type, False)
         symbol.texture_scale = symbol_data['scale']
         symbol.texture_offset = symbol_data['offset']
         
-        print(f"Card {i} assigned piece type: {random_piece_type}")  # Debug print
+        def on_click(card=card):
+            if not card.is_selected:
+                # Deselect any other selected cards
+                for other_card, _, _ in cards:
+                    if other_card != card and other_card.is_selected:
+                        other_card.is_selected = False
+                        other_card.animate_position(other_card.original_position, duration=0.1)
+                
+                # Select this card
+                card.is_selected = True
+                selected_pos = card.original_position + Vec3(0, CardUI.HOVER_LIFT * 2, CardUI.HOVER_FORWARD)
+                card.animate_position(selected_pos, duration=0.2)
+            else:
+                # Deselect if clicked again
+                card.is_selected = False
+                card.animate_position(card.original_position, duration=0.1)
         
-        cards.append((card, card_overlay, symbol, card_data))
+        # Define hover behavior
+        def on_hover(card=card):
+            if not card.is_selected:
+                hover_pos = card.original_position + Vec3(0, CardUI.HOVER_LIFT, CardUI.HOVER_FORWARD)
+                card.animate_position(hover_pos, duration=0.1)
+        
+        def on_unhover(card=card):
+            if not card.is_selected:
+                card.animate_position(card.original_position, duration=0.1)
+        
+        # Bind the events
+        card.on_click = on_click
+        card.on_mouse_enter = on_hover
+        card.on_mouse_exit = on_unhover
+        
+        # Store card in game state
+        game_state.card_entities.append((card, card_overlay, symbol))
+        cards.append((card, card_overlay, symbol))
     
     return cards
 
@@ -191,16 +223,12 @@ def update_cards_for_turn(card_state):
         return
         
     player_data = card_state.get_current_player_data()
-    is_black = player_data == PlayerCards.BLACK
-    
-    # Get the cards from the card_state's current player
-    current_cards = card_state.black_cards['hand'] if is_black else card_state.white_cards['hand']
     
     # Update all card images and symbols
-    for card, overlay, symbol, card_data in current_cards:
+    for card, _, symbol in card_state.game_state.card_entities:
         card.texture = player_data['dragon_image']
-        # Update symbol UVs based on the card's piece type
-        symbol_data = ChessSymbols.get_symbol_uvs(card_data.piece_type, is_black)
+        # Update symbol UVs for current turn
+        symbol_data = ChessSymbols.get_random_symbol_uvs(player_data == PlayerCards.BLACK)
         symbol.texture_scale = symbol_data['scale']
         symbol.texture_offset = symbol_data['offset']
 
@@ -221,4 +249,22 @@ def update_cards():
                 card_entity.select_card()
         elif not mouse.left:
             if card_entity.is_hovered:
-                card_entity.unhover() 
+                card_entity.unhover()
+
+def update(game_state):
+    """Update function to handle board interaction"""
+    if mouse.left and mouse.hovered_entity:
+        if hasattr(mouse.hovered_entity, 'is_board_square'):
+            selected_card = None
+            for card, overlay, symbol in game_state.card_entities:
+                if hasattr(card, 'is_selected') and card.is_selected:
+                    selected_card = card
+                    break
+            
+            if selected_card:
+                grid_x = mouse.hovered_entity.grid_x
+                grid_z = mouse.hovered_entity.grid_z
+                print(f"Attempting to place card at: {grid_x}, {grid_z}")
+                if place_card_on_board(selected_card, grid_x, grid_z, game_state):
+                    game_state.card_entities.remove((selected_card, overlay, symbol))
+                    destroy(selected_card) 

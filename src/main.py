@@ -1,10 +1,9 @@
 from ursina import *
 from constants import *
-from game.state import CardState
 from game.state_manager import GameStateManager
 from game.rules import GameRules
 from game.board import create_board, create_pieces
-from game.ui import update_cards, update_cards_for_turn, create_card_ui
+from game.ui import update_cards_for_turn, create_card_ui, update as ui_update
 from game.input_handler import handle_input
 from game.menu import create_menu
 
@@ -26,9 +25,7 @@ def start_game():
             destroy(entity)
     
     game_state.clear_state()
-    
-    # Initialize card state and store it in game_state
-    game_state.card_state = CardState()
+    game_state.initialize_card_state()
     
     # Setup scene lighting
     main_light = DirectionalLight(parent=scene, y=Light.HEIGHT, z=Light.DISTANCE, shadows=True)
@@ -45,8 +42,8 @@ def start_game():
     game_state.board = create_board()
     game_state.pieces = create_pieces(game_state)
     
-    # Create card UI
-    game_state.cards = create_card_ui()
+    # Create card UI - Pass game_state here
+    game_state.cards = create_card_ui(game_state)
     
     # Instead of disabling menu, destroy it
     for child in menu.children:
@@ -56,10 +53,11 @@ def start_game():
     return game_rules, game_state.card_state
 
 def update():
-    if game_rules and hasattr(game_state, 'card_state'):
+    if game_rules and game_state.card_state:
         game_rules.update_camera()
-        if hasattr(game_state, 'cards'):
+        if game_state.cards:
             update_cards_for_turn(game_state.card_state)
+        ui_update(game_state)
 
 def input(key):
     handle_input(key, game_state)

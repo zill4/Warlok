@@ -1,5 +1,5 @@
 from ursina import color, Vec3
-from random import choice
+from random import choice, randint
 
 class Board:
     SIZE = 8
@@ -7,7 +7,7 @@ class Board:
     COLS = range(SIZE)
     MAX_INDEX = SIZE - 1  # 7 for coordinate conversion
     THICKNESS = 0.1  # Board square height
-    
+
     # Define starting positions for all pieces
     PIECE_POSITIONS = [
         ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'],  # Black back row
@@ -66,9 +66,9 @@ class CardUI:
     Z_POSITION = 0
     CARD_TEXTURE = 'assets/images/Normal_card.png'
     MAX_CARDS = 8
-    HOVER_LIFT = 0.02
-    HOVER_FORWARD = -0.02
-    HOVER_SEPARATION = 0.01
+    HOVER_LIFT = 0.05
+    HOVER_FORWARD = -0.05
+    HOVER_SEPARATION = 0.03
     CARD_ROTATION = (0, 0, 0)
     
     # Larger size and more to the right
@@ -81,6 +81,11 @@ class CardUI:
     BASE_Z = 0
     OVERLAY_Z = -0.1
     SYMBOL_Z = -0.2
+
+    # Card hover and selection effects
+    MAX_ROTATION = 3        # Maximum random rotation for cards in hand
+    POSITION_VARIANCE = 0.002  # Random position variance for natural look
+    STACK_HEIGHT = 0.001    # Z-offset between cards
 
 class Light:
     HEIGHT = 15            # Higher light position
@@ -137,6 +142,20 @@ class ChessSymbols:
             'scale': (1/ChessSymbols.SYMBOLS_PER_ROW, 0.5),
             'offset': (x_offset, y_offset)
         }
+    @staticmethod
+    def get_random_symbol_uvs(is_black):
+        """Get UV coordinates for a random chess symbol"""
+        col = randint(0, ChessSymbols.SYMBOLS_PER_ROW - 1)
+        
+        x_offset = col / ChessSymbols.SYMBOLS_PER_ROW   
+        y_offset = 0.5 if is_black else 0.0
+        
+        return {
+            'scale': (1/ChessSymbols.SYMBOLS_PER_ROW, 0.5),
+            'offset': (x_offset, y_offset)
+        }  
+    
+    
 
 class PieceScale:
     PAWN = 0.00375
