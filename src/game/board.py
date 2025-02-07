@@ -63,11 +63,8 @@ def place_card_on_board(card, grid_x, grid_z, game_state):
             collider='box'
         )
         
-        # Debug: Print piece position
-        print(f"Piece position: {piece_position}")
-        
         # Force solid color for debugging
-        piece.color = color.black if card.card_data.is_black else color.white
+        piece.color = color.rgb(0.8, 0.1, 0.1) if card.card_data.is_black else color.white
         piece.alpha = 1.0
         
         # Debug: Print piece properties after creation
