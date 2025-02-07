@@ -1,5 +1,5 @@
 from ursina import Entity, load_model, color, Vec3, destroy
-from ursina.shaders import basic_lighting_shader, lit_with_shadows_shader
+from ursina.shaders import basic_lighting_shader, lit_with_shadows_shader, unlit_shader
 from constants import Board, BoardColors, Position, PieceRotation
 from entities.pieces import piece_classes
 from models import piece_models
@@ -43,24 +43,39 @@ def place_card_on_board(card, grid_x, grid_z, game_state):
         print(f"Placing card on board: {card}")
         print(f"Current player: {game_state.card_state.current_player}")
         
-        # Create piece using card_data's piece type and properties
+        pieces_parent = Entity(parent=game_state.board)
+        
+        # Store the exact position where the piece will be placed
+        piece_position = Vec3(grid_x, Position.GROUND_HEIGHT + 0.5, grid_z)
+        
+        # Create piece
         piece = piece_classes[card.card_data.piece_type](
+            parent=pieces_parent,
             is_black=card.card_data.is_black,
             grid_x=grid_x,
             grid_z=grid_z,
             model=load_model(piece_models[card.card_data.piece_type]['black' if card.card_data.is_black else 'white']),
             scale=piece_models[card.card_data.piece_type]['scale'],
             rotation=PieceRotation.BLACK if card.card_data.is_black else PieceRotation.WHITE,
-            position=(grid_x, Position.GROUND_HEIGHT, grid_z),
+            position=piece_position,  # Use stored position
             shader=basic_lighting_shader,
             double_sided=True,
-            collider='box',  # For mouse interaction
-            parent=game_state.board
+            collider='box'
         )
         
-        # Force opacity and color settings after creation
+        # Debug: Print piece position
+        print(f"Piece position: {piece_position}")
+        
+        # Force solid color for debugging
+        piece.color = color.black if card.card_data.is_black else color.white
         piece.alpha = 1.0
-        piece.color = color.rgb(0.8, 0.1, 0.1) if card.card_data.is_black else color.white
+        
+        # Debug: Print piece properties after creation
+        print(f"Piece created with color: {piece.color}")
+        print(f"Piece shader: {piece.shader}")
+        print(f"Piece texture: {piece.texture}")
+        
+        # Force opacity and color settings after creation
         piece.collision = True
         piece.always_on_top = False  # Make sure it's not treated as UI
         
@@ -68,12 +83,16 @@ def place_card_on_board(card, grid_x, grid_z, game_state):
         piece.hovered = False
         piece.selected = False
         
+        # After piece creation
+        piece.receive_shadows = True
+        piece.cast_shadows = True
+        
         if piece:
             # Add to game state for update loop
             game_state.virtual_grid[grid_z][grid_x] = piece
             game_state.piece_entities.append(piece)
             
-            # Create visual card on board
+            # Create card using EXACTLY the same x,z coordinates
             is_black_turn = game_state.card_state.current_player == 'BLACK'
             card_rotation = (90, 180, 0) if is_black_turn else (90, 0, 0)
             
@@ -82,10 +101,15 @@ def place_card_on_board(card, grid_x, grid_z, game_state):
                 model='quad',
                 texture=card.texture,
                 scale=(0.8, 0.8),
-                position=(grid_x, 0.01, grid_z),
+                position=Vec3(piece_position.x, 0.2, piece_position.z),  # Use piece's exact coordinates
                 rotation=card_rotation,
-                always_on_top=True
+                always_on_top=False,
+                shader=unlit_shader
             )
+            
+            # Debug: Print final positions
+            print(f"Final piece position: {piece.position}")
+            print(f"Final card position: {board_card.position}")
             
             if not hasattr(game_state, 'board_cards'):
                 game_state.board_cards = []
@@ -107,7 +131,7 @@ def place_card_on_board(card, grid_x, grid_z, game_state):
 def create_pieces(game_state, parent=None):
     """Create all chess pieces"""
     pieces_parent = Entity(parent=parent)
-    
+    print(f"Creating pieces for {len(Board.PIECE_POSITIONS)} positions")
     for row in Board.ROWS:
         for col in Board.COLS:
             piece_type = Board.PIECE_POSITIONS[row][col]
