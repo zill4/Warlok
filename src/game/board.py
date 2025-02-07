@@ -1,5 +1,5 @@
 from ursina import Entity, load_model, color, Vec3, destroy
-from ursina.shaders import basic_lighting_shader
+from ursina.shaders import basic_lighting_shader, lit_with_shadows_shader
 from constants import Board, BoardColors, Position, PieceRotation
 from entities.pieces import piece_classes
 from models import piece_models
@@ -8,18 +8,17 @@ def create_board(parent=None):
     """Create the chess board"""
     board_parent = Entity(parent=parent)
     
-    # Create a base under the board with basic lighting
+    # Create a darker base under the board
     base = Entity(
         parent=board_parent,
         model='cube',
         scale=(9, 0.5, 9),
         position=(3.5, -0.25, 3.5),
-        color=color.dark_gray,
-        shader=basic_lighting_shader,
-        double_sided=True
+        color=color.rgb(0.1, 0.1, 0.1),  # Very dark base
+        shader=lit_with_shadows_shader
     )
     
-    # Create the checkered board with colliders
+    # Create board squares with correct lighting
     for row in Board.ROWS:
         for col in Board.COLS:
             is_white = (row + col) % 2 == 0
@@ -30,8 +29,7 @@ def create_board(parent=None):
                 scale=(1, Board.THICKNESS, 1),
                 position=(col, 0, row),
                 color=BoardColors.WHITE if is_white else BoardColors.BLACK,
-                shader=basic_lighting_shader,
-                double_sided=True
+                shader=lit_with_shadows_shader
             )
             square.is_board_square = True
             square.grid_x = col
@@ -43,30 +41,49 @@ def place_card_on_board(card, grid_x, grid_z, game_state):
     """Place a card and create corresponding piece on the board"""
     try:
         print(f"Placing card on board: {card}")
-        print(f"Current player: {game_state.card_state.current_player}")  # Debug current player
-        piece = card.card_data.create_piece_entity()
+        print(f"Current player: {game_state.card_state.current_player}")
+        
+        # Create piece using card_data's piece type and properties
+        piece = piece_classes[card.card_data.piece_type](
+            is_black=card.card_data.is_black,
+            grid_x=grid_x,
+            grid_z=grid_z,
+            model=load_model(piece_models[card.card_data.piece_type]['black' if card.card_data.is_black else 'white']),
+            scale=piece_models[card.card_data.piece_type]['scale'],
+            rotation=PieceRotation.BLACK if card.card_data.is_black else PieceRotation.WHITE,
+            position=(grid_x, Position.GROUND_HEIGHT, grid_z),
+            shader=basic_lighting_shader,
+            double_sided=True,
+            collider='box',  # For mouse interaction
+            parent=game_state.board
+        )
+        
+        # Force opacity and color settings after creation
+        piece.alpha = 1.0
+        piece.color = color.rgb(0.8, 0.1, 0.1) if card.card_data.is_black else color.white
+        piece.collision = True
+        piece.always_on_top = False  # Make sure it's not treated as UI
+        
+        # Enable mouse interaction explicitly
+        piece.hovered = False
+        piece.selected = False
+        
         if piece:
-            piece.grid_x = grid_x
-            piece.grid_z = grid_z
-            piece.position = Vec3(grid_x, Position.GROUND_HEIGHT, grid_z)
-            
+            # Add to game state for update loop
             game_state.virtual_grid[grid_z][grid_x] = piece
             game_state.piece_entities.append(piece)
             
-            # Determine card rotation based on current player
+            # Create visual card on board
             is_black_turn = game_state.card_state.current_player == 'BLACK'
             card_rotation = (90, 180, 0) if is_black_turn else (90, 0, 0)
-            print(f"Is black's turn: {is_black_turn}")  # Debug turn state
-            print(f"Card rotation: {card_rotation}")  # Debug rotation
             
-            # Create a visual card on the board and store it
             board_card = Entity(
                 parent=game_state.board,
                 model='quad',
                 texture=card.texture,
                 scale=(0.8, 0.8),
                 position=(grid_x, 0.01, grid_z),
-                rotation=card_rotation,  # Apply rotation based on player
+                rotation=card_rotation,
                 always_on_top=True
             )
             
@@ -74,14 +91,17 @@ def place_card_on_board(card, grid_x, grid_z, game_state):
                 game_state.board_cards = []
             game_state.board_cards.append(board_card)
             
-            # After placing, switch turns
+            # Switch turns
             game_state.card_state.switch_turn()
-            print(f"Turn switched to: {game_state.card_state.current_player}")  # Debug turn switch
+            print(f"Turn switched to: {game_state.card_state.current_player}")
             
             return True
             
     except Exception as e:
         print(f"Error placing card: {e}")
+        print(f"Error type: {type(e)}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def create_pieces(game_state, parent=None):

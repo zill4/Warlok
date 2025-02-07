@@ -1,6 +1,6 @@
 from ursina import (
     Ursina, window, scene, color, Vec3,
-    DirectionalLight, AmbientLight, destroy, Entity  # Add these imports
+    DirectionalLight, AmbientLight, destroy, Entity, application, mouse
 )
 from constants import Light, BoardCenter
 from game.state_manager import GameStateManager
@@ -9,6 +9,7 @@ from game.board import create_board, create_pieces
 from game.ui import update_cards_for_turn, create_card_ui, update as ui_update
 from game.input_handler import handle_input
 from game.menu import create_menu
+from ursina.shaders import basic_lighting_shader, lit_with_shadows_shader
 
 app = Ursina()
 window.title = '3D Chess'
@@ -33,25 +34,37 @@ def start_game():
     # Create a pivot point for the board and pieces
     board_pivot = Entity()
     
-    # Single source of lighting setup - attach to scene, not board
+    # Main directional light with much lower intensity
     main_light = DirectionalLight(
-        parent=scene,  # Important: Parent to scene, not board
-        y=Light.HEIGHT,
+        parent=scene,
+        y=Light.HEIGHT * 2,
         z=Light.DISTANCE,
         shadows=True,
-        shadow_map_resolution=(2048, 2048)
+        rotation=(60, -45, 45),
+        shadow_map_resolution=(4096, 4096),
+        color=color.rgba(1, 1, 1, 0.3)  # Much lower intensity
     )
     main_light.look_at(Vec3(BoardCenter.X, 0, BoardCenter.Z))
-    main_light.rotation = Vec3(*Light.ROTATION)
     
-    # Add fill light to reduce harsh shadows
+    # Very minimal ambient light
+    AmbientLight(
+        parent=scene,
+        color=color.rgba(0.1, 0.1, 0.12, 0.1)  # Much darker ambient
+    )
+    
+    # Subtle fill light
     fill_light = DirectionalLight(
         parent=scene,
         y=Light.HEIGHT,
-        z=-Light.DISTANCE,  # Opposite direction
-        shadows=False  # No shadows for fill light
+        z=-Light.DISTANCE,
+        shadows=False,
+        rotation=(-45, 135, -45),
+        color=color.rgba(0.2, 0.2, 0.25, 0.1)  # Very subtle fill
     )
     fill_light.look_at(Vec3(BoardCenter.X, 0, BoardCenter.Z))
+    
+    # Make sure scene has lighting enabled
+    scene.light_nodes = [main_light, fill_light]
     
     # Setup camera and board
     camera_pivot = Entity()
@@ -76,6 +89,20 @@ def update():
         if game_state.cards:
             update_cards_for_turn(game_state.card_state)
         ui_update(game_state)
+    
+    if hasattr(game_state, 'piece_entities'):
+        for piece in game_state.piece_entities:
+            if hasattr(piece, 'update'):
+                piece.update()
+                
+            # Handle piece selection
+            if mouse.left and mouse.hovered_entity == piece:
+                if not piece.selected:
+                    piece.select()
+                    game_state.selected_piece = piece
+            elif mouse.right and piece.selected:
+                piece.deselect()
+                game_state.selected_piece = None
 
 def input(key):
     handle_input(key, game_state)
@@ -84,6 +111,6 @@ def input(key):
 menu = create_menu(start_game)
 
 # Set the update function
-app.update = update
+application.update = update
 
 app.run() 

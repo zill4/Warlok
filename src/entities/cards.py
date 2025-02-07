@@ -3,7 +3,7 @@ from entities.base import GameEntity
 from constants import Position, Board, CardUI, PlayerCards, ChessSymbols, PieceRotation
 from models import piece_models
 from entities.pieces import piece_classes
-from ursina.shaders import basic_lighting_shader
+from ursina.shaders import basic_lighting_shader, lit_with_shadows_shader
 from random import choice
 
 
@@ -21,21 +21,28 @@ class CardBase(GameEntity):
         return []
         
     def create_piece_entity(self):
-        """Factory method to create the corresponding chess piece"""
         if self.piece_type not in piece_classes:
             raise ValueError(f"Invalid piece type: {self.piece_type}")
             
-        return piece_classes[self.piece_type](
+        model_path = piece_models[self.piece_type]['black' if self.is_black else 'white']
+        model = load_model(model_path)
+        
+        piece = piece_classes[self.piece_type](
             is_black=self.is_black,
             grid_x=self.grid_x,
             grid_z=self.grid_z,
-            model=load_model(piece_models[self.piece_type]['black' if self.is_black else 'white']),
+            model=model,
             scale=piece_models[self.piece_type]['scale'],
             rotation=PieceRotation.BLACK if self.is_black else PieceRotation.WHITE,
             position=(self.grid_x, Position.GROUND_HEIGHT, self.grid_z),
-            shader=basic_lighting_shader,
-            double_sided=True,
+            parent=game_state.board
         )
+        
+        # Ensure piece is properly initialized
+        piece.collision = True
+        piece.alpha = 1.0
+        
+        return piece
 
 class CardEntity:
     def __init__(self, parent, image, symbol, index, original_position, original_z, is_hovered=False):

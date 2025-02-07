@@ -10,14 +10,14 @@ class Board:
 
     # Define starting positions for all pieces
     PIECE_POSITIONS = [
-        ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'],  # Black back row
-        ['pawn', 'pawn', 'pawn', 'pawn', 'pawn', 'pawn', 'pawn', 'pawn'],          # Black pawns
+        ['', '', '', '', 'king', '', '', ''],  # Black back row
+        [None] * 8,          # Black pawns
         [None] * 8,
         [None] * 8,
         [None] * 8,
         [None] * 8,
-        ['pawn', 'pawn', 'pawn', 'pawn', 'pawn', 'pawn', 'pawn', 'pawn'],          # White pawns
-        ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'],  # White back row
+        [None] * 8,  
+        ['', '', '', '', 'king', '', '', ''],  # White back row
     ]
 
 class Camera:
@@ -72,7 +72,7 @@ class CardUI:
     CARD_ROTATION = (0, 0, 0)
     
     # Increase symbol size further and adjust z-offset
-    SYMBOL_SCALE = 0.25      # Increased from 0.15 to 0.25
+    SYMBOL_SCALE = .50     # Increased from 0.15 to 0.25
     SYMBOL_X_OFFSET = 0.35   # Keep same horizontal position
     SYMBOL_Y_OFFSET = 0.4    # Keep same vertical position
     SYMBOL_Z_OFFSET = -0.01  # Reduced z-offset to prevent flickering

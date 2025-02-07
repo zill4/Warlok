@@ -1,32 +1,78 @@
 from ursina import Entity, Vec3, color, destroy, mouse
 from entities.base import GameEntity
 from constants import Position, Board, PieceColors
+from ursina.shaders import basic_lighting_shader
 
-
-class ChessPiece(GameEntity):
+class ChessPiece(Entity):
     def __init__(self, is_black, grid_x, grid_z, **kwargs):
-        super().__init__(is_black, grid_x, grid_z)
-        self.original_color = PieceColors.BLACK if is_black else PieceColors.WHITE
-        self.color = self.original_color
+        # Remove color from kwargs to prevent override
+        kwargs.pop('color', None)
+        kwargs['collider'] = 'box'  # Add collider for mouse interaction
+        kwargs['shader'] = basic_lighting_shader
+        kwargs['double_sided'] = True
+        super().__init__(**kwargs)
+        
+        # Initialize GameEntity properties
+        self.is_black = is_black
+        self.grid_x = grid_x
+        self.grid_z = grid_z
+        self.valid_moves = []
+        
+        # Set material properties
+        self.texture = None  # Use model's texture
+        self.color = color.rgb(0.8, 0.1, 0.1) if is_black else color.white
+        self.alpha = 1.0
+        
+        # Initialize state
+        self.original_color = self.color
         self.original_y = Position.GROUND_HEIGHT
+        self.is_dragging = False
+        self.start_pos = None
+        self.hovered = False
+        self.selected = False
+        
+        self.valid_move_markers = []
+        self.texture_scale = (1, 1)
     
     def highlight(self):
-        """Highlight piece when hovered"""
-        if self.is_black:
-            self.color = PieceColors.BLACK_HIGHLIGHT
-        else:
-            self.color = PieceColors.WHITE_HIGHLIGHT
+        if not self.selected:  # Only highlight if not selected
+            if self.is_black:
+                self.color = color.rgb(1.0, 0.2, 0.2)  # Brighter red
+            else:
+                self.color = color.rgb(1.2, 1.2, 1.2)  # Slightly brighter white
     
     def reset_color(self):
-        """Reset piece to original color"""
-        self.color = self.original_color
+        if not self.selected:  # Only reset if not selected
+            self.color = self.original_color
     
     def select(self):
-        """Highlight piece when selected"""
+        self.selected = True
         if self.is_black:
-            self.color = PieceColors.SELECTED_BLACK
+            self.color = color.rgb(1.2, 0.3, 0.3)  # Even brighter red
         else:
-            self.color = PieceColors.SELECTED_WHITE
+            self.color = color.rgb(1.5, 1.5, 1.5)  # Even brighter white
+    
+    def deselect(self):
+        self.selected = False
+        self.reset_color()
+    
+    def start_drag(self):
+        self.is_dragging = True
+        self.start_pos = self.position
+        self.y += 1  # Lift piece when dragging
+    
+    def end_drag(self):
+        self.is_dragging = False
+        self.y = self.original_y
+    
+    def update(self):
+        if mouse.hovered_entity == self:
+            if not self.hovered:
+                self.hovered = True
+                self.highlight()
+        elif self.hovered:
+            self.hovered = False
+            self.reset_color()
     
     def update_visual_position(self):
         """Update the piece's visual position based on grid coordinates"""
@@ -48,16 +94,13 @@ class ChessPiece(GameEntity):
     
     def clear_markers(self):
         """Clear all valid move markers"""
-        for marker in self.valid_move_markers:
+        for marker in self.valid_move_moves:
             destroy(marker)
         self.valid_move_markers.clear()
 
-    def update(self):
-        """Handle hover highlighting"""
-        if mouse.hovered_entity == self:
-            self.highlight()
-        else:
-            self.reset_color()
+    def get_valid_moves(self, grid):
+        """Get valid moves for this piece"""
+        return []  # Base class returns no moves
 
 class Pawn(ChessPiece):
     def get_valid_moves(self, grid):

@@ -3,37 +3,48 @@ from constants import PieceScale
 piece_models = {
     'pawn': {
 
-        'white': './src/assets/models/pawn_white.obj',
-        'black': './src/assets/models/pawn_black.obj',
+        'white': './assets/models/white_pawn.fbx',
+        'black': './assets/models/black_pawn.fbx',
         'scale': PieceScale.PAWN
+
+
     },
     'rook': {
-        'white': './src/assets/models/rook_white.obj',
-        'black': './src/assets/models/rook_black.obj',
+        'white': './assets/models/white_rook.fbx',
+        'black': './assets/models/black_rook.fbx',
         'scale': PieceScale.ROOK
     },
+
+
     'knight': {
-        'white': './src/assets/models/knight_white.obj',
-        'black': './src/assets/models/knight_black.obj',
+        'white': './assets/models/white_knight.fbx',
+        'black': './assets/models/black_knight.fbx',
         'scale': PieceScale.KNIGHT
+
+
 
     },
     'bishop': {
-        'white': './src/assets/models/bishop_white.obj',
-        'black': './src/assets/models/bishop_black.obj',
+        'white': './assets/models/white_bishop.fbx',
+        'black': './assets/models/black_bishop.fbx',
         'scale': PieceScale.BISHOP
     },
 
+
+
     'queen': {
-        'white': './src/assets/models/queen_white.obj',
-        'black': './src/assets/models/queen_black.obj',
+        'white': './assets/models/white_queen.fbx',
+        'black': './assets/models/black_queen.fbx',
         'scale': PieceScale.QUEEN
     },
 
+
+
     'king': {
-        'white': './src/assets/models/king_white.obj',
-        'black': './src/assets/models/king_black.obj',
+        'white': './assets/models/white_king.fbx',
+        'black': './assets/models/black_king.fbx',
         'scale': PieceScale.KING
     }
+
 
 } 
