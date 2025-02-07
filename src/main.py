@@ -1,5 +1,8 @@
-from ursina import *
-from constants import *
+from ursina import (
+    Ursina, window, scene, color, Vec3,
+    DirectionalLight, AmbientLight, destroy, Entity  # Add these imports
+)
+from constants import Light, BoardCenter
 from game.state_manager import GameStateManager
 from game.rules import GameRules
 from game.board import create_board, create_pieces
@@ -27,25 +30,40 @@ def start_game():
     game_state.clear_state()
     game_state.initialize_card_state()
     
-    # Setup scene lighting
-    main_light = DirectionalLight(parent=scene, y=Light.HEIGHT, z=Light.DISTANCE, shadows=True)
+    # Create a pivot point for the board and pieces
+    board_pivot = Entity()
+    
+    # Single source of lighting setup - attach to scene, not board
+    main_light = DirectionalLight(
+        parent=scene,  # Important: Parent to scene, not board
+        y=Light.HEIGHT,
+        z=Light.DISTANCE,
+        shadows=True,
+        shadow_map_resolution=(2048, 2048)
+    )
+    main_light.look_at(Vec3(BoardCenter.X, 0, BoardCenter.Z))
     main_light.rotation = Vec3(*Light.ROTATION)
-    main_light.intensity = Light.INTENSITY
-    AmbientLight(parent=scene, color=color.rgba(100, 100, 100, 0.1))
+    
+    # Add fill light to reduce harsh shadows
+    fill_light = DirectionalLight(
+        parent=scene,
+        y=Light.HEIGHT,
+        z=-Light.DISTANCE,  # Opposite direction
+        shadows=False  # No shadows for fill light
+    )
+    fill_light.look_at(Vec3(BoardCenter.X, 0, BoardCenter.Z))
     
     # Setup camera and board
     camera_pivot = Entity()
     game_rules = GameRules(game_state.card_state, camera_pivot)
     game_rules.setup_camera()
     
-    # Create game entities
-    game_state.board = create_board()
-    game_state.pieces = create_pieces(game_state)
-    
-    # Create card UI - Pass game_state here
+    # Create game entities - parent to board_pivot
+    game_state.board = create_board(parent=board_pivot)
+    game_state.pieces = create_pieces(game_state, parent=board_pivot)
     game_state.cards = create_card_ui(game_state)
     
-    # Instead of disabling menu, destroy it
+    # Clean up menu
     for child in menu.children:
         destroy(child)
     destroy(menu)

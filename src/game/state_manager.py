@@ -8,7 +8,6 @@ class GameStateManager:
         self.virtual_grid = [[None for _ in range(8)] for _ in range(8)]
         self.selected_piece = None
         self.selected_card = None
-        self.lights = []
         self.card_state = None
         
     def clear_state(self):
@@ -17,22 +16,11 @@ class GameStateManager:
         self.virtual_grid = [[None for _ in range(8)] for _ in range(8)]
         self.selected_piece = None
         self.selected_card = None
-        for light in self.lights:
-            destroy(light)
-        self.lights.clear()
-        
-    def setup_lighting(self):
-        """Setup and store scene lighting"""
-        main_light = DirectionalLight(parent=scene, y=2, z=3, shadows=True)
-        ambient = AmbientLight(parent=scene, color=color.rgba(100, 100, 100, 0.1))
-        
-        self.lights.extend([main_light, ambient])
-        return main_light, ambient
         
     def initialize_card_state(self):
         """Initialize card state within the game state manager"""
         self.card_state = CardState()
-        self.card_state.game_state = self  # Set the game state reference after creation
+        self.card_state.game_state = self
         return self.card_state
 
 class CardState:

@@ -21,18 +21,18 @@ class Board:
     ]
 
 class Camera:
-    PIVOT_HEIGHT = 8        # Lowered significantly
-    START_HEIGHT = -5     # Reset to ground level
-    START_DISTANCE = -20   # Brought much closer
-    START_ROTATION = 35     # More natural viewing angle
-    WHITE_ROTATION_Y = 180
-    BLACK_ROTATION_Y = 0
-    ROTATION_SMOOTHING = 8
+    PIVOT_HEIGHT = 0          # Set to match the parent Y position
+    START_HEIGHT = 11         # Match the camera's local Y position
+    START_DISTANCE = -25      # Match the camera's local Z position
+    START_ROTATION = 25       # Match the camera's rotation X
+    WHITE_ROTATION_Y = 0 # Match the parent rotation Y
+    BLACK_ROTATION_Y = 180.20833 
+    ROTATION_SMOOTHING = 2.0 # Adjust for smoother rotation
     MOUSE_SENSITIVITY = 40
     MIN_ROTATION_X = 15
     MAX_ROTATION_X = 70
     MOVE_SPEED = 20
-    FOV = 60               # Wider field of view
+    FOV = 60
 
 class Position:
     GROUND_HEIGHT = 0

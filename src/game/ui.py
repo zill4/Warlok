@@ -32,7 +32,9 @@ def create_card_ui(game_state):
     
     for i in range(CardUI.MAX_CARDS):
         random_piece_type = choice(piece_types)
-        card_data = CardBase(False, 0, 0)
+        # Set is_black based on current player
+        is_black = game_state.card_state.current_player == 'BLACK'
+        card_data = CardBase(is_black, 0, 0)
         card_data.piece_type = random_piece_type
         
         # Calculate base position
@@ -46,14 +48,14 @@ def create_card_ui(game_state):
         card = Button(
             parent=cards_parent,
             model='quad',
-            texture=PlayerCards.BLACK['dragon_image'],
+            texture=PlayerCards.BLACK['dragon_image'] if is_black else PlayerCards.WHITE['dragon_image'],
             scale=(CardUI.CARD_WIDTH, CardUI.CARD_HEIGHT),
             position=base_position,
             rotation=CardUI.CARD_ROTATION,
             z=CardUI.Z_POSITION + (i * CardUI.STACK_HEIGHT),
             color=color.white,
-            highlight_color=color.white,  # Keep same color when hovering
-            pressed_color=color.white     # Keep same color when clicking
+            highlight_color=color.white,
+            pressed_color=color.white
         )
         
         # Store original position and data
@@ -61,6 +63,7 @@ def create_card_ui(game_state):
         card.is_selected = False
         card.card_data = card_data
         card.piece_type = random_piece_type
+        card.is_destroyed = False
         
         # Normal card overlay
         card_overlay = Entity(
@@ -71,11 +74,14 @@ def create_card_ui(game_state):
             position=(0, 0, CardUI.OVERLAY_Z)
         )
         
-        # Chess symbol
+        # Chess symbol with correct color
+        symbol_data = ChessSymbols.get_symbol_uvs(random_piece_type, is_black)
         symbol = Entity(
             parent=card,
             model='quad',
             texture=ChessSymbols.TEXTURE,
+            texture_scale=symbol_data['scale'],
+            texture_offset=symbol_data['offset'],
             scale=(CardUI.SYMBOL_SCALE, CardUI.SYMBOL_SCALE),
             position=(
                 CardUI.SYMBOL_X_OFFSET,
@@ -91,29 +97,48 @@ def create_card_ui(game_state):
         symbol.texture_offset = symbol_data['offset']
         
         def on_click(card=card):
+            if not hasattr(card, 'is_destroyed') or card.is_destroyed:
+                return
+                
+            print(f"\n=== Camera Debug Info ===")
+            print(f"Camera Position: {camera.position}")
+            print(f"Camera World Position: {camera.world_position}")
+            print(f"Camera Rotation: {camera.rotation}")
+            print(f"Camera Parent Position: {camera.parent.position if camera.parent else 'No parent'}")
+            print(f"Camera Parent Rotation: {camera.parent.rotation if camera.parent else 'No parent'}")
+            print(f"======================\n")
+            
+            print(f"Card clicked: {card}")
             if not card.is_selected:
-                # Deselect any other selected cards
-                for other_card, _, _ in cards:
-                    if other_card != card and other_card.is_selected:
+                # Deselect other cards
+                for other_card, _, _ in game_state.card_entities:
+                    if (other_card != card and 
+                        hasattr(other_card, 'is_selected') and 
+                        other_card.is_selected and 
+                        not other_card.is_destroyed):
                         other_card.is_selected = False
                         other_card.animate_position(other_card.original_position, duration=0.1)
                 
-                # Select this card
                 card.is_selected = True
                 selected_pos = card.original_position + Vec3(0, CardUI.HOVER_LIFT * 2, CardUI.HOVER_FORWARD)
                 card.animate_position(selected_pos, duration=0.2)
+                print(f"Card selected: {card}")
             else:
-                # Deselect if clicked again
                 card.is_selected = False
                 card.animate_position(card.original_position, duration=0.1)
+                print(f"Card deselected: {card}")
         
         # Define hover behavior
         def on_hover(card=card):
+            if not hasattr(card, 'is_destroyed') or card.is_destroyed:
+                return
             if not card.is_selected:
                 hover_pos = card.original_position + Vec3(0, CardUI.HOVER_LIFT, CardUI.HOVER_FORWARD)
                 card.animate_position(hover_pos, duration=0.1)
         
         def on_unhover(card=card):
+            if not hasattr(card, 'is_destroyed') or card.is_destroyed:
+                return
             if not card.is_selected:
                 card.animate_position(card.original_position, duration=0.1)
         
@@ -257,7 +282,7 @@ def update(game_state):
         if hasattr(mouse.hovered_entity, 'is_board_square'):
             selected_card = None
             for card, overlay, symbol in game_state.card_entities:
-                if hasattr(card, 'is_selected') and card.is_selected:
+                if hasattr(card, 'is_selected') and card.is_selected and not card.is_destroyed:
                     selected_card = card
                     break
             
@@ -267,4 +292,5 @@ def update(game_state):
                 print(f"Attempting to place card at: {grid_x}, {grid_z}")
                 if place_card_on_board(selected_card, grid_x, grid_z, game_state):
                     game_state.card_entities.remove((selected_card, overlay, symbol))
+                    selected_card.is_destroyed = True  # Mark as destroyed before destroying
                     destroy(selected_card) 
