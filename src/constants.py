@@ -71,21 +71,21 @@ class CardUI:
     HOVER_SEPARATION = 0.03
     CARD_ROTATION = (0, 0, 0)
     
-    # Larger size and more to the right
-    SYMBOL_SCALE = 0.08      # Increased size
-    SYMBOL_X_OFFSET = 0.35   # More to the right
-    SYMBOL_Y_OFFSET = 0.4    # Keep same height
-    SYMBOL_Z_OFFSET = -0.2   
-
-    # Z-ordering for card layers
+    # Increase symbol size further and adjust z-offset
+    SYMBOL_SCALE = 0.25      # Increased from 0.15 to 0.25
+    SYMBOL_X_OFFSET = 0.35   # Keep same horizontal position
+    SYMBOL_Y_OFFSET = 0.4    # Keep same vertical position
+    SYMBOL_Z_OFFSET = -0.01  # Reduced z-offset to prevent flickering
+    
+    # Adjust Z-ordering for card layers to be closer together
     BASE_Z = 0
-    OVERLAY_Z = -0.1
-    SYMBOL_Z = -0.2
+    OVERLAY_Z = -0.005
+    SYMBOL_Z = -0.01
 
     # Card hover and selection effects
-    MAX_ROTATION = 3        # Maximum random rotation for cards in hand
-    POSITION_VARIANCE = 0.002  # Random position variance for natural look
-    STACK_HEIGHT = 0.001    # Z-offset between cards
+    MAX_ROTATION = 3        
+    POSITION_VARIANCE = 0.002  
+    STACK_HEIGHT = 0.001    
 
 class Light:
     HEIGHT = 15            # Higher light position
@@ -122,7 +122,8 @@ class ChessSymbols:
     SYMBOLS_PER_ROW = 6
     SYMBOL_WIDTH = 1/6
     SYMBOL_HEIGHT = 0.5
-    
+    SYMBOL_SCALE = 0.025  # Made slightly smaller
+
     @staticmethod
     def get_symbol_uvs(piece_type, is_black):
         """Get UV coordinates for a specific chess symbol"""
@@ -136,7 +137,7 @@ class ChessSymbols:
         }
         
         x_offset = positions[piece_type] / ChessSymbols.SYMBOLS_PER_ROW
-        y_offset = 0.5 if is_black else 0.0
+        y_offset = 0.5 if not is_black else 0.0
         
         return {
             'scale': (1/ChessSymbols.SYMBOLS_PER_ROW, 0.5),
@@ -148,7 +149,7 @@ class ChessSymbols:
         col = randint(0, ChessSymbols.SYMBOLS_PER_ROW - 1)
         
         x_offset = col / ChessSymbols.SYMBOLS_PER_ROW   
-        y_offset = 0.5 if is_black else 0.0
+        y_offset = 0.5 if not is_black else 0.0
         
         return {
             'scale': (1/ChessSymbols.SYMBOLS_PER_ROW, 0.5),

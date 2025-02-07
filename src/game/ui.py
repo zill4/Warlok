@@ -1,8 +1,10 @@
-from ursina import Entity, Vec3, mouse, camera, color, os, Text, Texture, Button, destroy
+from ursina import Entity, Vec3, mouse, camera, color, os, Text, Texture, Button, destroy, Vec2
 from random import uniform, randint, choice
 from constants import CardUI, PlayerCards, BoardCenter, ChessSymbols, Board
 from entities import CardBase
 from game.board import place_card_on_board
+from ursina.shaders import  unlit_shader
+
 
 
 # Global variable to store card entities
@@ -32,10 +34,12 @@ def create_card_ui(game_state):
     
     for i in range(CardUI.MAX_CARDS):
         random_piece_type = choice(piece_types)
-        # Set is_black based on current player
         is_black = game_state.card_state.current_player == 'BLACK'
         card_data = CardBase(is_black, 0, 0)
         card_data.piece_type = random_piece_type
+        
+        # Use pre-composed texture that includes both dragon and symbol
+        card_texture = f'assets/images/chess_pieces/{"black" if is_black else "white"}_{random_piece_type}.png'
         
         # Calculate base position
         base_position = Vec3(
@@ -44,11 +48,10 @@ def create_card_ui(game_state):
             CardUI.Z_POSITION
         )
         
-        # Create card as a Button instead of Entity for better interaction
         card = Button(
             parent=cards_parent,
             model='quad',
-            texture=PlayerCards.BLACK['dragon_image'] if is_black else PlayerCards.WHITE['dragon_image'],
+            texture=card_texture,  # Single texture with everything baked in
             scale=(CardUI.CARD_WIDTH, CardUI.CARD_HEIGHT),
             position=base_position,
             rotation=CardUI.CARD_ROTATION,
@@ -71,30 +74,33 @@ def create_card_ui(game_state):
             model='quad',
             texture=CardUI.CARD_TEXTURE,
             scale=(1, 1),
-            position=(0, 0, CardUI.OVERLAY_Z)
+            position=(0, 0, CardUI.OVERLAY_Z),
+            shader=unlit_shader,
+            z_bias=-50
         )
         
-        # Chess symbol with correct color
-        symbol_data = ChessSymbols.get_symbol_uvs(random_piece_type, is_black)
+        # Chess symbol with sprite sheet UV mapping
+        symbol_data = ChessSymbols.get_random_symbol_uvs(is_black)
         symbol = Entity(
             parent=card,
             model='quad',
-            texture=ChessSymbols.TEXTURE,
-            texture_scale=symbol_data['scale'],
-            texture_offset=symbol_data['offset'],
-            scale=(CardUI.SYMBOL_SCALE, CardUI.SYMBOL_SCALE),
-            position=(
-                CardUI.SYMBOL_X_OFFSET,
-                CardUI.SYMBOL_Y_OFFSET,
-                CardUI.SYMBOL_Z
-            ),
+            texture=ChessSymbols.TEXTURE,  # Use the sprite sheet texture
+            texture_scale=symbol_data['scale'],  # Set UV scale
+            texture_offset=symbol_data['offset'],  # Set UV offset
+            position=(CardUI.SYMBOL_X_OFFSET, CardUI.SYMBOL_Y_OFFSET, CardUI.SYMBOL_Z),
+            scale=ChessSymbols.SYMBOL_SCALE,
+            color=color.white,
+            shader=unlit_shader,
             always_on_top=True
         )
         
-        # Set UV coordinates for the specific piece
-        symbol_data = ChessSymbols.get_symbol_uvs(random_piece_type, False)
-        symbol.texture_scale = symbol_data['scale']
-        symbol.texture_offset = symbol_data['offset']
+        # Lock the UV coordinates
+        if hasattr(symbol, 'texture'):
+            symbol.texture.filtering = None
+            symbol.texture.mipmap = True
+            # Store the UV data to prevent updates
+            symbol._texture_scale = symbol_data['scale']
+            symbol._texture_offset = symbol_data['offset']
         
         def on_click(card=card):
             if not hasattr(card, 'is_destroyed') or card.is_destroyed:
@@ -292,5 +298,5 @@ def update(game_state):
                 print(f"Attempting to place card at: {grid_x}, {grid_z}")
                 if place_card_on_board(selected_card, grid_x, grid_z, game_state):
                     game_state.card_entities.remove((selected_card, overlay, symbol))
-                    selected_card.is_destroyed = True  # Mark as destroyed before destroying
+                    selected_card.is_destroyed = True
                     destroy(selected_card) 
