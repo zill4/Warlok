@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { BoardManager } from './board';
-import { GameState } from './state';
+import { Card, GameState } from './state';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { WebGPURenderer } from 'three/webgpu';
+import { CardHand } from './card';
 
 // Configuration (from constants.py)
 export const BOARD_CONFIG = {
@@ -40,6 +41,7 @@ export class ChessGame {
     private pieceModels = new Map<string, THREE.Group>();
     private isInitialized = false;
     private stats: Stats | null = null;
+    private cardHand!: CardHand;
 
     constructor(containerId: string) {
         if (ChessGame.instance) {
@@ -80,9 +82,23 @@ export class ChessGame {
         this.state = new GameState(this.scene);
         this.boardManager = new BoardManager(this.scene, this.state);
         
+        this.cardHand = new CardHand();
+        
+        // Add test cards
+        const testCards = [
+            { pieceType: 'pawn', color: 'white', texture: 'pawn_card' },
+            { pieceType: 'knight', color: 'white', texture: 'knight_card' },
+            { pieceType: 'bishop', color: 'white', texture: 'bishop_card' },
+            { pieceType: 'rook', color: 'white', texture: 'rook_card' },
+            { pieceType: 'queen', color: 'white', texture: 'queen_card' },
+            { pieceType: 'king', color: 'white', texture: 'king_card' },
+            { pieceType: 'pawn', color: 'black', texture: 'pawn_card' }
+        ];
+        
+        testCards.forEach(card => this.cardHand.addCard(card as Card));
+        
         // Start animation loop
         this.animate();
-        
         // Initialize game
         this.init().catch(error => {
             console.error('Failed to initialize game:', error);
@@ -95,13 +111,16 @@ export class ChessGame {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x1a1a1a);
         
-        const aspect = this.container.clientWidth / this.container.clientHeight;
-        this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-        this.camera.position.set(12, 8, 12);
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        const aspect = width / height;
+        
+        // Adjust camera to see the cards better
+        this.camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
+        this.camera.position.set(0, 4, 10);  // Moved camera back and up slightly
         this.camera.lookAt(0, 0, 0);
         
         try {
-            // Try to create WebGPU renderer
             this.renderer = new WebGPURenderer({ 
                 antialias: true,
                 alpha: true 
@@ -115,15 +134,16 @@ export class ChessGame {
             });
         }
         
-        this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+        this.renderer.setSize(width, height);
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.container.appendChild(this.renderer.domElement);
         
+        // Adjust OrbitControls
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.05;
         this.controls.screenSpacePanning = false;
-        this.controls.minDistance = 8;
+        this.controls.minDistance = 5;
         this.controls.maxDistance = 20;
         this.controls.maxPolarAngle = Math.PI / 2;
         this.controls.target.set(0, 0, 0);
@@ -157,18 +177,25 @@ export class ChessGame {
     private animate(): void {
         requestAnimationFrame(() => this.animate());
         
-        // Update stats at the start of each frame
         if (this.stats) {
             this.stats.begin();
         }
+        
         if (this.controls) {
             this.controls.update();
         }
+
+        // Render main scene
         if (this.renderer && this.scene && this.camera) {
+            this.renderer.clear();  // Clear the renderer
             this.renderer.render(this.scene, this.camera);
+            
+            // Render UI/cards on top
+            if (this.cardHand) {
+                this.cardHand.render(this.renderer);
+            }
         }
         
-        // End stats timing
         if (this.stats) {
             this.stats.end();
         }
