@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { ChessPiece } from './core';
-
+import { BOARD_CONFIG } from './config';
 export interface Card {
     texture: string;
     pieceType: string;
@@ -19,4 +19,22 @@ export class GameState {
         Array(8).fill(null).map(() => Array(8).fill(null));
 
     constructor(public scene: THREE.Scene) {}
+
+    // Move the highlight moves functionality from game.ts to here
+    highlightValidMoves(piece: ChessPiece) {
+        const validMoves = piece.getValidMoves(this.virtualGrid);
+        
+        validMoves.forEach(([x, z]) => {
+            const marker = new THREE.Mesh(
+                new THREE.SphereGeometry(0.2),
+                new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+            );
+            marker.position.set(
+                x * BOARD_CONFIG.SQUARE_SIZE - (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE)/2,
+                0.1,
+                z * BOARD_CONFIG.SQUARE_SIZE - (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE)/2
+            );
+            this.scene.add(marker);
+        });
+    }
 }

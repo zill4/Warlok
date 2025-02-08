@@ -1,6 +1,6 @@
 export const BOARD_CONFIG = {
   SIZE: 8,
-  SQUARE_SIZE: 1.5,
+  SQUARE_SIZE: 1.0,
   COLORS: {
     WHITE: 0xeeeeee,
     BLACK: 0x444444,

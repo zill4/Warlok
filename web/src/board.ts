@@ -6,37 +6,185 @@ import { Card } from './card';
 
 export class BoardManager {
     private scene: THREE.Scene;
-    public pieces: ChessPiece[] = [];
+    private pieces: ChessPiece[] = [];
     private pieceModels!: Map<string, THREE.Group>;
     private state: GameState;
+    private board: THREE.Group;
+    private isInitialized = false;  // Add initialization flag
 
     constructor(scene: THREE.Scene, state: GameState) {
         this.scene = scene;
         this.state = state;
-        this.createBoard();
+        this.board = new THREE.Group();
+        this.scene.add(this.board);
+        // this.createBoard();
     }
 
     public setPieceModels(models: Map<string, THREE.Group>) {
+        if (this.pieceModels) {
+            console.warn('Piece models already set, skipping...');
+            return;
+        }
         this.pieceModels = models;
+        console.log('Piece models set in BoardManager');
     }
 
     public createBoard() {
-        // Chess board creation logic from Python
-        for(let z = 0; z < BOARD_CONFIG.SIZE; z++) {
-            for(let x = 0; x < BOARD_CONFIG.SIZE; x++) {
-                const color = (x + z) % 2 === 0 ? BOARD_CONFIG.COLORS.WHITE : BOARD_CONFIG.COLORS.BLACK;
-                const geometry = new THREE.PlaneGeometry(BOARD_CONFIG.SQUARE_SIZE, BOARD_CONFIG.SQUARE_SIZE);
-                const material = new THREE.MeshStandardMaterial({ color });
-                const square = new THREE.Mesh(geometry, material);
-                square.rotation.x = -Math.PI / 2;
+        if (this.isInitialized) {
+            console.warn('Board already created, skipping...');
+            return;
+        }
+
+        console.log("Creating board...");
+        
+        // Create board container
+        const boardGeometry = new THREE.BoxGeometry(
+            BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE,
+            0.2,
+            BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE
+        );
+        const boardMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0x202020
+        });
+        const boardBase = new THREE.Mesh(boardGeometry, boardMaterial);
+        boardBase.position.y = -0.1;
+        this.board.add(boardBase);
+
+        // Create squares
+        const squareGeometry = new THREE.BoxGeometry(
+            BOARD_CONFIG.SQUARE_SIZE,
+            0.1,
+            BOARD_CONFIG.SQUARE_SIZE
+        );
+
+        const offset = (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE) / 2 - BOARD_CONFIG.SQUARE_SIZE / 2;
+
+        for (let z = 0; z < BOARD_CONFIG.SIZE; z++) {
+            for (let x = 0; x < BOARD_CONFIG.SIZE; x++) {
+                const isWhite = (x + z) % 2 === 0;
+                const material = new THREE.MeshBasicMaterial({
+                    color: isWhite ? BOARD_CONFIG.COLORS.WHITE : BOARD_CONFIG.COLORS.BLACK
+                });
+
+                const square = new THREE.Mesh(squareGeometry, material);
                 square.position.set(
-                    x * BOARD_CONFIG.SQUARE_SIZE - (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE)/2,
+                    x * BOARD_CONFIG.SQUARE_SIZE - offset,
                     0,
-                    z * BOARD_CONFIG.SQUARE_SIZE - (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE)/2
+                    z * BOARD_CONFIG.SQUARE_SIZE - offset
                 );
-                this.scene.add(square);
+                this.board.add(square);
             }
         }
+
+        // Add board frame with basic material
+        const frameSize = BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE + 0.4;
+        const frameThickness = 0.3;
+        const frameHeight = 0.3;
+        const frameMaterial = new THREE.MeshBasicMaterial({ color: 0x4a3019 });
+
+        // Create frame pieces
+        const createFramePiece = (width: number, depth: number, x: number, z: number) => {
+            const geometry = new THREE.BoxGeometry(width, frameHeight, depth);
+            const frame = new THREE.Mesh(geometry, frameMaterial);
+            frame.position.set(x, -0.1, z);
+            this.board.add(frame);
+        };
+
+        // Add frame borders
+        createFramePiece(frameSize + frameThickness * 2, frameThickness, 0, -(frameSize/2 + frameThickness/2)); // Bottom
+        createFramePiece(frameSize + frameThickness * 2, frameThickness, 0, frameSize/2 + frameThickness/2);    // Top
+        createFramePiece(frameThickness, frameSize + frameThickness * 2, -(frameSize/2 + frameThickness/2), 0); // Left
+        createFramePiece(frameThickness, frameSize + frameThickness * 2, frameSize/2 + frameThickness/2, 0);    // Right
+
+        this.isInitialized = true;
+    }
+
+    public setupInitialPieces() {
+        if (this.pieces.length > 0) {
+            console.warn('Pieces already set up, skipping...');
+            return;
+        }
+        console.log("Setting up initial pieces...");
+        
+        // Setup piece positions
+        const pieceSetup = [
+            { type: 'rook', positions: [[0, 0], [7, 0], [0, 7], [7, 7]] },
+            { type: 'knight', positions: [[1, 0], [6, 0], [1, 7], [6, 7]] },
+            { type: 'bishop', positions: [[2, 0], [5, 0], [2, 7], [5, 7]] },
+            { type: 'queen', positions: [[3, 0], [3, 7]] },
+            { type: 'king', positions: [[4, 0], [4, 7]] }
+        ];
+
+        // Place main pieces
+        pieceSetup.forEach(({ type, positions }) => {
+            positions.forEach(([x, z]) => {
+                const isBlack = z > 4;
+                const color = isBlack ? 'black' : 'white';
+                this.placeInitialPiece(type, color, x, z);
+            });
+        });
+
+        // Place pawns
+        for (let x = 0; x < BOARD_CONFIG.SIZE; x++) {
+            this.placeInitialPiece('pawn', 'white', x, 1);
+            this.placeInitialPiece('pawn', 'black', x, 6);
+        }
+    }
+
+    private placeInitialPiece(type: string, color: 'white' | 'black', x: number, z: number) {
+        const modelKey = `${color}_${type}`;
+        const model = this.pieceModels.get(modelKey);
+        
+        if (!model) {
+            console.error(`Missing model for ${modelKey}`);
+            return;
+        }
+
+        const piece = new ChessPiece(type, color === 'black', x, z, model.clone());
+        
+        // Enable shadows for the piece
+        piece.traverse((object) => {
+            if (object instanceof THREE.Mesh) {
+                object.castShadow = true;
+                object.receiveShadow = true;
+            }
+        });
+        
+        const offset = (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE) / 2 - BOARD_CONFIG.SQUARE_SIZE / 2;
+        piece.position.set(
+            x * BOARD_CONFIG.SQUARE_SIZE - offset,
+            0.5,
+            z * BOARD_CONFIG.SQUARE_SIZE - offset
+        );
+
+        this.scene.add(piece);
+        this.pieces.push(piece);
+        this.state.virtualGrid[z][x] = piece;
+        
+        console.log(`Placed ${color} ${type} at (${x}, ${z})`);
+    }
+
+    // Method to get piece at grid position
+    public getPieceAt(x: number, z: number): ChessPiece | null {
+        return this.state.virtualGrid[z][x];
+    }
+
+    // Method to move piece
+    public movePiece(piece: ChessPiece, newX: number, newZ: number) {
+        const offset = (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE) / 2 - BOARD_CONFIG.SQUARE_SIZE / 2;
+        
+        // Update virtual grid
+        this.state.virtualGrid[piece.gridZ][piece.gridX] = null;
+        this.state.virtualGrid[newZ][newX] = piece;
+
+        // Update piece position
+        piece.gridX = newX;
+        piece.gridZ = newZ;
+        piece.position.set(
+            newX * BOARD_CONFIG.SQUARE_SIZE - offset,
+            0.1,
+            newZ * BOARD_CONFIG.SQUARE_SIZE - offset
+        );
     }
 
     placeCardOnBoard(card: Card, gridX: number, gridZ: number) {
@@ -80,61 +228,5 @@ export class BoardManager {
         const cardMesh = new THREE.Mesh(geometry, material);
         cardMesh.rotation.x = -Math.PI / 2;
         return cardMesh;
-    }
-
-    public setupInitialPieces() {
-        // White back rank
-        this.placeInitialPiece('rook', 'white', 0, 0);
-        this.placeInitialPiece('knight', 'white', 1, 0);
-        this.placeInitialPiece('bishop', 'white', 2, 0);
-        this.placeInitialPiece('queen', 'white', 3, 0);
-        this.placeInitialPiece('king', 'white', 4, 0);
-        this.placeInitialPiece('bishop', 'white', 5, 0);
-        this.placeInitialPiece('knight', 'white', 6, 0);
-        this.placeInitialPiece('rook', 'white', 7, 0);
-
-        // White pawns
-        for (let x = 0; x < 8; x++) {
-            this.placeInitialPiece('pawn', 'white', x, 1);
-        }
-
-        // Black back rank
-        this.placeInitialPiece('rook', 'black', 0, 7);
-        this.placeInitialPiece('knight', 'black', 1, 7);
-        this.placeInitialPiece('bishop', 'black', 2, 7);
-        this.placeInitialPiece('queen', 'black', 3, 7);
-        this.placeInitialPiece('king', 'black', 4, 7);
-        this.placeInitialPiece('bishop', 'black', 5, 7);
-        this.placeInitialPiece('knight', 'black', 6, 7);
-        this.placeInitialPiece('rook', 'black', 7, 7);
-
-        // Black pawns
-        for (let x = 0; x < 8; x++) {
-            this.placeInitialPiece('pawn', 'black', x, 6);
-        }
-    }
-
-    private placeInitialPiece(type: string, color: 'white' | 'black', x: number, z: number) {
-        const model = this.pieceModels.get(`${color}_${type}`);
-        if (!model) throw new Error(`Missing model for ${color}_${type}`);
-        
-        const piece = new ChessPiece(
-            type,
-            color === 'black',
-            x,
-            z,
-            model.clone()
-        );
-        
-        // Calculate proper board position
-        const boardCenter = (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE) / 2;
-        piece.position.set(
-            x * BOARD_CONFIG.SQUARE_SIZE - boardCenter + BOARD_CONFIG.SQUARE_SIZE/2,
-            0,
-            z * BOARD_CONFIG.SQUARE_SIZE - boardCenter + BOARD_CONFIG.SQUARE_SIZE/2
-        );
-        
-        this.scene.add(piece);
-        this.pieces.push(piece);
     }
 }
