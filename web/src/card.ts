@@ -20,7 +20,9 @@ export class CardSystem {
     private raycaster: THREE.Raycaster;
     private mouse: THREE.Vector2;
     private hoveredCard: THREE.Mesh | null = null;
+    private selectedCards: Set<THREE.Mesh> = new Set();  // Change to Set for multiple selections
     private originalPositions: Map<THREE.Mesh, THREE.Vector3> = new Map();
+    private readonly MAX_SELECTED_CARDS = 5;  // Maximum cards in hand
     
     constructor() {
         // this.scene = scene;
@@ -70,6 +72,9 @@ export class CardSystem {
         window.addEventListener('mousemove', (event) => {
             this.onMouseMove(event);
         });
+
+        // Add click listener
+        window.addEventListener('click', () => this.onMouseClick());
     }
 
     private createCompositeTexture(cardTexture: THREE.Texture): THREE.CanvasTexture {
@@ -129,7 +134,106 @@ export class CardSystem {
         }
     }
 
+    private onMouseClick() {
+        const intersects = this.raycaster.intersectObjects(this.cardMeshes);
+        
+        if (intersects.length > 0) {
+            const clickedCard = intersects[0].object as THREE.Mesh;
+            
+            if (this.selectedCards.has(clickedCard)) {
+                // Deselect card if already selected
+                this.deselectCard(clickedCard);
+            } else if (this.selectedCards.size < this.MAX_SELECTED_CARDS) {
+                // Select new card if under max limit
+                this.selectCard(clickedCard);
+            } else {
+                console.log('Maximum number of cards already selected');
+                // Optional: Add visual feedback that max cards are selected
+            }
+        }
+    }
+
+    private selectCard(card: THREE.Mesh) {
+        this.selectedCards.add(card);
+        
+        if (!this.originalPositions.has(card)) {
+            this.originalPositions.set(card, card.position.clone());
+        }
+
+        // Calculate position in selected row based on number of selected cards
+        const selectedIndex = Array.from(this.selectedCards).indexOf(card);
+        const spacing = 2.5;  // Spacing between selected cards
+        const totalWidth = (this.selectedCards.size - 1) * spacing;
+        const startX = -totalWidth / 2;
+
+        // Animate to selected position
+        gsap.to(card.position, {
+            x: startX + (selectedIndex * spacing),
+            y: -6,  // Higher row
+            z: -0.5,  // Slightly forward
+            duration: 0.3,
+            ease: "power2.out"
+        });
+
+        // Scale up slightly
+        gsap.to(card.scale, {
+            x: 1.2,
+            y: 1.2,
+            duration: 0.3,
+            ease: "power2.out"
+        });
+
+        // Rearrange other selected cards if needed
+        this.updateSelectedCardsPositions();
+    }
+
+    private deselectCard(card: THREE.Mesh) {
+        this.selectedCards.delete(card);
+        const originalPos = this.originalPositions.get(card);
+        if (!originalPos) return;
+
+        // Animate back to original position
+        gsap.to(card.position, {
+            x: originalPos.x,
+            y: originalPos.y,
+            z: originalPos.z,
+            duration: 0.3,
+            ease: "power2.out"
+        });
+
+        // Scale back to normal
+        gsap.to(card.scale, {
+            x: 1,
+            y: 1,
+            duration: 0.3,
+            ease: "power2.out"
+        });
+
+        // Rearrange remaining selected cards
+        this.updateSelectedCardsPositions();
+    }
+
+    private updateSelectedCardsPositions() {
+        const selectedArray = Array.from(this.selectedCards);
+        const spacing = 2.5;
+        const totalWidth = (selectedArray.length - 1) * spacing;
+        const startX = -totalWidth / 2;
+
+        selectedArray.forEach((card, index) => {
+            gsap.to(card.position, {
+                x: startX + (index * spacing),
+                y: -6,
+                z: -0.5,
+                duration: 0.3,
+                ease: "power2.out"
+            });
+        });
+    }
+
     private animateCardUp(card: THREE.Mesh) {
+        // Don't hover selected cards
+        if (this.selectedCards.has(card)) return;
+
         if (!this.originalPositions.has(card)) {
             this.originalPositions.set(card, card.position.clone());
         }
@@ -155,6 +259,9 @@ export class CardSystem {
     }
 
     private animateCardDown(card: THREE.Mesh) {
+        // Don't animate down selected cards
+        if (this.selectedCards.has(card)) return;
+
         const originalPos = this.originalPositions.get(card);
         if (!originalPos) return;
 
@@ -309,6 +416,24 @@ export class CardSystem {
         this.cards.push(card);
 
         return cardMesh;
+    }
+
+    // Update getter to return all selected cards
+    public getSelectedCards(): Card[] {
+        return Array.from(this.selectedCards).map(cardMesh => {
+            const index = this.cardMeshes.indexOf(cardMesh);
+            return this.cards[index];
+        });
+    }
+
+    // Add method to check if max cards are selected
+    public isHandFull(): boolean {
+        return this.selectedCards.size >= this.MAX_SELECTED_CARDS;
+    }
+
+    // Add method to clear all selections
+    public clearSelection() {
+        Array.from(this.selectedCards).forEach(card => this.deselectCard(card));
     }
 }
 
