@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { WebGPURenderer } from 'three/webgpu';
+import gsap from 'gsap';
 
 export interface Card {
     pieceType: string;
@@ -16,12 +17,20 @@ export class CardSystem {
     private uiScene: THREE.Scene;  // Separate scene for UI
     private uiCamera: THREE.OrthographicCamera;  // Orthographic camera for UI
     private frameTexture: THREE.Texture;
+    private raycaster: THREE.Raycaster;
+    private mouse: THREE.Vector2;
+    private hoveredCard: THREE.Mesh | null = null;
+    private originalPositions: Map<THREE.Mesh, THREE.Vector3> = new Map();
     
     constructor() {
         // this.scene = scene;
         
         // Create separate scene for UI elements
         this.uiScene = new THREE.Scene();
+        
+        // Setup raycaster and mouse
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2();
         
         // Adjust camera to better fit cards
         const aspect = window.innerWidth / window.innerHeight;
@@ -56,6 +65,11 @@ export class CardSystem {
             this.uiCamera.right = 10 * newAspect;
             this.uiCamera.updateProjectionMatrix();
         });
+
+        // Add mouse move listener
+        window.addEventListener('mousemove', (event) => {
+            this.onMouseMove(event);
+        });
     }
 
     private createCompositeTexture(cardTexture: THREE.Texture): THREE.CanvasTexture {
@@ -88,10 +102,84 @@ export class CardSystem {
         return new THREE.CanvasTexture(canvas);
     }
 
+    private onMouseMove(event: MouseEvent) {
+        // Calculate mouse position in normalized device coordinates (-1 to +1)
+        this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        // Update the picking ray with the camera and mouse position
+        this.raycaster.setFromCamera(this.mouse, this.uiCamera);
+
+        // Calculate objects intersecting the picking ray
+        const intersects = this.raycaster.intersectObjects(this.cardMeshes);
+
+        // Reset previously hovered card
+        if (this.hoveredCard && (!intersects.length || intersects[0].object !== this.hoveredCard)) {
+            this.animateCardDown(this.hoveredCard);
+            this.hoveredCard = null;
+        }
+
+        // Handle new hover
+        if (intersects.length > 0) {
+            const newHoveredCard = intersects[0].object as THREE.Mesh;
+            if (this.hoveredCard !== newHoveredCard) {
+                this.hoveredCard = newHoveredCard;
+                this.animateCardUp(newHoveredCard);
+            }
+        }
+    }
+
+    private animateCardUp(card: THREE.Mesh) {
+        if (!this.originalPositions.has(card)) {
+            this.originalPositions.set(card, card.position.clone());
+        }
+        
+        // Store original position if not already stored
+        const originalPos = this.originalPositions.get(card)!;
+        
+        // Animate to raised position
+        gsap.to(card.position, {
+            y: originalPos.y + 1,  // Raise card
+            z: originalPos.z - 0.5,  // Bring slightly forward
+            duration: 0.3,
+            ease: "power2.out"
+        });
+        
+        // Scale up slightly
+        gsap.to(card.scale, {
+            x: 1.1,
+            y: 1.1,
+            duration: 0.3,
+            ease: "power2.out"
+        });
+    }
+
+    private animateCardDown(card: THREE.Mesh) {
+        const originalPos = this.originalPositions.get(card);
+        if (!originalPos) return;
+
+        // Animate back to original position
+        gsap.to(card.position, {
+            y: originalPos.y,
+            z: originalPos.z,
+            duration: 0.3,
+            ease: "power2.out"
+        });
+        
+        // Scale back to normal
+        gsap.to(card.scale, {
+            x: 1,
+            y: 1,
+            duration: 0.3,
+            ease: "power2.out"
+        });
+    }
+
     private updateHandDisplay() {
-        // Clear existing card meshes
+        // Clear existing card meshes and their stored positions
         this.cardMeshes.forEach(mesh => this.uiScene.remove(mesh));
         this.cardMeshes = [];
+        this.originalPositions.clear();
 
         // Calculate total width of all cards with spacing
         const cardWidth = 2;
@@ -140,12 +228,15 @@ export class CardSystem {
 
             const cardMesh = new THREE.Mesh(cardGeometry, material);
             
-            cardMesh.position.set(
+            const position = new THREE.Vector3(
                 startX + (index * (cardWidth + spacing)),
                 -8,
                 0
             );
-
+            
+            cardMesh.position.copy(position);
+            this.originalPositions.set(cardMesh, position.clone());
+            
             this.uiScene.add(cardMesh);
             this.cardMeshes.push(cardMesh);
         });

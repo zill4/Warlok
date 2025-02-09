@@ -12,7 +12,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@types/gsap": "^1.20.2",
     "@webgpu/types": "^0.1.54",
+    "gsap": "^3.12.7",
     "three": "^0.173.0"
   },
   "devDependencies": {
