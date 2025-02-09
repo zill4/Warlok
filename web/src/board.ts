@@ -11,7 +11,7 @@ export class BoardManager {
     private pieceModels!: Map<string, THREE.Group>;
     private state: GameState;
     private board: THREE.Group;
-    private isInitialized = false;  // Add initialization flag
+    private isInitialized = false;
     private cardSystem: CardSystem;
 
     constructor(scene: THREE.Scene, state: GameState) {
@@ -20,9 +20,7 @@ export class BoardManager {
         this.board = new THREE.Group();
         this.scene.add(this.board);
         this.cardSystem = new CardSystem();
-        this.createBoard();
-        // Example: Place a card at position 0,0
-        this.cardSystem.placeCardOnBoard(0, 0);
+        console.log("BoardManager initialized");
     }
 
     public setPieceModels(models: Map<string, THREE.Group>) {
@@ -57,9 +55,9 @@ export class BoardManager {
 
         // Create squares
         const squareGeometry = new THREE.BoxGeometry(
-            BOARD_CONFIG.SQUARE_SIZE,
+            BOARD_CONFIG.SQUARE_SIZE * 0.98,
             0.1,
-            BOARD_CONFIG.SQUARE_SIZE
+            BOARD_CONFIG.SQUARE_SIZE * 0.98
         );
 
         const offset = (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE) / 2 - BOARD_CONFIG.SQUARE_SIZE / 2;
@@ -81,25 +79,37 @@ export class BoardManager {
             }
         }
 
-        // Add board frame with basic material
+        // Add board frame
         const frameSize = BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE + 0.4;
-        const frameThickness = 0.3;
+        const frameThickness = 0.4;
         const frameHeight = 0.3;
         const frameMaterial = new THREE.MeshBasicMaterial({ color: 0x4a3019 });
 
-        // Create frame pieces
-        const createFramePiece = (width: number, depth: number, x: number, z: number) => {
-            const geometry = new THREE.BoxGeometry(width, frameHeight, depth);
-            const frame = new THREE.Mesh(geometry, frameMaterial);
-            frame.position.set(x, -0.1, z);
-            this.board.add(frame);
-        };
+        // Create frame pieces with proper typing
+        interface FrameSide {
+            pos: [number, number, number];
+            scale: [number, number, number];
+        }
 
-        // Add frame borders
-        createFramePiece(frameSize + frameThickness * 2, frameThickness, 0, -(frameSize/2 + frameThickness/2)); // Bottom
-        createFramePiece(frameSize + frameThickness * 2, frameThickness, 0, frameSize/2 + frameThickness/2);    // Top
-        createFramePiece(frameThickness, frameSize + frameThickness * 2, -(frameSize/2 + frameThickness/2), 0); // Left
-        createFramePiece(frameThickness, frameSize + frameThickness * 2, frameSize/2 + frameThickness/2, 0);    // Right
+        const sides: FrameSide[] = [
+            // North
+            { pos: [0, 0, -frameSize/2], scale: [frameSize, frameHeight, frameThickness] },
+            // South
+            { pos: [0, 0, frameSize/2], scale: [frameSize, frameHeight, frameThickness] },
+            // East
+            { pos: [frameSize/2, 0, 0], scale: [frameThickness, frameHeight, frameSize] },
+            // West
+            { pos: [-frameSize/2, 0, 0], scale: [frameThickness, frameHeight, frameSize] }
+        ];
+
+        sides.forEach(side => {
+            const frameGeometry = new THREE.BoxGeometry(1, 1, 1);
+            const framePiece = new THREE.Mesh(frameGeometry, frameMaterial);
+            framePiece.position.set(side.pos[0], side.pos[1], side.pos[2]);
+            framePiece.scale.set(side.scale[0], side.scale[1], side.scale[2]);
+            framePiece.position.y = frameHeight/2 - 0.1;
+            this.board.add(framePiece);
+        });
 
         this.isInitialized = true;
     }
@@ -233,5 +243,10 @@ export class BoardManager {
         const cardMesh = new THREE.Mesh(geometry, material);
         cardMesh.rotation.x = -Math.PI / 2;
         return cardMesh;
+    }
+
+    // Add method to access cardSystem
+    public getCardSystem(): CardSystem {
+        return this.cardSystem;
     }
 }
