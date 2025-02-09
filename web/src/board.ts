@@ -13,13 +13,17 @@ export class BoardManager {
     private board: THREE.Group;
     private isInitialized = false;
     private cardSystem: CardSystem;
+    private camera: THREE.Camera;
 
-    constructor(scene: THREE.Scene, state: GameState) {
+    constructor(scene: THREE.Scene, state: GameState, cardSystem: CardSystem, camera: THREE.Camera) {
         this.scene = scene;
         this.state = state;
+        this.cardSystem = cardSystem;
+        this.camera = camera;
         this.board = new THREE.Group();
         this.scene.add(this.board);
-        this.cardSystem = new CardSystem();
+        
+        window.addEventListener('click', (event) => this.onBoardClick(event));
         console.log("BoardManager initialized");
     }
 
@@ -248,5 +252,42 @@ export class BoardManager {
     // Add method to access cardSystem
     public getCardSystem(): CardSystem {
         return this.cardSystem;
+    }
+
+    private onBoardClick(event: MouseEvent) {
+        const mouse = new THREE.Vector2(
+            (event.clientX / window.innerWidth) * 2 - 1,
+            -(event.clientY / window.innerHeight) * 2 + 1
+        );
+
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, this.camera);
+
+        const squares = this.board.children.filter(child => 
+            child instanceof THREE.Mesh && 
+            child.geometry instanceof THREE.BoxGeometry &&
+            child.geometry.parameters.width === BOARD_CONFIG.SQUARE_SIZE * 0.98
+        );
+
+        const intersects = raycaster.intersectObjects(squares);
+        
+        if (intersects.length > 0) {
+            const square = intersects[0].object as THREE.Mesh;
+            const gridPosition = this.getGridPosition(square.position);
+            
+            if (!this.state.board[gridPosition.z][gridPosition.x]) {
+                const selectedCards = this.cardSystem.getSelectedCards();
+                if (selectedCards.length > 0) {
+                    this.cardSystem.placeCardOnBoard(gridPosition.x, gridPosition.z);
+                    this.cardSystem.removeSelectedCard();
+                }
+            }
+        }
+    }
+
+    private getGridPosition(position: THREE.Vector3): THREE.Vector3 {
+        const gridX = Math.round(position.x / BOARD_CONFIG.SQUARE_SIZE + (BOARD_CONFIG.SIZE - 1) / 2);
+        const gridZ = Math.round(position.z / BOARD_CONFIG.SQUARE_SIZE + (BOARD_CONFIG.SIZE - 1) / 2);
+        return new THREE.Vector3(gridX, 0, gridZ);
     }
 }

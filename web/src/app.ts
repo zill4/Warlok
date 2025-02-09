@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { BoardManager } from './board';
-import { Card, GameState } from './state';
+import { GameState } from './state';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { WebGPURenderer } from 'three/webgpu';
@@ -79,23 +79,21 @@ export class ChessGame {
         // Initialize scene and components
         await this.setupScene();
         this.setupLighting();
-        this.state = new GameState(this.scene);
-        this.boardManager = new BoardManager(this.scene, this.state);
         
+        // Initialize card system first
         this.cardHand = new CardSystem();
         
-        // Add test cards
-        const testCards = [
-            { pieceType: 'pawn', color: 'white', texture: 'pawn_card' },
-            { pieceType: 'knight', color: 'white', texture: 'knight_card' },
-            { pieceType: 'bishop', color: 'white', texture: 'bishop_card' },
-            { pieceType: 'rook', color: 'white', texture: 'rook_card' },
-            { pieceType: 'queen', color: 'white', texture: 'queen_card' },
-            { pieceType: 'king', color: 'white', texture: 'king_card' },
-            { pieceType: 'pawn', color: 'black', texture: 'pawn_card' }
-        ];
+        // Initialize game state and board with card system and camera
+        this.state = new GameState(this.scene);
+        this.boardManager = new BoardManager(
+            this.scene, 
+            this.state, 
+            this.cardHand,
+            this.camera  // Pass camera reference
+        );
         
-        testCards.forEach(card => this.cardHand.addCard(card as Card));
+        // Draw initial hand
+        this.cardHand.drawInitialHand(7);
         
         // Start animation loop
         this.animate();

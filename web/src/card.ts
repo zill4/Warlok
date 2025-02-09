@@ -1,16 +1,24 @@
 import * as THREE from 'three';
 import { WebGPURenderer } from 'three/webgpu';
 import gsap from 'gsap';
+import { BOARD_CONFIG } from './app';  // Import BOARD_CONFIG
 
-export interface Card {
-    pieceType: string;
+// Add new interfaces for card properties
+interface CardProperties {
+    cardType: 'normal';
+    monsterType: 'dragon';
+    pieceType: 'pawn' | 'rook' | 'bishop' | 'knight' | 'king' | 'queen';
     color: 'white' | 'black';
+}
+
+export interface Card extends CardProperties {
     texture: string;
-    model?: THREE.Group;  // For 3D piece preview
+    model?: THREE.Group;
 }
 
 // Rename CardHand to CardSystem for consistency with imports
 export class CardSystem {
+    private deck: Card[] = [];
     private cards: Card[] = [];
     private cardMeshes: THREE.Mesh[] = [];
     // private scene: THREE.Scene;
@@ -75,6 +83,73 @@ export class CardSystem {
 
         // Add click listener
         window.addEventListener('click', () => this.onMouseClick());
+
+        this.initializeDeck('white');  // Initialize with player color
+    }
+
+    private initializeDeck(playerColor: 'white' | 'black') {
+        this.deck = [];  // Clear existing deck
+        
+        const pieceTypes: Array<CardProperties['pieceType']> = [
+            'pawn', 'rook', 'bishop', 'knight', 'king', 'queen'
+        ];
+
+        // Create 4 cards of each piece type (24 total)
+        pieceTypes.forEach(pieceType => {
+            for (let i = 0; i < 4; i++) {
+                this.deck.push({
+                    cardType: 'normal',
+                    monsterType: 'dragon',
+                    pieceType: pieceType,
+                    color: playerColor,
+                    texture: 'blue_eyes_w_dragon'  // Using consistent texture
+                });
+            }
+        });
+
+        this.shuffleDeck();
+        console.log(`Initialized deck with ${this.deck.length} cards:`, this.deck);
+    }
+
+    private shuffleDeck() {
+        for (let i = this.deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
+        }
+    }
+
+    public drawCard(): Card | null {
+        if (this.deck.length === 0) {
+            console.log('Deck is empty!');
+            return null;
+        }
+
+        const card = this.deck.pop()!;
+        this.addCard(card);
+        return card;
+    }
+
+    public drawInitialHand(count: number = 7) {
+        console.log(`Drawing initial hand of ${count} cards`);
+        for (let i = 0; i < count && this.deck.length > 0; i++) {
+            const card = this.drawCard();
+            console.log(`Drew card ${i + 1}:`, card);
+        }
+        console.log(`Hand size after drawing: ${this.cards.length}`);
+    }
+
+    public getRemainingDeckSize(): number {
+        return this.deck.length;
+    }
+
+    public resetDeck(playerColor: 'white' | 'black') {
+        this.deck = [];
+        this.cards = [];
+        this.clearSelection();
+        this.cardMeshes.forEach(mesh => this.uiScene.remove(mesh));
+        this.cardMeshes = [];
+        this.originalPositions.clear();
+        this.initializeDeck(playerColor);
     }
 
     private createCompositeTexture(cardTexture: THREE.Texture): THREE.CanvasTexture {
@@ -355,7 +430,7 @@ export class CardSystem {
     }
 
     public addCard(card: Card) {
-        console.log("Adding card:", card);  // Debug log
+        console.log("Adding card:", card);
         this.cards.push(card);
         this.updateHandDisplay();
     }
@@ -370,51 +445,42 @@ export class CardSystem {
     }
 
     public placeCardOnBoard(gridX: number, gridZ: number) {
-        const card: Card = {
-            pieceType: 'dragon',
-            color: 'white',
-            texture: 'blue_eyes_w_dragon'
-        };
-        
-        const cardGeometry = new THREE.PlaneGeometry(2, 3);
+        const selectedCards = this.getSelectedCards();
+        if (selectedCards.length === 0) return null;
+
+        const card = selectedCards[0];
+        const cardGeometry = new THREE.PlaneGeometry(1.4, 2.1); // Adjusted size to fit board squares
         const material = new THREE.MeshBasicMaterial({
             transparent: true,
             side: THREE.DoubleSide
         });
 
-        // Load card texture with error handling
+        // Load card texture
         const textureLoader = new THREE.TextureLoader();
         textureLoader.load(
             `/assets/images/${card.texture}.png`,
             (cardTexture) => {
-                console.log('Loading board card texture');
-                // Wait for both textures to be loaded
                 if (this.frameTexture.image) {
                     material.map = this.createCompositeTexture(cardTexture);
                     material.needsUpdate = true;
-                } else {
-                    console.error('Frame texture not loaded yet');
                 }
-            },
-            undefined,
-            (error) => {
-                console.error('Error loading board card texture:', error);
             }
         );
 
         const cardMesh = new THREE.Mesh(cardGeometry, material);
         
+        // Position card on board
+        const boardX = (gridX - 3.5) * BOARD_CONFIG.SQUARE_SIZE;
+        const boardZ = (gridZ - 3.5) * BOARD_CONFIG.SQUARE_SIZE;
+        
         cardMesh.position.set(
-            gridX - 3.5,
-            0.1,
-            gridZ - 3.5
+            boardX,
+            0.01, // Slightly above board to prevent z-fighting
+            boardZ
         );
-        cardMesh.rotation.x = -Math.PI / 2;
+        cardMesh.rotation.x = -Math.PI / 2; // Lay flat on board
 
         this.uiScene.add(cardMesh);
-        this.cardMeshes.push(cardMesh);
-        this.cards.push(card);
-
         return cardMesh;
     }
 
@@ -434,6 +500,37 @@ export class CardSystem {
     // Add method to clear all selections
     public clearSelection() {
         Array.from(this.selectedCards).forEach(card => this.deselectCard(card));
+    }
+
+    // Optional: Add method to get deck statistics
+    public getDeckStats() {
+        const stats = new Map<string, number>();
+        this.deck.forEach(card => {
+            const key = card.pieceType;
+            stats.set(key, (stats.get(key) || 0) + 1);
+        });
+        return Object.fromEntries(stats);
+    }
+
+    public removeSelectedCard() {
+        const selectedCards = Array.from(this.selectedCards);
+        if (selectedCards.length > 0) {
+            const cardMesh = selectedCards[0];
+            const index = this.cardMeshes.indexOf(cardMesh);
+            if (index !== -1) {
+                // Remove from arrays and sets
+                this.cards.splice(index, 1);
+                this.cardMeshes.splice(index, 1);
+                this.selectedCards.delete(cardMesh);
+                this.originalPositions.delete(cardMesh);
+                
+                // Remove from scene
+                this.uiScene.remove(cardMesh);
+                
+                // Update display
+                this.updateHandDisplay();
+            }
+        }
     }
 }
 
