@@ -5,7 +5,7 @@ import { Card, GameState } from './state';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { WebGPURenderer } from 'three/webgpu';
-import { CardHand } from './card';
+import { CardSystem } from './card';
 
 // Configuration (from constants.py)
 export const BOARD_CONFIG = {
@@ -41,7 +41,7 @@ export class ChessGame {
     private pieceModels = new Map<string, THREE.Group>();
     private isInitialized = false;
     private stats: Stats | null = null;
-    private cardHand!: CardHand;
+    private cardHand!: CardSystem;
 
     constructor(containerId: string) {
         if (ChessGame.instance) {
@@ -82,7 +82,7 @@ export class ChessGame {
         this.state = new GameState(this.scene);
         this.boardManager = new BoardManager(this.scene, this.state);
         
-        this.cardHand = new CardHand();
+        this.cardHand = new CardSystem();
         
         // Add test cards
         const testCards = [

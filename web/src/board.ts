@@ -3,6 +3,7 @@ import { BOARD_CONFIG } from './config';
 import { GameState } from './state';
 import { ChessPiece } from './core';
 import { Card } from './card';
+import { CardSystem } from './card';
 
 export class BoardManager {
     private scene: THREE.Scene;
@@ -11,13 +12,17 @@ export class BoardManager {
     private state: GameState;
     private board: THREE.Group;
     private isInitialized = false;  // Add initialization flag
+    private cardSystem: CardSystem;
 
     constructor(scene: THREE.Scene, state: GameState) {
         this.scene = scene;
         this.state = state;
         this.board = new THREE.Group();
         this.scene.add(this.board);
-        // this.createBoard();
+        this.cardSystem = new CardSystem();
+        this.createBoard();
+        // Example: Place a card at position 0,0
+        this.cardSystem.placeCardOnBoard(0, 0);
     }
 
     public setPieceModels(models: Map<string, THREE.Group>) {
