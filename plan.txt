@@ -1,0 +1,294 @@
+==============================================
+Chess Card Game MVP Deployment – Step-by-Step
+==============================================
+
+Overview:
+---------
+This document outlines the steps to build and deploy an MVP for a Chess Card Game web app featuring:
+  • A Three.js chess game (ported into Astro + Preact)
+  • User authentication & multiplayer (via Supabase and a Node.js backend with Fastify and Socket.io)
+  • NFT minting on Solana (custodial wallet model using Solana Web3.js)
+  • A GPU-powered 3D model generation pipeline (containerized with Docker)
+  • Deployment on Fly.io for cost-effectiveness and simplicity
+
+Pre-Requisites:
+---------------
+- Install Node.js (v16+), Git, and Docker.
+- Choose a package manager (Yarn or npm).
+- Create accounts for:
+    • Fly.io (deployment platform)
+    • Supabase (auth and database)
+- Ensure your development machine supports GPU usage for the 3D generation pipeline if testing locally.
+
+Directory Structure (Monorepo using Turborepo):
+------------------------------------------------
+chess-card-game/  
+├── apps/  
+│    ├── frontend      (Astro + Preact, Three.js integration)  
+│    ├── backend       (Node.js API: Fastify, Socket.io, NFT minting)  
+│    └── gpu-pipeline  (GPU-based 3D model generation service)  
+└── packages/  
+     └── shared      (Optional: shared code and types)  
+
+Step 0: Initialize the Monorepo
+--------------------------------
+1. Create the root directory and initialize Git:
+   $ mkdir chess-card-game
+   $ cd chess-card-game
+   $ git init
+
+2. Set up Turborepo (or similar tool) to manage multiple projects:
+   $ npx create-turbo@latest
+   - When prompted, select a TypeScript template.
+   - Verify your directory now contains apps/frontend, apps/backend, and apps/gpu-pipeline.
+
+Step 1: Set Up the Frontend (Astro + Preact)
+---------------------------------------------
+1. Navigate to the frontend directory:
+   $ cd apps/frontend
+
+2. Initialize an Astro project with Preact:
+   $ npm init astro -- --template framework-preact
+
+3. Port Your Existing Three.js Chess Game:
+   - Create a component (e.g., src/components/ChessGame.tsx).
+   - Insert your Three.js code into this component (initialize renderer, scene, camera, etc.).
+   - Import and include this component in your main page (e.g., src/pages/index.astro).
+
+4. Configure Environment Variables:
+   - Create a .env file in apps/frontend with Supabase keys:
+       PUBLIC_SUPABASE_URL=your_supabase_url
+       PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+5. Test Locally:
+   $ npm install
+   $ npm run dev
+   - Confirm that the chess game renders correctly in the browser.
+
+Step 2: Build the Backend (Fastify + Socket.io)
+------------------------------------------------
+1. Navigate to the backend directory:
+   $ cd ../backend
+
+2. Initialize a Node.js project and install dependencies:
+   $ npm init -y
+   $ npm install fastify fastify-socket.io cors dotenv
+   $ npm install -D typescript ts-node @types/node @types/cors
+
+3. Create a tsconfig.json with basic TypeScript settings:
+   {
+     "compilerOptions": {
+       "target": "ES2020",
+       "module": "CommonJS",
+       "outDir": "./dist",
+       "rootDir": "./src",
+       "strict": true,
+       "esModuleInterop": true
+     }
+   }
+
+4. Create the server file at src/index.ts:
+   - Initialize a Fastify server.
+   - Register fastify-socket.io (with basic CORS settings).
+   - Add a test HTTP endpoint (/api/health).
+   - Handle a sample Socket.io event (e.g., "chat-message").
+   - Example:
+     ---------------------------------------------------------
+     import Fastify from 'fastify';
+     import fastifyIO from 'fastify-socket.io';
+     import dotenv from 'dotenv';
+
+     dotenv.config();
+     const fastify = Fastify({ logger: true });
+
+     fastify.register(fastifyIO, { cors: { origin: '*' } });
+
+     fastify.get('/api/health', async () => ({ status: 'ok' }));
+
+     fastify.ready().then(() => {
+       fastify.io.on('connection', (socket) => {
+         fastify.log.info(`Socket connected: ${socket.id}`);
+         socket.on('chat-message', (msg) => {
+           fastify.io.emit('chat-message', msg);
+         });
+       });
+     });
+
+     const start = async () => {
+       try {
+         await fastify.listen({ port: process.env.PORT ? Number(process.env.PORT) : 3001, host: '0.0.0.0' });
+         fastify.log.info('Server started');
+       } catch (err) {
+         fastify.log.error(err);
+         process.exit(1);
+       }
+     };
+
+     start();
+     ---------------------------------------------------------
+
+5. Add a development script to package.json:
+   "scripts": { "dev": "ts-node-dev src/index.ts" }
+
+6. Test the backend:
+   $ npm run dev
+   - Verify /api/health returns a JSON response and Socket.io logs connections.
+
+Step 3: Integrate Supabase (Auth & Database)
+---------------------------------------------
+1. In your Supabase dashboard:
+   - Create a new project.
+   - Configure authentication (e.g., email/password).
+   - Create additional tables (users, friends, cards, game_sessions) as needed.
+
+2. Frontend Integration:
+   - Install the Supabase client:
+     $ npm install @supabase/supabase-js
+   - Create src/lib/supabaseClient.ts:
+     ---------------------------------------------------------
+     import { createClient } from '@supabase/supabase-js';
+     const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+     const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+     export const supabase = createClient(supabaseUrl, supabaseKey);
+     ---------------------------------------------------------
+   - Use Supabase for sign-up/sign-in flows.
+
+3. Backend Integration (if needed):
+   - Install the Supabase admin client and configure using a server key.
+   - Create or update the backend’s .env with:
+       SUPABASE_SERVICE_KEY=your_service_key
+
+Step 4: Add Solana NFT Minting (Custodial Wallet)
+-------------------------------------------------
+1. In the backend, install Solana Web3.js:
+   $ npm install @solana/web3.js
+
+2. Create a module for NFT minting (e.g., src/solana.ts):
+   ---------------------------------------------------------
+   import { Connection, Keypair, Transaction } from '@solana/web3.js';
+   import dotenv from 'dotenv';
+   dotenv.config();
+
+   const connection = new Connection('https://api.devnet.solana.com');
+   const walletSecret = JSON.parse(process.env.CUSTODIAL_WALLET_SECRET as string);
+   const wallet = Keypair.fromSecretKey(new Uint8Array(walletSecret));
+
+   export const mintNFT = async (metadataUrl: string): Promise<string> => {
+     // Implement NFT minting logic here
+     const transaction = new Transaction();
+     // (Add instructions, sign with wallet, and send transaction)
+     return "dummy_tx_signature"; // Replace with actual tx signature
+   };
+   ---------------------------------------------------------
+
+3. Add an API endpoint for NFT minting in src/index.ts:
+   ---------------------------------------------------------
+   fastify.post('/api/mint-nft', async (request, reply) => {
+     const { metadataUrl } = request.body as { metadataUrl: string };
+     try {
+       const txSignature = await mintNFT(metadataUrl);
+       return { success: true, txSignature };
+     } catch (error) {
+       reply.code(500);
+       return { success: false, error: error.message };
+     }
+   });
+   ---------------------------------------------------------
+
+Step 5: Containerize the 3D Generation Pipeline (GPU Service)
+---------------------------------------------------------------
+1. Navigate to the gpu-pipeline directory:
+   $ cd ../gpu-pipeline
+
+2. Create a Dockerfile:
+   ---------------------------------------------------------
+   # Use an NVIDIA CUDA base image
+   FROM nvidia/cuda:11.6.2-base-ubuntu20.04
+
+   RUN apt-get update && apt-get install -y \
+       build-essential python3 python3-pip && rm -rf /var/lib/apt/lists/*
+
+   WORKDIR /app
+   COPY . .
+   RUN pip3 install -r requirements.txt
+
+   EXPOSE 5000
+   CMD ["python3", "server.py"]
+   ---------------------------------------------------------
+   - Adjust the base image and commands as needed for your Hunyuan3D generator.
+
+3. (Optional) Integrate a job queue (e.g., BullMQ) in the backend to trigger GPU jobs.
+
+4. Test the GPU pipeline:
+   $ docker build -t gpu-pipeline .
+   $ docker run --gpus all -p 5000:5000 gpu-pipeline
+
+Step 6: Local Integration & Testing
+-------------------------------------
+1. Run services locally:
+   - Frontend: In apps/frontend, run $ npm run dev.
+   - Backend: In apps/backend, run $ npm run dev.
+   - GPU Pipeline: Run the Docker container as above.
+2. Verify:
+   - The chess game loads in the browser.
+   - Authentication flows work via Supabase.
+   - Socket.io connections (e.g., chat messages) are active.
+   - API endpoints (/api/health, /api/mint-nft) respond correctly.
+
+Step 7: Deploying to Fly.io
+---------------------------
+1. Prepare Dockerfiles for deployment:
+   a) Frontend (apps/frontend/Dockerfile):
+      ---------------------------------------------------------
+      FROM node:16-alpine AS builder
+      WORKDIR /app
+      COPY package*.json ./
+      RUN npm install
+      COPY . .
+      RUN npm run build
+
+      FROM nginx:alpine
+      COPY --from=builder /app/dist /usr/share/nginx/html
+      EXPOSE 80
+      CMD ["nginx", "-g", "daemon off;"]
+      ---------------------------------------------------------
+   b) Backend (apps/backend/Dockerfile):
+      ---------------------------------------------------------
+      FROM node:16-alpine
+      WORKDIR /app
+      COPY package*.json ./
+      RUN npm install --production
+      COPY . .
+      RUN npm run build  # if using a build step; otherwise adjust accordingly
+      EXPOSE 3001
+      CMD ["node", "dist/index.js"]
+      ---------------------------------------------------------
+   c) GPU Pipeline: Use the Dockerfile created in Step 5.
+
+2. Install and Login to Fly.io CLI:
+   $ flyctl auth login
+
+3. Launch and Configure Each App:
+   - In each service directory (frontend, backend, gpu-pipeline), run:
+     $ flyctl launch
+     - Follow prompts (choose region, app name, etc.).
+   - Set required environment variables on Fly.io (e.g., PORT, SUPABASE keys, CUSTODIAL_WALLET_SECRET):
+     $ flyctl secrets set PORT=3001 SUPABASE_SERVICE_KEY=your_service_key CUSTODIAL_WALLET_SECRET='[your,secret,array]'
+   
+4. Deploy:
+   In each service directory, run:
+   $ flyctl deploy
+   - Monitor logs with: $ flyctl logs
+
+Step 8: Final Testing & MVP Completion
+-----------------------------------------
+1. Test production endpoints:
+   - Confirm that the frontend (chess game, sign-in/out, card shop) loads.
+   - Verify the backend API endpoints and real-time communication work.
+   - Test NFT minting (using devnet initially to avoid real fund usage).
+2. Document your configuration and deployment steps.
+3. Plan future improvements (friend management, wallet integration, additional features).
+
+==============================================
+End of Deployment Plan
+==============================================
