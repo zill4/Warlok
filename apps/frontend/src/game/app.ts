@@ -42,6 +42,9 @@ export class ChessGame {
     private isInitialized = false;
     private stats: Stats | null = null;
     private cardHand!: CardSystem;
+    private raycaster!: THREE.Raycaster;
+    private mouse!: THREE.Vector2;
+    private cards!: CardSystem[];
 
     constructor(containerId: string) {
         if (ChessGame.instance) {
@@ -63,15 +66,15 @@ export class ChessGame {
         // Initialize Stats with custom styling
         this.stats = new Stats();
         const statsElement = this.stats.dom;
-        statsElement.style.position = 'absolute';
-        statsElement.style.top = '10px';
+        statsElement.style.position = 'fixed';
+        statsElement.style.bottom = '10px';
         statsElement.style.right = '10px';
         statsElement.style.transform = 'scale(0.1)';
-        statsElement.style.transformOrigin = 'top right';
+        statsElement.style.transformOrigin = 'bottom right';
         document.body.appendChild(statsElement);
 
         // Get container element
-        this.container = document.getElementById(containerId) as HTMLElement;
+        this.container = document.getElementById(containerId) as HTMLElement;1
         if (!this.container) {
             throw new Error(`Container with id '${containerId}' not found`);
         }
@@ -107,16 +110,20 @@ export class ChessGame {
 
     private async setupScene(): Promise<void> {
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x1a1a1a);
+        this.scene.background = new THREE.Color(0x000000);
         
         const width = window.innerWidth;
         const height = window.innerHeight;
         const aspect = width / height;
         
         // Adjust camera to see the cards better
-        this.camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
-        this.camera.position.set(0, 4, 10);  // Moved camera back and up slightly
-        this.camera.lookAt(0, 0, 0);
+        this.camera = new THREE.PerspectiveCamera(
+            45,
+            window.innerWidth / window.innerHeight,
+            0.1,
+            1000
+        );
+        this.camera.position.set(0, 20, 20); // Adjusted for better view
         
         try {
             this.renderer = new WebGPURenderer({ 
@@ -137,14 +144,18 @@ export class ChessGame {
         this.container.appendChild(this.renderer.domElement);
         
         // Adjust OrbitControls
-        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-        this.controls.enableDamping = true;
-        this.controls.dampingFactor = 0.05;
-        this.controls.screenSpacePanning = false;
-        this.controls.minDistance = 5;
-        this.controls.maxDistance = 20;
-        this.controls.maxPolarAngle = Math.PI / 2;
-        this.controls.target.set(0, 0, 0);
+        this.setupControls();
+        
+        // Update raycaster to be more precise
+        this.raycaster = new THREE.Raycaster();
+        this.raycaster.params.Line!.threshold = 0.1;
+        
+        // Improve mouse position calculation
+        this.mouse = new THREE.Vector2();
+        
+        // Add event listeners for card interactions
+        this.container.addEventListener('mousemove', (event) => this.onMouseMove(event));
+        this.container.addEventListener('click', (event) => this.onMouseClick(event));
         
         window.addEventListener('resize', () => this.onWindowResize());
     }
@@ -185,7 +196,7 @@ export class ChessGame {
 
         // Render main scene
         if (this.renderer && this.scene && this.camera) {
-            this.renderer.clear();  // Clear the renderer
+            this.renderer.clear();
             this.renderer.render(this.scene, this.camera);
             
             // Render UI/cards on top
@@ -271,6 +282,58 @@ export class ChessGame {
 
         await Promise.all(loadPromises);
         console.log('All models loaded successfully');
+    }
+
+    private onMouseMove(event: MouseEvent) {
+        const rect = this.container.getBoundingClientRect();
+        this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        
+        // Update raycaster
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+        
+        // Let the card system handle its own hover detection
+        if (this.cardHand) {
+            this.cardHand.handleMouseMove(this.mouse.x, this.mouse.y);
+        }
+    }
+
+    private onMouseClick(event: MouseEvent) {
+        const rect = this.container.getBoundingClientRect();
+        this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        
+        // Let the card system handle its own click detection
+        if (this.cardHand) {
+            this.cardHand.handleClick(this.mouse.x, this.mouse.y);
+        }
+    }
+
+    private setupControls() {
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        
+        // Only enable middle mouse button for camera control
+        this.controls.mouseButtons = {
+            LEFT: undefined,  // Disable left click
+            MIDDLE: THREE.MOUSE.ROTATE,  // Middle mouse for rotation
+            RIGHT: undefined   // Disable right click
+        };
+
+        // Enable zoom but limit it
+        this.controls.enableZoom = true;
+        this.controls.minDistance = 15;
+        this.controls.maxDistance = 40;
+
+        // Disable pan movement
+        this.controls.enablePan = false;
+
+        // Optional: Add some damping for smoother rotation
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.05;
+
+        // Optional: Limit vertical rotation if desired
+        this.controls.minPolarAngle = Math.PI / 4; // 45 degrees
+        this.controls.maxPolarAngle = Math.PI / 2.1; // ~85 degrees
     }
 }
 

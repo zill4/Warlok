@@ -2,6 +2,7 @@
 // Component Imports
 import Counter from '../components/Counter';
 import ChessGame from '../components/ChessGame';
+import '../styles/fonts.css';
 
 import { signal } from '@preact/signals';
 
@@ -15,9 +16,10 @@ const count = signal(0);
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>3D Chess</title>
-		<meta name="generator" content={Astro.generator} />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<title>WARLOK</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono&display=swap" rel="stylesheet">
 		<style>
 			* {
 				margin: 0;
@@ -30,24 +32,83 @@ const count = signal(0);
 				height: 100vh;
 				overflow: hidden;
 				background: #000;
+				color: #D9D9D9;
+			}
+
+			.header {
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				padding: 20px;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				z-index: 1000;
+			}
+
+			.logo {
+				font-family: 'Bebas Neue', sans-serif;
+				-webkit-font-smoothing: antialiased;
+				font-size: 2rem;
+				color: #D9D9D9;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+
+			.logo-icon {
+				width: 24px;
+				height: 24px;
+			}
+
+			.auth-buttons {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+
+			.auth-button {
+				font-family: 'Space Mono', monospace;
+				background-color: #D9D9D9;
+				color: #000;
+				border: none;
+				padding: 8px 16px;
+				cursor: pointer;
+				font-size: 0.9rem;
+			}
+
+			.divider {
+				color: #D9D9D9;
+				font-family: 'Space Mono', monospace;
+			}
+
+			.game-container {
+				width: 100%;
+				height: 100%;
 				display: flex;
 				justify-content: center;
 				align-items: center;
-				padding: 20px;
+				padding: 80px 20px 20px;
 			}
 		</style>
 	</head>
 	<body>
-		<main>
-			<!-- <Counter count={count} client:visible>
-				<h1>Hello, Preact 1!</h1>
-			</Counter>
-
-			<Counter count={count} client:visible>
-				<h1>Hello, Preact 2!</h1>
-			</Counter> -->
-
+		<header class="header">
+			<div class="logo">
+				<!-- <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" stroke="white" stroke-width="2"/>
+				</svg> -->
+				山 W̵a̵r̵l̵o̵k̵
+			</div>
+			<div class="auth-buttons">
+				<button class="auth-button">Sign_Up</button>
+				<span class="divider">/</span>
+				<button class="auth-button">Login</button>
+			</div>
+		</header>
+		<div class="game-container">
 			<ChessGame client:only="preact" />
-		</main>
+		</div>
 	</body>
 </html>

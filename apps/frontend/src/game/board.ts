@@ -87,7 +87,7 @@ export class BoardManager {
         const frameSize = BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE + 0.4;
         const frameThickness = 0.4;
         const frameHeight = 0.3;
-        const frameMaterial = new THREE.MeshBasicMaterial({ color: 0x4a3019 });
+        const frameMaterial = new THREE.MeshBasicMaterial({ color: 0xA5A1A2 });
 
         // Create frame pieces with proper typing
         interface FrameSide {
@@ -113,6 +113,31 @@ export class BoardManager {
             framePiece.scale.set(side.scale[0], side.scale[1], side.scale[2]);
             framePiece.position.y = frameHeight/2 - 0.1;
             this.board.add(framePiece);
+        });
+
+        // Add ambient light for better overall visibility
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        this.scene.add(ambientLight);
+
+        // Add directional light for shadows and depth
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(5, 10, 5);
+        directionalLight.castShadow = true;
+        
+        // Adjust shadow properties
+        directionalLight.shadow.mapSize.width = 2048;
+        directionalLight.shadow.mapSize.height = 2048;
+        directionalLight.shadow.camera.near = 0.5;
+        directionalLight.shadow.camera.far = 50;
+        directionalLight.shadow.bias = -0.001;
+        
+        this.scene.add(directionalLight);
+
+        // Enable shadow rendering on the board squares
+        this.board.traverse((object) => {
+            if (object instanceof THREE.Mesh) {
+                object.receiveShadow = true;
+            }
         });
 
         this.isInitialized = true;
@@ -161,18 +186,28 @@ export class BoardManager {
 
         const piece = new ChessPiece(type, color === 'black', x, z, model.clone());
         
-        // Enable shadows for the piece
+        // Scale up the piece slightly
+        piece.scale.set(1.2, 1.2, 1.2);
+        
+        // Enable shadows and adjust material properties for better lighting
         piece.traverse((object) => {
             if (object instanceof THREE.Mesh) {
                 object.castShadow = true;
                 object.receiveShadow = true;
+                
+                // Adjust material properties for better lighting
+                if (object.material instanceof THREE.MeshStandardMaterial) {
+                    object.material.metalness = 0.3;
+                    object.material.roughness = 0.7;
+                    object.material.envMapIntensity = 1.5;
+                }
             }
         });
         
         const offset = (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE) / 2 - BOARD_CONFIG.SQUARE_SIZE / 2;
         piece.position.set(
             x * BOARD_CONFIG.SQUARE_SIZE - offset,
-            0.5,
+            0.1, // Lower the piece closer to the board
             z * BOARD_CONFIG.SQUARE_SIZE - offset
         );
 
@@ -201,7 +236,7 @@ export class BoardManager {
         piece.gridZ = newZ;
         piece.position.set(
             newX * BOARD_CONFIG.SQUARE_SIZE - offset,
-            0.1,
+            0.1, // Keep consistent height with initial placement
             newZ * BOARD_CONFIG.SQUARE_SIZE - offset
         );
     }
