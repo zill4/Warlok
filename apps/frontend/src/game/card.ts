@@ -552,7 +552,7 @@ export class CardSystem {
         selectedArray.forEach((card, index) => {
             gsap.to(card.position, {
                 x: startX + (index * cardSpacing),
-                y: 0, // Center vertically (0 is middle of screen)
+                y: 7, // Center vertically (0 is middle of screen)
                 z: -5, // Bring forward significantly
                 duration: 0.4,
                 ease: "power2.out"

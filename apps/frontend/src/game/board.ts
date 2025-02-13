@@ -246,8 +246,13 @@ export class BoardManager {
     placeCardOnBoard(card: Card, gridX: number, gridZ: number) {
         console.log("BoardManager placing card:", card, "at", gridX, gridZ);
         
-        // Create card mesh
-        const cardGeometry = new THREE.PlaneGeometry(1.4, 2.1);
+        // Make card smaller than the square size
+        const squareSize = BOARD_CONFIG.SQUARE_SIZE;
+        const cardHeight = squareSize * 0.8;  // 80% of square height
+        const cardWidth = cardHeight * 0.666;  // Maintain aspect ratio (1:1.5)
+        
+        // Create card mesh with adjusted dimensions
+        const cardGeometry = new THREE.PlaneGeometry(cardWidth, cardHeight);
         const material = new THREE.MeshBasicMaterial({
             transparent: true,
             side: THREE.DoubleSide
@@ -265,11 +270,15 @@ export class BoardManager {
 
         const cardMesh = new THREE.Mesh(cardGeometry, material);
         
-        // Calculate world position
-        const worldX = (gridX - 3.5) * BOARD_CONFIG.SQUARE_SIZE;
-        const worldZ = (gridZ - 3.5) * BOARD_CONFIG.SQUARE_SIZE;
+        // Calculate world position (centered in square)
+        const worldX = (gridX - 3.5) * squareSize;
+        const worldZ = (gridZ - 3.5) * squareSize;
         
-        cardMesh.position.set(worldX, 0.2, worldZ);
+        cardMesh.position.set(
+            worldX,      // Center X
+            0.2,        // Slightly above board
+            worldZ      // Center Z
+        );
         cardMesh.rotation.x = -Math.PI / 2; // Lay flat
         
         // Add to scene and track
