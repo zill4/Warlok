@@ -45,8 +45,8 @@ export class CardSystem {
         // Adjust camera to better fit cards
         const aspect = window.innerWidth / window.innerHeight;
         this.uiCamera = new THREE.OrthographicCamera(
-            -10 * aspect, 10 * aspect,  // left, right
-            10, -10,                    // top, bottom
+            -15 * aspect, 15 * aspect,  // left, right (increased from -10/10)
+            15, -15,                    // top, bottom (increased from 10/-10)
             0.1, 1000                   // near, far
         );
         this.uiCamera.position.z = 10;
@@ -71,8 +71,8 @@ export class CardSystem {
         // Handle window resize
         window.addEventListener('resize', () => {
             const newAspect = window.innerWidth / window.innerHeight;
-            this.uiCamera.left = -10 * newAspect;
-            this.uiCamera.right = 10 * newAspect;
+            this.uiCamera.left = -15 * newAspect;
+            this.uiCamera.right = 15 * newAspect;
             this.uiCamera.updateProjectionMatrix();
         });
 
@@ -90,21 +90,26 @@ export class CardSystem {
     private initializeDeck(playerColor: 'white' | 'black') {
         this.deck = [];  // Clear existing deck
         
-        const pieceTypes: Array<CardProperties['pieceType']> = [
-            'pawn', 'rook', 'bishop', 'knight', 'king', 'queen'
+        // Define all available cards
+        const cardTypes = [
+            'Ace_kunoichi',
+            'Chroma_king',
+            'Chroma_Queen',
+            'Faithful_Pal',
+            'Chroma_Dragon',
+            'Wicked_Assassin',
+            'Ye_Old_Bishop'
         ];
 
-        // Create 4 cards of each piece type (24 total)
-        pieceTypes.forEach(pieceType => {
-            for (let i = 0; i < 4; i++) {
-                this.deck.push({
-                    cardType: 'normal',
-                    monsterType: 'dragon',
-                    pieceType: pieceType,
-                    color: playerColor,
-                    texture: 'blue_eyes_w_dragon'  // Using consistent texture
-                });
-            }
+        // Create one of each card type
+        cardTypes.forEach(cardType => {
+            this.deck.push({
+                cardType: 'normal',
+                monsterType: 'dragon',
+                pieceType: 'pawn', // You might want to map these to appropriate piece types
+                color: playerColor,
+                texture: cardType
+            });
         });
 
         this.shuffleDeck();
@@ -153,30 +158,19 @@ export class CardSystem {
     }
 
     private createCompositeTexture(cardTexture: THREE.Texture): THREE.CanvasTexture {
-        // Create a canvas with proper dimensions
         const canvas = document.createElement('canvas');
         canvas.width = 512;
         canvas.height = 768;
         const context = canvas.getContext('2d')!;
 
-        // Draw the card art (dragon) first
+        // Draw the card art at full size
         if (cardTexture.image) {
             context.drawImage(cardTexture.image,
-                56, 112,   // Position inside frame
-                400, 400   // Size of card art
-            );
-        } else {
-            console.error('Card texture image not loaded');
-        }
-
-        // Draw the frame on top
-        if (this.frameTexture.image) {
-            context.drawImage(this.frameTexture.image,
                 0, 0,      // Start at top left
                 512, 768   // Full size
             );
         } else {
-            console.error('Frame texture not loaded');
+            console.error('Card texture image not loaded');
         }
 
         return new THREE.CanvasTexture(canvas);
@@ -217,10 +211,31 @@ export class CardSystem {
 
         if (intersects.length > 0) {
             const clickedCard = intersects[0].object as THREE.Mesh;
+            
             if (this.selectedCards.has(clickedCard)) {
                 this.deselectCard(clickedCard);
             } else if (!this.isHandFull()) {
                 this.selectCard(clickedCard);
+                
+                // Move to center and up
+                gsap.to(clickedCard.position, {
+                    x: 0, // Center horizontally
+                    y: 0, // Move to vertical center
+                    z: -5, // Bring forward significantly
+                    duration: 0.4,
+                    ease: "power2.out"
+                });
+                
+                gsap.to(clickedCard.scale, {
+                    x: 2.5, // Even larger scale for better readability
+                    y: 2.5,
+                    duration: 0.4,
+                    ease: "power2.out"
+                });
+
+                // Ensure this card renders above others
+                clickedCard.renderOrder = 1;
+                (clickedCard.material as THREE.Material).depthTest = false;
             }
         }
     }
@@ -245,7 +260,26 @@ export class CardSystem {
 
     private deselectCard(card: THREE.Mesh) {
         this.selectedCards.delete(card);
-        this.animateCardDown(card);
+        const originalPos = this.originalPositions.get(card)!;
+        
+        gsap.to(card.position, {
+            x: originalPos.x,
+            y: originalPos.y,
+            z: originalPos.z,
+            duration: 0.4,
+            ease: "power2.out"
+        });
+        
+        gsap.to(card.scale, {
+            x: 1,
+            y: 1,
+            duration: 0.4,
+            ease: "power2.out"
+        });
+
+        // Restore original rendering properties
+        card.renderOrder = 0;
+        (card.material as THREE.Material).depthTest = true;
     }
 
     private animateCardUp(card: THREE.Mesh) {
@@ -259,8 +293,8 @@ export class CardSystem {
             });
             
             gsap.to(card.scale, {
-                x: 1.1,
-                y: 1.1,
+                x: 1.2,
+                y: 1.2,
                 duration: 0.3,
                 ease: "power2.out"
             });
@@ -293,43 +327,32 @@ export class CardSystem {
         this.originalPositions.clear();
 
         // Calculate total width of all cards with spacing
-        const cardWidth = 2;
-        const spacing = 0.5;
+        const cardWidth = 6;  // Increased from 4
+        const spacing = 1.5;  // Increased from 1
         const totalWidth = (this.cards.length * cardWidth) + ((this.cards.length - 1) * spacing);
         const startX = -totalWidth / 2;
 
         this.cards.forEach((card, index) => {
-            const cardGeometry = new THREE.PlaneGeometry(2, 3);
+            const cardGeometry = new THREE.PlaneGeometry(6, 9);
             const material = new THREE.MeshBasicMaterial({
                 transparent: true,
-                side: THREE.DoubleSide
+                side: THREE.DoubleSide,
+                color: 0xcccccc,
+                toneMapped: false
             });
 
-            // Load card-specific texture with error handling
             const textureLoader = new THREE.TextureLoader();
-            
-            // Check if the texture exists before trying to load it
-            if (card.texture === 'knight_card' || 
-                card.texture === 'bishop_card' || 
-                card.texture === 'rook_card' || 
-                card.texture === 'queen_card' || 
-                card.texture === 'king_card' || 
-                card.texture === 'pawn_card') {
-                // Use a default texture or skip loading
-                console.log(`Using default texture for ${card.texture}`);
-                card.texture = 'blue_eyes_w_dragon'; // Use the texture we know exists
-            }
-
             textureLoader.load(
                 `/assets/images/${card.texture}.png`,
                 (cardTexture) => {
-                    console.log(`Loading texture for card: ${card.texture}`);
-                    if (this.frameTexture.image) {
-                        material.map = this.createCompositeTexture(cardTexture);
-                        material.needsUpdate = true;
-                    } else {
-                        console.error('Frame texture not loaded yet');
-                    }
+                    cardTexture.encoding = THREE.sRGBEncoding;
+                    cardTexture.colorSpace = 'srgb';
+                    // Increase texture quality
+                    cardTexture.minFilter = THREE.LinearFilter;
+                    cardTexture.magFilter = THREE.LinearFilter;
+                    cardTexture.anisotropy = 16; // Increase texture sharpness
+                    material.map = cardTexture;
+                    material.needsUpdate = true;
                 },
                 undefined,
                 (error) => {
@@ -341,7 +364,7 @@ export class CardSystem {
             
             const position = new THREE.Vector3(
                 startX + (index * (cardWidth + spacing)),
-                -8,
+                -10,  // Changed from -12 to -7 to move cards up ~40%
                 0
             );
             
@@ -389,10 +412,8 @@ export class CardSystem {
         textureLoader.load(
             `/assets/images/${card.texture}.png`,
             (cardTexture) => {
-                if (this.frameTexture.image) {
-                    material.map = this.createCompositeTexture(cardTexture);
-                    material.needsUpdate = true;
-                }
+                material.map = this.createCompositeTexture(cardTexture);
+                material.needsUpdate = true;
             }
         );
 
