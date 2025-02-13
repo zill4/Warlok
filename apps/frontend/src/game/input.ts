@@ -28,6 +28,7 @@ export class InputManager {
         // Then check for board interactions
         const boardIntersects = raycaster.intersectObjects(boardManager.getBoardSquares());
         if (boardIntersects.length > 0) {
+            console.log("Board intersects", boardIntersects);
             boardManager.handleBoardClick(mouse, camera);
             return;
         }

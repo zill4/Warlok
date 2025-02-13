@@ -474,41 +474,22 @@ export class CardSystem {
     }
 
     public placeCardOnBoard(gridX: number, gridZ: number) {
+        console.log("CardSystem: Initiating card placement at", gridX, gridZ);
         const selectedCards = this.getSelectedCards();
         if (selectedCards.length === 0) return null;
 
         const card = selectedCards[0];
-        const cardGeometry = new THREE.PlaneGeometry(1.4, 2.1); // Adjusted size to fit board squares
-        const material = new THREE.MeshBasicMaterial({
-            transparent: true,
-            side: THREE.DoubleSide
-        });
-
-        // Load card texture
-        const textureLoader = new THREE.TextureLoader();
-        textureLoader.load(
-            `/assets/images/${card.texture}.png`,
-            (cardTexture) => {
-                material.map = this.createCompositeTexture(cardTexture);
-                material.needsUpdate = true;
-            }
-        );
-
-        const cardMesh = new THREE.Mesh(cardGeometry, material);
+        // Get reference to BoardManager through the window for now
+        // In a proper architecture, this would be passed through dependency injection
+        const boardManager = (window as any).boardManagerInstance;
         
-        // Position card on board
-        const boardX = (gridX - 3.5) * BOARD_CONFIG.SQUARE_SIZE;
-        const boardZ = (gridZ - 3.5) * BOARD_CONFIG.SQUARE_SIZE;
-        
-        cardMesh.position.set(
-            boardX,
-            0.01, // Slightly above board to prevent z-fighting
-            boardZ
-        );
-        cardMesh.rotation.x = -Math.PI / 2; // Lay flat on board
-
-        this.uiScene.add(cardMesh);
-        return cardMesh;
+        if (boardManager) {
+            boardManager.placeCardOnBoard(card, gridX, gridZ);
+            // Remove card from hand after successful placement
+            this.removeSelectedCard();
+        } else {
+            console.error("BoardManager instance not found");
+        }
     }
 
     // Update getter to return all selected cards

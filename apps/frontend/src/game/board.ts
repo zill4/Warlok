@@ -24,6 +24,9 @@ export class BoardManager {
         this.scene.add(this.board);
         
         console.log("BoardManager initialized");
+        
+        // Make BoardManager available globally for CardSystem
+        (window as any).boardManagerInstance = this;
     }
 
     public setPieceModels(models: Map<string, THREE.Group>) {
@@ -241,46 +244,63 @@ export class BoardManager {
     }
 
     placeCardOnBoard(card: Card, gridX: number, gridZ: number) {
-        // Clean up existing card at position
-        this.state.boardCards = this.state.boardCards.filter(existingCard => {
-            if (existingCard.position.x === gridX && existingCard.position.z === gridZ) {
-                this.scene.remove(existingCard);
-                return false;
-            }
-            return true;
-        });
-
-        // Create new card entity
-        const cardEntity = this.createCardEntity(card);
-        cardEntity.position.set(gridX - 3.5, 0.2, gridZ - 3.5);
-        this.scene.add(cardEntity);
-        this.state.boardCards.push(cardEntity);
-
-        // Create piece
-        const piece = new ChessPiece(
-            card.pieceType, 
-            card.color === 'black', 
-            gridX, 
-            gridZ, 
-            this.pieceModels.get(`${card.color === 'black' ? 'black' : 'white'}_${card.pieceType}`)!
-        );
-
-        this.scene.add(piece.mesh);
-        this.state.pieces.push(piece);
-    }
-
-    private createCardEntity(card: Card): THREE.Mesh {
-        const geometry = new THREE.PlaneGeometry(0.8, 0.8);
-        const texture = new THREE.TextureLoader().load(`assets/cards/${card.texture}.png`);
+        console.log("BoardManager placing card:", card, "at", gridX, gridZ);
+        
+        // Create card mesh
+        const cardGeometry = new THREE.PlaneGeometry(1.4, 2.1);
         const material = new THREE.MeshBasicMaterial({
-            map: texture,
             transparent: true,
             side: THREE.DoubleSide
         });
+
+        // Load texture
+        const textureLoader = new THREE.TextureLoader();
+        textureLoader.load(
+            `/assets/images/${card.texture}.png`,
+            (texture) => {
+                material.map = texture;
+                material.needsUpdate = true;
+            }
+        );
+
+        const cardMesh = new THREE.Mesh(cardGeometry, material);
         
-        const cardMesh = new THREE.Mesh(geometry, material);
-        cardMesh.rotation.x = -Math.PI / 2;
-        return cardMesh;
+        // Calculate world position
+        const worldX = (gridX - 3.5) * BOARD_CONFIG.SQUARE_SIZE;
+        const worldZ = (gridZ - 3.5) * BOARD_CONFIG.SQUARE_SIZE;
+        
+        cardMesh.position.set(worldX, 0.2, worldZ);
+        cardMesh.rotation.x = -Math.PI / 2; // Lay flat
+        
+        // Add to scene and track
+        this.scene.add(cardMesh);
+        this.state.boardCards.push(cardMesh);
+        
+        console.log("Card mesh added to scene at:", cardMesh.position);
+
+        // Create and place piece if needed
+        if (card.pieceType) {
+            const modelKey = `${card.color}_${card.pieceType}`;
+            const pieceModel = this.pieceModels.get(modelKey);
+            
+            if (pieceModel) {
+                const piece = new ChessPiece(
+                    card.pieceType,
+                    card.color === 'black',
+                    gridX,
+                    gridZ,
+                    pieceModel.clone()
+                );
+                
+                // Position piece
+                piece.position.set(worldX, 0.1, worldZ);
+                this.scene.add(piece);
+                this.pieces.push(piece);
+                
+                // Update virtual grid
+                this.state.virtualGrid[gridZ][gridX] = piece;
+            }
+        }
     }
 
     // Add method to access cardSystem
