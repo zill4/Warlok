@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { WebGPURenderer } from 'three/webgpu';
 import gsap from 'gsap';
 import { BOARD_CONFIG } from './app';  // Import BOARD_CONFIG
+import { GameState } from './state';
+import { Player } from './player';
 
 // Add new interfaces for card properties
 interface CardProperties {
@@ -41,8 +43,13 @@ export class CardSystem {
     private readonly MAX_SELECTED_CARDS = 5;  // Maximum cards in hand
     private readonly MAX_HAND_SIZE = 7;  // Maximum cards in hand
     private readonly DEFAULT_DECK_SIZE = 40;  // Maximum cards in deck
+    private gameState: GameState;
+    private readonly localPlayer: Player;
     
-    constructor() {
+    constructor(gameState: GameState) {
+        this.gameState = gameState;
+        // Get the local player instead of assuming white
+        this.localPlayer = gameState.getLocalPlayer();
         // Initialize UI scene
         this.uiScene = new THREE.Scene();
         
@@ -260,6 +267,12 @@ export class CardSystem {
     }
 
     public handleClick(normalizedX: number, normalizedY: number) {
+        // Check if it's local player's turn
+        if (!this.gameState.isPlayerTurn(this.localPlayer.id)) {
+            console.log("Not your turn!");
+            return;
+        }
+
         console.log("Handling click");
         
         // Update mouse position
@@ -474,19 +487,23 @@ export class CardSystem {
     }
 
     public placeCardOnBoard(gridX: number, gridZ: number) {
+        // Check if it's local player's turn
+        if (!this.gameState.isPlayerTurn(this.localPlayer.id)) {
+            console.log("Not your turn!");
+            return;
+        }
+
         console.log("CardSystem: Initiating card placement at", gridX, gridZ);
         const selectedCards = this.getSelectedCards();
         if (selectedCards.length === 0) return null;
 
         const card = selectedCards[0];
-        // Get reference to BoardManager through the window for now
-        // In a proper architecture, this would be passed through dependency injection
         const boardManager = (window as any).boardManagerInstance;
         
         if (boardManager) {
             boardManager.placeCardOnBoard(card, gridX, gridZ);
-            // Remove card from hand after successful placement
             this.removeSelectedCard();
+            this.gameState.switchTurn();
         } else {
             console.error("BoardManager instance not found");
         }

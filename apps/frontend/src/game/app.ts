@@ -7,6 +7,7 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { WebGPURenderer } from 'three/webgpu';
 import { CardSystem } from './card.js';
 import { InputManager } from './input.js';
+import { Bot } from './bot.js';
 
 // Configuration (from constants.py)
 export const BOARD_CONFIG = {
@@ -46,6 +47,7 @@ export class ChessGame {
     private raycaster!: THREE.Raycaster;
     private mouse!: THREE.Vector2;
     private inputManager!: InputManager;
+    private bot!: Bot;
 
     constructor(containerId: string) {
         if (ChessGame.instance) {
@@ -87,17 +89,31 @@ export class ChessGame {
         // Initialize input manager
         this.inputManager = new InputManager(this.container);
 
-        // Initialize card system first
-        this.cardHand = new CardSystem();
-        
-        // Initialize game state and board with card system and camera
+        // Initialize game state first
         this.state = new GameState(this.scene);
+        
+        // Initialize card system with game state
+        this.cardHand = new CardSystem(this.state);
+        
+        // Initialize board manager
         this.boardManager = new BoardManager(
             this.scene, 
             this.state, 
             this.cardHand,
-            this.camera  // Pass camera reference
+            this.camera
         );
+        
+        // Initialize bot after other systems are ready
+        const botPlayer = this.state.getPlayer('black');
+        this.bot = new Bot(
+            this.state,
+            this.boardManager,
+            this.cardHand,
+            botPlayer
+        );
+        
+        // Set bot instance in game state
+        this.state.setBotInstance(this.bot);
         
         // Draw initial hand
         this.cardHand.drawInitialHand(7);

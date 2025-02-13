@@ -4,6 +4,7 @@ import { GameState } from './state.js';
 import { ChessPiece } from './core.js';
 import type { Card } from './card.js';
 import { CardSystem } from './card.js';
+import { Player } from './player.js';
 
 export class BoardManager {
     private scene: THREE.Scene;
@@ -14,6 +15,8 @@ export class BoardManager {
     private isInitialized = false;
     private cardSystem: CardSystem;
     private camera: THREE.Camera;
+    private readonly playerId: string;
+    private readonly localPlayer: Player;
 
     constructor(scene: THREE.Scene, state: GameState, cardSystem: CardSystem, camera: THREE.Camera) {
         this.scene = scene;
@@ -27,6 +30,8 @@ export class BoardManager {
         
         // Make BoardManager available globally for CardSystem
         (window as any).boardManagerInstance = this;
+        this.playerId = state.getPlayer('white').id;
+        this.localPlayer = state.getLocalPlayer();
     }
 
     public setPieceModels(models: Map<string, THREE.Group>) {
@@ -152,29 +157,31 @@ export class BoardManager {
         }
         console.log("Setting up initial pieces...");
         
-        // Setup piece positions
+        // Setup piece positions - swapped colors from previous setup
         const pieceSetup = [
-            { type: 'rook', positions: [[0, 0], [7, 0], [0, 7], [7, 7]] },
-            { type: 'knight', positions: [[1, 0], [6, 0], [1, 7], [6, 7]] },
-            { type: 'bishop', positions: [[2, 0], [5, 0], [2, 7], [5, 7]] },
-            { type: 'queen', positions: [[3, 0], [3, 7]] },
-            { type: 'king', positions: [[4, 0], [4, 7]] }
+            // Black pieces on bottom ranks (0,1)
+            { type: 'rook', positions: [[0, 0], [7, 0]], color: 'black' },
+            { type: 'knight', positions: [[1, 0], [6, 0]], color: 'black' },
+            { type: 'bishop', positions: [[2, 0], [5, 0]], color: 'black' },
+            { type: 'queen', positions: [[3, 0]], color: 'black' },
+            { type: 'king', positions: [[4, 0]], color: 'black' },
+            { type: 'pawn', positions: Array.from({length: 8}, (_, i) => [i, 1]), color: 'black' },
+            
+            // White pieces on top ranks (6,7)
+            { type: 'rook', positions: [[0, 7], [7, 7]], color: 'white' },
+            { type: 'knight', positions: [[1, 7], [6, 7]], color: 'white' },
+            { type: 'bishop', positions: [[2, 7], [5, 7]], color: 'white' },
+            { type: 'queen', positions: [[3, 7]], color: 'white' },
+            { type: 'king', positions: [[4, 7]], color: 'white' },
+            { type: 'pawn', positions: Array.from({length: 8}, (_, i) => [i, 6]), color: 'white' }
         ];
 
-        // Place main pieces
-        pieceSetup.forEach(({ type, positions }) => {
+        // Place all pieces
+        pieceSetup.forEach(({ type, positions, color }) => {
             positions.forEach(([x, z]) => {
-                const isBlack = z > 4;
-                const color = isBlack ? 'black' : 'white';
                 this.placeInitialPiece(type, color, x, z);
             });
         });
-
-        // Place pawns
-        for (let x = 0; x < BOARD_CONFIG.SIZE; x++) {
-            this.placeInitialPiece('pawn', 'white', x, 1);
-            this.placeInitialPiece('pawn', 'black', x, 6);
-        }
     }
 
     private placeInitialPiece(type: string, color: 'white' | 'black', x: number, z: number) {
@@ -244,6 +251,8 @@ export class BoardManager {
     }
 
     placeCardOnBoard(card: Card, gridX: number, gridZ: number) {
+        // Check if it's local player's turn
+
         console.log("BoardManager placing card:", card, "at", gridX, gridZ);
         
         // Make card smaller than the square size
@@ -260,6 +269,7 @@ export class BoardManager {
 
         // Load texture
         const textureLoader = new THREE.TextureLoader();
+        console.log('placing card texture:', card.texture);
         textureLoader.load(
             `/assets/images/${card.texture}.png`,
             (texture) => {
@@ -280,7 +290,8 @@ export class BoardManager {
             worldZ      // Center Z
         );
         cardMesh.rotation.x = -Math.PI / 2; // Lay flat
-        
+        cardMesh.rotation.z = card.color === 'black' ? Math.PI : 0;
+
         // Add to scene and track
         this.scene.add(cardMesh);
         this.state.boardCards.push(cardMesh);
@@ -352,5 +363,16 @@ export class BoardManager {
         const gridX = Math.round(position.x / BOARD_CONFIG.SQUARE_SIZE + (BOARD_CONFIG.SIZE - 1) / 2);
         const gridZ = Math.round(position.z / BOARD_CONFIG.SQUARE_SIZE + (BOARD_CONFIG.SIZE - 1) / 2);
         return new THREE.Vector3(gridX, 0, gridZ);
+    }
+
+    // Update computer turn handler to not assume black
+    private handleComputerTurn() {
+        const players = Array.from(this.state.players.values());
+        const computerPlayer = players.find(p => p.isComputer());
+        
+        if (computerPlayer && this.state.isPlayerTurn(computerPlayer.id)) {
+            console.log("Computer thinking about its move...");
+            // TODO: Implement computer move logic
+        }
     }
 }
