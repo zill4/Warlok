@@ -1,0 +1,8 @@
+Notes 02_13_25
+
+TODO:
+	0. Define game loop, logic, and design.
+	1. Implement game loop vs. AI.
+	2. Define schema for Cards, Decks, Chess Pieces, Game, etc.
+	3. Infra setup, databases, user identity
+

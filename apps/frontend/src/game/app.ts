@@ -6,6 +6,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { WebGPURenderer } from 'three/webgpu';
 import { CardSystem } from './card.js';
+import { InputManager } from './input.js';
 
 // Configuration (from constants.py)
 export const BOARD_CONFIG = {
@@ -44,7 +45,7 @@ export class ChessGame {
     private cardHand!: CardSystem;
     private raycaster!: THREE.Raycaster;
     private mouse!: THREE.Vector2;
-    private cards!: CardSystem[];
+    private inputManager!: InputManager;
 
     constructor(containerId: string) {
         if (ChessGame.instance) {
@@ -67,9 +68,9 @@ export class ChessGame {
         this.stats = new Stats();
         const statsElement = this.stats.dom;
         statsElement.style.position = 'fixed';
-        statsElement.style.bottom = '10px';
-        statsElement.style.right = '10px';
-        statsElement.style.transform = 'scale(0.1)';
+        statsElement.style.bottom = '3px';
+        statsElement.style.right = '3px';
+        statsElement.style.transform = 'scale(0.04)';
         statsElement.style.transformOrigin = 'bottom right';
         document.body.appendChild(statsElement);
 
@@ -83,6 +84,9 @@ export class ChessGame {
         await this.setupScene();
         this.setupLighting();
         
+        // Initialize input manager
+        this.inputManager = new InputManager(this.container);
+
         // Initialize card system first
         this.cardHand = new CardSystem();
         
@@ -154,8 +158,8 @@ export class ChessGame {
         this.mouse = new THREE.Vector2();
         
         // Add event listeners for card interactions
-        this.container.addEventListener('mousemove', (event) => this.onMouseMove(event));
-        this.container.addEventListener('click', (event) => this.onMouseClick(event));
+        this.container.addEventListener('mousemove', (event) => this.inputManager.onMouseMove(event, this.cardHand, this.raycaster, this.camera, this.mouse));
+        this.container.addEventListener('click', (event) => this.inputManager.onMouseClick(event, this.mouse, this.raycaster, this.camera, this.cardHand, this.boardManager));
         
         window.addEventListener('resize', () => this.onWindowResize());
     }
@@ -183,7 +187,7 @@ export class ChessGame {
         this.renderer.setSize(width, height);
     }
 
-    private animate(): void {
+    private async animate(): Promise<void> {
         requestAnimationFrame(() => this.animate());
         
         if (this.stats) {
@@ -196,12 +200,24 @@ export class ChessGame {
 
         // Render main scene
         if (this.renderer && this.scene && this.camera) {
-            this.renderer.clear();
-            this.renderer.render(this.scene, this.camera);
-            
-            // Render UI/cards on top
-            if (this.cardHand) {
-                this.cardHand.render(this.renderer);
+            if (this.renderer instanceof WebGPURenderer) {
+                await this.renderer.clearAsync();
+                await this.renderer.renderAsync(this.scene, this.camera);
+                // Render UI/cards on top
+                if (this.cardHand) {
+                    this.renderer.autoClear = false;  // Don't clear the previous render
+                    await this.cardHand.renderAsync(this.renderer);
+                }
+            } else {
+                // WebGL path
+                this.renderer.clear();
+                this.renderer.render(this.scene, this.camera);
+                
+                // Render UI/cards on top
+                if (this.cardHand) {
+                    this.renderer.autoClear = false;  // Don't clear the previous render
+                    this.cardHand.render(this.renderer);
+                }
             }
         }
         
@@ -298,16 +314,6 @@ export class ChessGame {
         }
     }
 
-    private onMouseClick(event: MouseEvent) {
-        const rect = this.container.getBoundingClientRect();
-        this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-        
-        // Let the card system handle its own click detection
-        if (this.cardHand) {
-            this.cardHand.handleClick(this.mouse.x, this.mouse.y);
-        }
-    }
 
     private setupControls() {
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);

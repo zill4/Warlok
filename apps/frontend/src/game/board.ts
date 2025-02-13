@@ -23,7 +23,6 @@ export class BoardManager {
         this.board = new THREE.Group();
         this.scene.add(this.board);
         
-        window.addEventListener('click', (event) => this.onBoardClick(event));
         console.log("BoardManager initialized");
     }
 
@@ -289,21 +288,21 @@ export class BoardManager {
         return this.cardSystem;
     }
 
-    private onBoardClick(event: MouseEvent) {
-        const mouse = new THREE.Vector2(
-            (event.clientX / window.innerWidth) * 2 - 1,
-            -(event.clientY / window.innerHeight) * 2 + 1
-        );
-
-        const raycaster = new THREE.Raycaster();
-        raycaster.setFromCamera(mouse, this.camera);
-
-        const squares = this.board.children.filter(child => 
+    // Add getter for board squares
+    public getBoardSquares(): THREE.Object3D[] {
+        return this.board.children.filter(child => 
             child instanceof THREE.Mesh && 
             child.geometry instanceof THREE.BoxGeometry &&
             child.geometry.parameters.width === BOARD_CONFIG.SQUARE_SIZE * 0.98
         );
+    }
 
+    // Rename onBoardClick to handleBoardClick and update signature
+    public handleBoardClick(mouse: THREE.Vector2, camera: THREE.Camera) {
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, camera);
+
+        const squares = this.getBoardSquares();
         const intersects = raycaster.intersectObjects(squares);
         
         if (intersects.length > 0) {
