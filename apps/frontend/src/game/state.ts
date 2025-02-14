@@ -4,12 +4,13 @@ import { BOARD_CONFIG } from './config';
 import { Player,  type PlayerColor, type PlayerType } from './player';
 import type { Card } from './card';
 import { Bot } from './bot';
+import { EffectsManager } from './effects-manager';
 
-export interface Card {
-    texture: string;
-    pieceType: string;
-    color: 'white' | 'black';
-}
+// export interface Card {
+//     texture: string;
+//     pieceType: string;
+//     color: 'white' | 'black';
+// }
 
 export interface PlayerState {
     id: string;
@@ -105,6 +106,7 @@ export class GameState {
     private gameActive: boolean = false;
     private bot: Bot | null = null;
     private turnCount: number = 1;  // Start at turn 1
+    private effectsManager: EffectsManager;
 
     constructor(scene: THREE.Scene) {
         this._scene = scene;
@@ -142,6 +144,7 @@ export class GameState {
 
         // Start the game
         this.startGame();
+        this.effectsManager = new EffectsManager(scene);
     }
 
     // Add getter for scene if needed
@@ -263,5 +266,60 @@ export class GameState {
 
     public getCurrentTurnPlayer(): string {
         return `Turn ${this.turnCount}: ${this.currentPlayer.color}`;
+    }
+
+    public capturePiece(piece: ChessPiece, capturedBy: Player) {
+        console.log(`${piece.color} ${piece.type} captured by ${capturedBy.color}`);
+        
+        // Add to player's captured pieces
+        capturedBy.capturePiece(piece);
+        
+        // Remove from virtual grid
+        const [x, z] = piece.getPosition();
+        this.virtualGrid[z][x] = null;
+        
+        // Find and remove the associated card mesh
+        const cardMesh = this.boardCards.find(card => {
+            const cardPos = card.position;
+            return Math.abs(cardPos.x - piece.position.x) < 0.1 && 
+                   Math.abs(cardPos.z - piece.position.z) < 0.1;
+        });
+
+        if (cardMesh) {
+            this._scene.remove(cardMesh);
+            // Remove from boardCards array
+            const cardIndex = this.boardCards.indexOf(cardMesh);
+            if (cardIndex > -1) {
+                this.boardCards.splice(cardIndex, 1);
+            }
+            // Dispose of geometries and materials
+            if (cardMesh.geometry) cardMesh.geometry.dispose();
+            if (cardMesh.material) {
+                if (Array.isArray(cardMesh.material)) {
+                    cardMesh.material.forEach(m => m.dispose());
+                } else {
+                    cardMesh.material.dispose();
+                }
+            }
+        }
+        
+        // Remove the piece from the scene
+        this._scene.remove(piece);
+        // Dispose of piece geometries and materials
+        piece.traverse((child) => {
+            if (child instanceof THREE.Mesh) {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(m => m.dispose());
+                    } else {
+                        child.material.dispose();
+                    }
+                }
+            }
+        });
+        
+        // Trigger destruction animation
+        this.effectsManager.animatePieceDestruction(piece);
     }
 }

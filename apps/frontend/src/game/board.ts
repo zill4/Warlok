@@ -225,6 +225,13 @@ export class BoardManager {
         if (cardMesh) {
             console.log("Found card at position:", oldX, oldZ);
         }
+        console.log("Checking for capture at:", targetX, targetZ, 'from', oldX, oldZ, 'virtual grid:', this.state.virtualGrid);
+        // Check if there's a piece to capture at the target position
+        const targetPiece = this.state.virtualGrid[newZ][newX];
+        if (targetPiece && targetPiece.color !== piece.color) {
+            console.log(`Capturing ${targetPiece.color} ${targetPiece.type} at ${newX},${newZ}`);
+            this.state.capturePiece(targetPiece, this.state.getCurrentPlayer());
+        }
 
         // Update piece's grid position
         piece.gridX = newX;

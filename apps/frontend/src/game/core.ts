@@ -1,15 +1,18 @@
 import * as THREE from 'three';
 
+export type PieceColor = 'white' | 'black';
+export type PieceType = 'pawn' | 'rook' | 'knight' | 'bishop' | 'queen' | 'king';
+
 export interface PieceData {
-    type: string;
-    color: 'white' | 'black';
+    type: PieceType;
+    color: PieceColor;
     gridX: number;
     gridZ: number;
 }
 
 export class GameEntity extends THREE.Object3D {
     constructor(
-        public isBlack: boolean,
+        public readonly color: PieceColor,
         public gridX: number,
         public gridZ: number
     ) {
@@ -19,24 +22,30 @@ export class GameEntity extends THREE.Object3D {
     getValidMoves(_boardState: (GameEntity | null)[][]): [number, number][] {
         return [];
     }
+
+    getPosition(): [number, number] {
+        return [this.gridX, this.gridZ];
+    }
 }
 
 export class ChessPiece extends GameEntity {
-    public readonly mesh: THREE.Object3D;
+    public readonly model: THREE.Group | null = null;
 
     constructor(
-        public readonly type: string,
-        isBlack: boolean,
+        public readonly type: PieceType,
+        color: PieceColor,
         gridX: number,
         gridZ: number,
-        model: THREE.Object3D
+        model?: THREE.Group
     ) {
-        super(isBlack, gridX, gridZ);
-        this.mesh = model.clone();
-        this.add(this.mesh);
+        super(color, gridX, gridZ);
+        if (model) {
+            this.model = model.clone();
+            this.add(this.model);
+        }
     }
 
-    getValidMoves(_boardState: (GameEntity | null)[][]): [number, number][] {
+    getValidMoves(boardState: (GameEntity | null)[][]): [number, number][] {
         // Implementation from Python logic here
         return [];
     }

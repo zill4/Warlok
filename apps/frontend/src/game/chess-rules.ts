@@ -37,7 +37,7 @@ export class ChessRules {
 
     private static isOccupiedBySameColor(x: number, z: number, piece: ChessPiece, virtualGrid: (ChessPiece | null)[][]): boolean {
         const targetPiece = virtualGrid[z][x];
-        return targetPiece !== null && targetPiece.isBlack === piece.isBlack;
+        return targetPiece !== null && targetPiece.color === piece.color;
     }
 
     private static addMoveIfValid(x: number, z: number, piece: ChessPiece, virtualGrid: (ChessPiece | null)[][], moves: {x: number, z: number}[]): boolean {
@@ -50,8 +50,8 @@ export class ChessRules {
     }
 
     private static getPawnMoves(piece: ChessPiece, virtualGrid: (ChessPiece | null)[][], moves: {x: number, z: number}[]) {
-        const direction = piece.isBlack ? 1 : -1;
-        const startRank = piece.isBlack ? 1 : 6;
+        const direction = piece.color === 'black' ? 1 : -1;
+        const startRank = piece.color === 'black' ? 1 : 6;
 
         // Forward move
         if (this.isValidPosition(piece.gridX, piece.gridZ + direction) && 
@@ -74,7 +74,7 @@ export class ChessRules {
         captureSquares.forEach(square => {
             if (this.isValidPosition(square.x, square.z) && 
                 virtualGrid[square.z][square.x] !== null && 
-                virtualGrid[square.z][square.x]!.isBlack !== piece.isBlack) {
+                virtualGrid[square.z][square.x]!.color !== piece.color) {
                 moves.push(square);
             }
         });
