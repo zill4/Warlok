@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { Player } from './player';
 
 export type PieceColor = 'white' | 'black';
 export type PieceType = 'pawn' | 'rook' | 'knight' | 'bishop' | 'queen' | 'king';
@@ -14,7 +15,8 @@ export class GameEntity extends THREE.Object3D {
     constructor(
         public readonly color: PieceColor,
         public gridX: number,
-        public gridZ: number
+        public gridZ: number,
+        public owner: Player
     ) {
         super();
     }
@@ -30,23 +32,25 @@ export class GameEntity extends THREE.Object3D {
 
 export class ChessPiece extends GameEntity {
     public readonly model: THREE.Group | null = null;
+    public readonly pieceType: PieceType;
 
     constructor(
         public readonly type: PieceType,
         color: PieceColor,
         gridX: number,
         gridZ: number,
+        owner: Player,
         model?: THREE.Group
     ) {
-        super(color, gridX, gridZ);
+        super(color, gridX, gridZ, owner);
+        this.pieceType = type;
         if (model) {
             this.model = model.clone();
             this.add(this.model);
         }
     }
 
-    getValidMoves(boardState: (GameEntity | null)[][]): [number, number][] {
-        // Implementation from Python logic here
-        return [];
+    public getOwner(): Player {
+        return this.owner;
     }
 }

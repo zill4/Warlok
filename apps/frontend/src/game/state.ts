@@ -89,6 +89,14 @@ export const INITIAL_GAME_STATE: GameStateData = {
     currentTurn: 'white'
 };
 
+interface TurnMove {
+    piece: string;
+    from?: { x: number, z: number };
+    to: { x: number, z: number };
+    isCapture: boolean;
+    isPlacement: boolean;
+}
+
 export class GameState {
     private _scene: THREE.Scene;  // Add underscore to indicate private
     selectedPiece: ChessPiece | null = null;
@@ -107,6 +115,13 @@ export class GameState {
     private bot: Bot | null = null;
     private turnCount: number = 1;  // Start at turn 1
     private effectsManager: EffectsManager;
+    private moveHistory: {
+        white: TurnMove[],
+        black: TurnMove[]
+    } = {
+        white: [],
+        black: []
+    };
 
     constructor(scene: THREE.Scene) {
         this._scene = scene;
@@ -228,7 +243,7 @@ export class GameState {
             setTimeout(() => {
                 console.log('Bot making move');
                 this.bot?.makeMove();
-            }, 5000); // 5 second delay
+            }, 1000); // 1 second delay
         }
     }
 
@@ -321,5 +336,61 @@ export class GameState {
         
         // Trigger destruction animation
         this.effectsManager.animatePieceDestruction(piece);
+    }
+
+    public recordMove(piece: ChessPiece | Card, to: { x: number, z: number }, from?: { x: number, z: number }, isCapture: boolean = false) {
+        const currentColor = this.currentPlayer.color;
+        const move: TurnMove = {
+            piece: 'piece' in piece ? piece.pieceType : piece.pieceType,
+            to: to,
+            from: from,
+            isCapture: isCapture,
+            isPlacement: !from
+        };
+
+        this.moveHistory[currentColor].push(move);
+        
+        // Log the move in chess notation
+        console.log(this.getMoveNotation(move));
+    }
+
+    private getMoveNotation(move: TurnMove): string {
+        let notation = '';
+        
+        // Add piece letter (except for pawns)
+        if (move.piece !== 'pawn') {
+            notation += move.piece[0].toUpperCase();
+        }
+        
+        // Add 'x' if it's a capture
+        if (move.isCapture) {
+            if (move.piece === 'pawn') {
+                notation += String.fromCharCode(97 + move.from!.x); // Add starting file for pawn captures
+            }
+            notation += 'x';
+        }
+        
+        // Add destination square
+        notation += String.fromCharCode(97 + move.to.x); // Convert to a-h
+        notation += (8 - move.to.z); // Convert to 1-8
+        
+        return notation;
+    }
+
+    public getMoveHistory(): string[] {
+        const history: string[] = [];
+        const maxMoves = Math.max(this.moveHistory.white.length, this.moveHistory.black.length);
+        
+        for (let i = 0; i < maxMoves; i++) {
+            const moveNum = i + 1;
+            const whiteMoveNotation = this.moveHistory.white[i] ? 
+                this.getMoveNotation(this.moveHistory.white[i]) : '';
+            const blackMoveNotation = this.moveHistory.black[i] ? 
+                this.getMoveNotation(this.moveHistory.black[i]) : '';
+            
+            history.push(`${moveNum}. ${whiteMoveNotation} ${blackMoveNotation}`);
+        }
+        
+        return history;
     }
 }

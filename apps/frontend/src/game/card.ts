@@ -519,7 +519,6 @@ export class CardSystem {
         if (boardManager) {
             boardManager.placeCardOnBoard(card, gridX, gridZ);
             this.removeSelectedCard();
-            this.gameState.switchTurn();
         } else {
             console.error("BoardManager instance not found");
         }

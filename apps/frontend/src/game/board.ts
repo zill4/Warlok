@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { Easing, Group, Tween, update as updateTween } from 'three/examples/jsm/libs/tween.module.js';
 import { BOARD_CONFIG } from './config.js';
 import { GameState } from './state.js';
-import { ChessPiece } from './core.js';
+import { ChessPiece, type PieceColor, type PieceType } from './core.js';
 import type { Card } from './card.js';
 import { CardSystem } from './card.js';
 import { Player, type PlayerColor } from './player.js';
@@ -37,7 +37,7 @@ export class BoardManager {
         
         // Make BoardManager available globally for CardSystem
         (window as any).boardManagerInstance = this;
-        this.playerId = state.getPlayer('white').id;
+        this.playerId = state.getPlayer('white')?.id || '';
         this.localPlayer = state.getLocalPlayer();
     }
 
@@ -176,7 +176,21 @@ export class BoardManager {
             return;
         }
 
-        const piece = new ChessPiece(type, color === 'black', x, z, model.clone());
+        // Get the correct player for the piece
+        const owner = this.state.getPlayer(color);
+        if (!owner) {
+            console.error(`No player found for color ${color}`);
+            return;
+        }
+
+        const piece = new ChessPiece(
+            type as PieceType,
+            color,
+            x,
+            z,
+            owner,
+            model.clone()
+        );
         
         const offset = (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE) / 2 - BOARD_CONFIG.SQUARE_SIZE / 2;
         piece.position.set(
@@ -189,7 +203,8 @@ export class BoardManager {
         this.pieces.push(piece);
         this.state.virtualGrid[z][x] = piece;
         
-        // console.log(`Placed ${color} ${type} at (${x}, ${z})`);
+        // Add piece to player's owned pieces
+        owner.addPiece(piece);
     }
 
     // Method to get piece at grid position
@@ -315,6 +330,9 @@ export class BoardManager {
                 this.state.virtualGrid[newZ][newX] = piece;
                 this.clearSelection();
                 this.isMovingPiece = false;
+                
+                // End the turn after piece movement is complete
+                this.state.switchTurn();
             });
 
         // Chain the tweens and start
@@ -377,21 +395,31 @@ export class BoardManager {
             const pieceModel = this.pieceModels.get(modelKey);
             
             if (pieceModel) {
+                const owner = this.state.getPlayer(card.color);
+                if (!owner) {
+                    console.error(`No player found for color ${card.color}`);
+                    return;
+                }
+
                 const piece = new ChessPiece(
                     card.pieceType,
-                    card.color === 'black',
+                    card.color as PieceColor,
                     gridX,
                     gridZ,
-                    pieceModel.clone()
+                    owner,
+                    pieceModel // Pass the model to the constructor
                 );
                 
                 piece.position.set(worldX, 0.125, worldZ);
                 this.scene.add(piece);
                 this.pieces.push(piece);
                 this.state.virtualGrid[gridZ][gridX] = piece;
+                
+                // Add piece to player's owned pieces
+                owner.addPiece(piece);
             }
         }
-        
+        this.state.switchTurn();
         setTimeout(() => {
             this.isPlacingCardPiece = false;
         }, 100);

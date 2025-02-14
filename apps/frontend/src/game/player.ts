@@ -8,6 +8,7 @@ export type PlayerColor = 'white' | 'black';
 export class Player {
     private state: PlayerState;
     private readonly MAX_HAND_SIZE = 7;  // Match CardSystem's limit
+    private ownedPieces: ChessPiece[] = [];
 
     constructor(
         public readonly id: string,
@@ -100,5 +101,20 @@ export class Player {
         this.state.score = this.state.capturedPieces.reduce((total, piece) => {
             return total + (pieceValues[piece.type] || 0);
         }, 0);
+    }
+
+    public addPiece(piece: ChessPiece): void {
+        this.ownedPieces.push(piece);
+    }
+
+    public removePiece(piece: ChessPiece): void {
+        const index = this.ownedPieces.indexOf(piece);
+        if (index !== -1) {
+            this.ownedPieces.splice(index, 1);
+        }
+    }
+
+    public getOwnedPieces(): ChessPiece[] {
+        return [...this.ownedPieces];
     }
 } 
