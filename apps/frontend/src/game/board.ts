@@ -4,7 +4,7 @@ import { GameState } from './state.js';
 import { ChessPiece } from './core.js';
 import type { Card } from './card.js';
 import { CardSystem } from './card.js';
-import { Player } from './player.js';
+import { Player, type PlayerColor } from './player.js';
 
 export class BoardManager {
     private scene: THREE.Scene;
@@ -57,8 +57,9 @@ export class BoardManager {
             0.2,
             BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE
         );
-        const boardMaterial = new THREE.MeshBasicMaterial({ 
-            color: 0x202020
+        const boardMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x202020,
+            emissive: 0x000000  // Ensure no emission
         });
         const boardBase = new THREE.Mesh(boardGeometry, boardMaterial);
         boardBase.position.y = -0.1;
@@ -76,8 +77,9 @@ export class BoardManager {
         for (let z = 0; z < BOARD_CONFIG.SIZE; z++) {
             for (let x = 0; x < BOARD_CONFIG.SIZE; x++) {
                 const isWhite = (x + z) % 2 === 0;
-                const material = new THREE.MeshBasicMaterial({
-                    color: isWhite ? BOARD_CONFIG.COLORS.WHITE : BOARD_CONFIG.COLORS.BLACK
+                const material = new THREE.MeshStandardMaterial({
+                    color: isWhite ? BOARD_CONFIG.COLORS.WHITE : BOARD_CONFIG.COLORS.BLACK,
+                    emissive: 0x000000  // Ensure no emission
                 });
 
                 const square = new THREE.Mesh(squareGeometry, material);
@@ -94,7 +96,7 @@ export class BoardManager {
         const frameSize = BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE + 0.4;
         const frameThickness = 0.4;
         const frameHeight = 0.3;
-        const frameMaterial = new THREE.MeshBasicMaterial({ color: 0xA5A1A2 });
+        const frameMaterial = new THREE.MeshStandardMaterial({ color: 0xA5A1A2 });
 
         // Create frame pieces with proper typing
         interface FrameSide {
@@ -122,31 +124,6 @@ export class BoardManager {
             this.board.add(framePiece);
         });
 
-        // Add ambient light for better overall visibility
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        this.scene.add(ambientLight);
-
-        // Add directional light for shadows and depth
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(5, 10, 5);
-        directionalLight.castShadow = true;
-        
-        // Adjust shadow properties
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
-        directionalLight.shadow.camera.near = 0.5;
-        directionalLight.shadow.camera.far = 50;
-        directionalLight.shadow.bias = -0.001;
-        
-        this.scene.add(directionalLight);
-
-        // Enable shadow rendering on the board squares
-        this.board.traverse((object) => {
-            if (object instanceof THREE.Mesh) {
-                object.receiveShadow = true;
-            }
-        });
-
         this.isInitialized = true;
     }
 
@@ -163,31 +140,31 @@ export class BoardManager {
             { type: 'rook', positions: [[0, 0], [7, 0]], color: 'black' },
             { type: 'knight', positions: [[1, 0], [6, 0]], color: 'black' },
             { type: 'bishop', positions: [[2, 0], [5, 0]], color: 'black' },
-            { type: 'queen', positions: [[3, 0]], color: 'black' },
-            { type: 'king', positions: [[4, 0]], color: 'black' },
+            { type: 'queen', positions: [[4, 0]], color: 'black' },
+            { type: 'king', positions: [[3, 0]], color: 'black' },
             { type: 'pawn', positions: Array.from({length: 8}, (_, i) => [i, 1]), color: 'black' },
             
             // White pieces on top ranks (6,7)
             { type: 'rook', positions: [[0, 7], [7, 7]], color: 'white' },
             { type: 'knight', positions: [[1, 7], [6, 7]], color: 'white' },
             { type: 'bishop', positions: [[2, 7], [5, 7]], color: 'white' },
-            { type: 'queen', positions: [[3, 7]], color: 'white' },
-            { type: 'king', positions: [[4, 7]], color: 'white' },
+            { type: 'queen', positions: [[4, 7]], color: 'white' },
+            { type: 'king', positions: [[3, 7]], color: 'white' },
             { type: 'pawn', positions: Array.from({length: 8}, (_, i) => [i, 6]), color: 'white' }
         ];
 
         // Place all pieces
         pieceSetup.forEach(({ type, positions, color }) => {
             positions.forEach(([x, z]) => {
-                this.placeInitialPiece(type, color, x, z);
+                this.placeInitialPiece(type, color as PlayerColor, x, z);
             });
         });
     }
 
-    private placeInitialPiece(type: string, color: 'white' | 'black', x: number, z: number) {
+    private placeInitialPiece(type: string, color: PlayerColor, x: number, z: number) {
         const modelKey = `${color}_${type}`;
         const model = this.pieceModels.get(modelKey);
-        
+        console.log("placing initial piece:", modelKey);
         if (!model) {
             console.error(`Missing model for ${modelKey}`);
             return;
@@ -195,28 +172,10 @@ export class BoardManager {
 
         const piece = new ChessPiece(type, color === 'black', x, z, model.clone());
         
-        // Scale up the piece slightly
-        piece.scale.set(1.2, 1.2, 1.2);
-        
-        // Enable shadows and adjust material properties for better lighting
-        piece.traverse((object) => {
-            if (object instanceof THREE.Mesh) {
-                object.castShadow = true;
-                object.receiveShadow = true;
-                
-                // Adjust material properties for better lighting
-                if (object.material instanceof THREE.MeshStandardMaterial) {
-                    object.material.metalness = 0.3;
-                    object.material.roughness = 0.7;
-                    object.material.envMapIntensity = 1.5;
-                }
-            }
-        });
-        
         const offset = (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE) / 2 - BOARD_CONFIG.SQUARE_SIZE / 2;
         piece.position.set(
             x * BOARD_CONFIG.SQUARE_SIZE - offset,
-            0.1, // Lower the piece closer to the board
+            0.1,
             z * BOARD_CONFIG.SQUARE_SIZE - offset
         );
 
@@ -262,7 +221,7 @@ export class BoardManager {
         
         // Create card mesh with adjusted dimensions
         const cardGeometry = new THREE.PlaneGeometry(cardWidth, cardHeight);
-        const material = new THREE.MeshBasicMaterial({
+        const material = new THREE.MeshStandardMaterial({
             transparent: true,
             side: THREE.DoubleSide
         });
@@ -286,7 +245,7 @@ export class BoardManager {
         
         cardMesh.position.set(
             worldX,      // Center X
-            0.2,        // Slightly above board
+            0.1,        // Slightly above board
             worldZ      // Center Z
         );
         cardMesh.rotation.x = -Math.PI / 2; // Lay flat
@@ -313,7 +272,7 @@ export class BoardManager {
                 );
                 
                 // Position piece
-                piece.position.set(worldX, 0.1, worldZ);
+                piece.position.set(worldX, 0.125, worldZ);
                 this.scene.add(piece);
                 this.pieces.push(piece);
                 
