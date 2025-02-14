@@ -1,10 +1,12 @@
 import * as THREE from 'three';
+import { Easing, Group, Tween, update as updateTween } from 'three/examples/jsm/libs/tween.module.js';
 import { BOARD_CONFIG } from './config.js';
 import { GameState } from './state.js';
 import { ChessPiece } from './core.js';
 import type { Card } from './card.js';
 import { CardSystem } from './card.js';
 import { Player, type PlayerColor } from './player.js';
+import { ChessRules } from './chess-rules.js';
 
 export class BoardManager {
     private scene: THREE.Scene;
@@ -21,6 +23,7 @@ export class BoardManager {
     private selectedPiece: ChessPiece | null = null;
     private possibleMovesHighlighted: boolean = false;
     private isPlacingCardPiece: boolean = false;
+    private isMovingPiece: boolean = false;
 
     constructor(scene: THREE.Scene, state: GameState, cardSystem: CardSystem, camera: THREE.Camera) {
         this.scene = scene;
@@ -200,20 +203,118 @@ export class BoardManager {
 
     // Method to move piece
     public movePiece(piece: ChessPiece, newX: number, newZ: number) {
-        const offset = (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE) / 2 - BOARD_CONFIG.SQUARE_SIZE / 2;
-        
-        // Update virtual grid
-        this.state.virtualGrid[piece.gridZ][piece.gridX] = null;
-        this.state.virtualGrid[newZ][newX] = piece;
+        this.isMovingPiece = true;
+        console.log("Moving piece to:", newX, newZ);
 
-        // Update piece position
+        // Calculate world coordinates
+        const offset = (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE) / 2 - BOARD_CONFIG.SQUARE_SIZE / 2;
+        const targetX = newX * BOARD_CONFIG.SQUARE_SIZE - offset;
+        const targetZ = newZ * BOARD_CONFIG.SQUARE_SIZE - offset;
+
+        // Store old position for virtual grid update
+        const oldX = piece.gridX;
+        const oldZ = piece.gridZ;
+
+        // Find associated card at the old position
+        const cardMesh = this.state.boardCards.find(card => {
+            const cardPos = this.getGridPosition(card.position);
+            console.log("Checking card at:", cardPos, "looking for:", oldX, oldZ);
+            return Math.round(cardPos.x) === oldX && Math.round(cardPos.z) === oldZ;
+        });
+
+        if (cardMesh) {
+            console.log("Found card at position:", oldX, oldZ);
+        }
+
+        // Update piece's grid position
         piece.gridX = newX;
         piece.gridZ = newZ;
-        piece.position.set(
-            newX * BOARD_CONFIG.SQUARE_SIZE - offset,
-            0.1, // Keep consistent height with initial placement
-            newZ * BOARD_CONFIG.SQUARE_SIZE - offset
-        );
+
+        const startPosition = { 
+            x: piece.position.x, 
+            y: piece.position.y, 
+            z: piece.position.z 
+        };
+        
+        const endPosition = { 
+            x: targetX, 
+            y: piece.position.y, 
+            z: targetZ 
+        };
+
+        const midPoint = {
+            x: (startPosition.x + endPosition.x) / 2,
+            y: piece.position.y + 1, // Lift piece by 1 unit at peak
+            z: (startPosition.z + endPosition.z) / 2
+        };
+
+        // If we found a card, create its animation positions
+        const cardStartPosition = cardMesh ? {
+            x: cardMesh.position.x,
+            y: cardMesh.position.y,
+            z: cardMesh.position.z
+        } : null;
+
+        const cardEndPosition = cardMesh ? {
+            x: targetX,
+            y: cardMesh.position.y,
+            z: targetZ
+        } : null;
+
+        let animationProgress = 0;
+
+        // First tween (up and halfway for piece, slide for card)
+        const tween1 = new Tween({ progress: 0 })
+            .to({ progress: 1 }, 500)
+            .easing(Easing.Quadratic.Out)
+            .onUpdate((obj) => {
+                piece.position.set(
+                    startPosition.x + (midPoint.x - startPosition.x) * obj.progress,
+                    startPosition.y + (midPoint.y - startPosition.y) * obj.progress,
+                    startPosition.z + (midPoint.z - startPosition.z) * obj.progress
+                );
+                
+                if (cardMesh && cardStartPosition && cardEndPosition) {
+                    // Linear interpolation for card (sliding)
+                    const cardX = cardStartPosition.x + (cardEndPosition.x - cardStartPosition.x) * obj.progress * 0.5;
+                    const cardZ = cardStartPosition.z + (cardEndPosition.z - cardStartPosition.z) * obj.progress * 0.5;
+
+                    cardMesh.position.set(cardX, cardStartPosition.y, cardZ);
+                }
+            });
+
+        // Second tween (down and to target for piece, continue slide for card)
+        const tween2 = new Tween({ progress: 0 })
+            .to({ progress: 1 }, 500)
+            .easing(Easing.Quadratic.In)
+            .onUpdate((obj) => {
+                piece.position.set(
+                    midPoint.x + (endPosition.x - midPoint.x) * obj.progress,
+                    midPoint.y + (endPosition.y - midPoint.y) * obj.progress,
+                    midPoint.z + (endPosition.z - midPoint.z) * obj.progress
+                );
+                
+                if (cardMesh && cardStartPosition && cardEndPosition) {
+                    // Continue linear interpolation for card
+                    const cardX = cardStartPosition.x + (cardEndPosition.x - cardStartPosition.x) * (0.5 + obj.progress * 0.5);
+                    const cardZ = cardStartPosition.z + (cardEndPosition.z - cardStartPosition.z) * (0.5 + obj.progress * 0.5);
+
+                    cardMesh.position.set(cardX, cardStartPosition.y, cardZ);
+                }
+            })
+            .onComplete(() => {
+                console.log("Animation complete");
+                this.state.virtualGrid[oldZ][oldX] = null;
+                this.state.virtualGrid[newZ][newX] = piece;
+                this.clearSelection();
+                this.isMovingPiece = false;
+            });
+
+        // Chain the tweens and start
+        tween1.chain(tween2).start();
+        
+        // Force an initial update
+        updateTween();
     }
 
     public placeCardOnBoard(card: Card, gridX: number, gridZ: number) {
@@ -305,9 +406,10 @@ export class BoardManager {
 
     // Rename onBoardClick to handleBoardClick and update signature
     public handleBoardClick(mouse: THREE.Vector2, camera: THREE.Camera) {
-        if (this.possibleMovesHighlighted) {
-            this.clearHighlights();
+        if (this.isPlacingCardPiece || this.isMovingPiece) {
+            return;
         }
+
         const raycaster = new THREE.Raycaster();
         raycaster.setFromCamera(mouse, camera);
 
@@ -318,6 +420,21 @@ export class BoardManager {
             const square = intersects[0].object as THREE.Mesh;
             const gridPosition = this.getGridPosition(square.position);
             
+            // If we have a selected piece and this is a valid move
+            if (this.selectedPiece && this.possibleMovesHighlighted) {
+                const validMoves = this.getValidMoves(this.selectedPiece);
+                const isValidMove = validMoves.some(move => 
+                    move.x === gridPosition.x && move.z === gridPosition.z
+                );
+
+                if (isValidMove) {
+                    console.log("moving piece");
+                    this.movePiece(this.selectedPiece, gridPosition.x, gridPosition.z);
+                    return;
+                }
+            }
+
+            // Handle card placement (existing code)
             if (!this.state.board[gridPosition.z][gridPosition.x]) {
                 const selectedCards = this.cardSystem.getSelectedCards();
                 if (selectedCards.length > 0) {
@@ -329,21 +446,22 @@ export class BoardManager {
     }
 
     private getGridPosition(position: THREE.Vector3): THREE.Vector3 {
-        const gridX = Math.round(position.x / BOARD_CONFIG.SQUARE_SIZE + (BOARD_CONFIG.SIZE - 1) / 2);
-        const gridZ = Math.round(position.z / BOARD_CONFIG.SQUARE_SIZE + (BOARD_CONFIG.SIZE - 1) / 2);
+        const offset = (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE) / 2 - BOARD_CONFIG.SQUARE_SIZE / 2;
+        const gridX = Math.round((position.x + offset) / BOARD_CONFIG.SQUARE_SIZE);
+        const gridZ = Math.round((position.z + offset) / BOARD_CONFIG.SQUARE_SIZE);
         return new THREE.Vector3(gridX, 0, gridZ);
     }
 
     // Update computer turn handler to not assume black
-    private handleComputerTurn() {
-        const players = Array.from(this.state.players.values());
-        const computerPlayer = players.find(p => p.isComputer());
+    // private handleComputerTurn() {
+    //     const players = Array.from(this.state.players.values());
+    //     const computerPlayer = players.find(p => p.isComputer());
         
-        if (computerPlayer && this.state.isPlayerTurn(computerPlayer.id)) {
-            console.log("Computer thinking about its move...");
-            // TODO: Implement computer move logic
-        }
-    }
+    //     if (computerPlayer && this.state.isPlayerTurn(computerPlayer.id)) {
+    //         console.log("Computer thinking about its move...");
+    //         // TODO: Implement computer move logic
+    //     }
+    // }
 
     // Update handlePieceClick to handle toggle behavior
     public handlePieceClick(mouse: THREE.Vector2) {
@@ -435,29 +553,13 @@ export class BoardManager {
     }
 
     private getValidMoves(piece: ChessPiece): {x: number, z: number}[] {
-        // This is a placeholder - implement actual chess move logic
-        const moves: {x: number, z: number}[] = [];
-        const x = piece.gridX;
-        const z = piece.gridZ;
-        
-        // Example: For now, just highlight adjacent squares
-        const directions = [
-            {x: 1, z: 0}, {x: -1, z: 0},
-            {x: 0, z: 1}, {x: 0, z: -1},
-            {x: 1, z: 1}, {x: -1, z: 1},
-            {x: 1, z: -1}, {x: -1, z: -1}
-        ];
-        
-        directions.forEach(dir => {
-            const newX = x + dir.x;
-            const newZ = z + dir.z;
-            
-            if (newX >= 0 && newX < BOARD_CONFIG.SIZE &&
-                newZ >= 0 && newZ < BOARD_CONFIG.SIZE) {
-                moves.push({x: newX, z: newZ});
-            }
-        });
-        
-        return moves;
+        return ChessRules.getValidMoves(piece, this.state.virtualGrid);
+    }
+
+    // Update method for animation
+    public update(deltaTime: number) {
+        if (this.isMovingPiece) {
+            updateTween();
+        }
     }
 }

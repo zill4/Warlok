@@ -200,8 +200,11 @@ export class ChessGame {
         this.renderer.setSize(width, height);
     }
 
-    private async animate(): Promise<void> {
+    private async animate() { 
         requestAnimationFrame(() => this.animate());
+        
+        // Update board manager (for animations)
+        this.boardManager.update(0);
         
         if (this.stats) {
             this.stats.begin();
