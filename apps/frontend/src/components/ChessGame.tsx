@@ -11,7 +11,7 @@ export default function ChessGame({ containerId = 'game-container', ...props }: 
   const [currentTurn, setCurrentTurn] = useState<string>("White's turn");
   const [turnNumber, setTurnNumber] = useState<number>(1);
   const [botThinking, setBotThinking] = useState<boolean>(false);
-  const [thinkingTime, setThinkingTime] = useState<number>(5);
+  const [thinkingTime, setThinkingTime] = useState<number>(3);
 
   useEffect(() => {
     // We'll dynamically import the game to avoid SSR issues
@@ -23,7 +23,7 @@ export default function ChessGame({ containerId = 'game-container', ...props }: 
         (window as any).onTurnChange = (player: string, turn: number) => {
           if (player === 'black') {
             setBotThinking(true);
-            setThinkingTime(5);
+            setThinkingTime(3);
             setCurrentTurn("Black's turn");
           } else {
             setBotThinking(false);
@@ -41,7 +41,7 @@ export default function ChessGame({ containerId = 'game-container', ...props }: 
     if (botThinking && thinkingTime > 0) {
       timer = window.setInterval(() => {
         setThinkingTime((prev) => prev - 1);
-      }, 1000);
+      }, 3000);
     }
     return () => {
       if (timer) clearInterval(timer);

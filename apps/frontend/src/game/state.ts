@@ -42,15 +42,35 @@ export const INITIAL_GAME_STATE: GameStateData = {
                 { cardType: 'normal', monsterType: 'dragon', pieceType: 'pawn', color: 'white', texture: 'Faithful_Pal' },
                 { cardType: 'normal', monsterType: 'dragon', pieceType: 'bishop', color: 'white', texture: 'Ye_Old_Bishop' },
                 { cardType: 'normal', monsterType: 'dragon', pieceType: 'knight', color: 'white', texture: 'Wicked_Assassin' },
-                { cardType: 'normal', monsterType: 'dragon', pieceType: 'rook', color: 'white', texture: 'Faithful_Pal' },
                 { cardType: 'normal', monsterType: 'dragon', pieceType: 'queen', color: 'white', texture: 'Chroma_Queen' },
                 { cardType: 'normal', monsterType: 'dragon', pieceType: 'king', color: 'white', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'bishop', color: 'white', texture: 'Ye_Old_Bishop' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'knight', color: 'white', texture: 'Wicked_Assassin' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'queen', color: 'white', texture: 'Chroma_Queen' },
                 { cardType: 'normal', monsterType: 'dragon', pieceType: 'pawn', color: 'white', texture: 'Faithful_Pal' },
                 { cardType: 'normal', monsterType: 'dragon', pieceType: 'bishop', color: 'white', texture: 'Ye_Old_Bishop' },
                 { cardType: 'normal', monsterType: 'dragon', pieceType: 'knight', color: 'white', texture: 'Wicked_Assassin' },
-                { cardType: 'normal', monsterType: 'dragon', pieceType: 'rook', color: 'white', texture: 'Faithful_Pal' },
                 { cardType: 'normal', monsterType: 'dragon', pieceType: 'queen', color: 'white', texture: 'Chroma_Queen' },
                 { cardType: 'normal', monsterType: 'dragon', pieceType: 'king', color: 'white', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'bishop', color: 'white', texture: 'Ye_Old_Bishop' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'knight', color: 'white', texture: 'Wicked_Assassin' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'queen', color: 'white', texture: 'Chroma_Queen' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'pawn', color: 'white', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'bishop', color: 'white', texture: 'Ye_Old_Bishop' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'knight', color: 'white', texture: 'Wicked_Assassin' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'queen', color: 'white', texture: 'Chroma_Queen' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'king', color: 'white', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'bishop', color: 'white', texture: 'Ye_Old_Bishop' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'knight', color: 'white', texture: 'Wicked_Assassin' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'queen', color: 'white', texture: 'Chroma_Queen' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'pawn', color: 'white', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'bishop', color: 'white', texture: 'Ye_Old_Bishop' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'knight', color: 'white', texture: 'Wicked_Assassin' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'queen', color: 'white', texture: 'Chroma_Queen' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'king', color: 'white', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'bishop', color: 'white', texture: 'Ye_Old_Bishop' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'knight', color: 'white', texture: 'Wicked_Assassin' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'queen', color: 'white', texture: 'Chroma_Queen' },
                 // ... add more cards
             ],
             hand: [],
@@ -63,6 +83,36 @@ export const INITIAL_GAME_STATE: GameStateData = {
             color: 'black',
             deck: [
                 // Initial deck configuration for black
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'knight', color: 'black', texture: 'Wicked_Assassin' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'queen', color: 'black', texture: 'Chroma_Queen' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'king', color: 'black', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'pawn', color: 'black', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'bishop', color: 'black', texture: 'Ye_Old_Bishop' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'knight', color: 'black', texture: 'Wicked_Assassin' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'rook', color: 'black', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'queen', color: 'black', texture: 'Chroma_Queen' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'king', color: 'black', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'pawn', color: 'black', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'bishop', color: 'black', texture: 'Ye_Old_Bishop' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'knight', color: 'black', texture: 'Wicked_Assassin' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'rook', color: 'black', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'queen', color: 'black', texture: 'Chroma_Queen' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'king', color: 'black', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'knight', color: 'black', texture: 'Wicked_Assassin' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'queen', color: 'black', texture: 'Chroma_Queen' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'king', color: 'black', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'pawn', color: 'black', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'bishop', color: 'black', texture: 'Ye_Old_Bishop' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'knight', color: 'black', texture: 'Wicked_Assassin' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'rook', color: 'black', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'queen', color: 'black', texture: 'Chroma_Queen' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'king', color: 'black', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'pawn', color: 'black', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'bishop', color: 'black', texture: 'Ye_Old_Bishop' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'knight', color: 'black', texture: 'Wicked_Assassin' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'rook', color: 'black', texture: 'Faithful_Pal' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'queen', color: 'black', texture: 'Chroma_Queen' },
+                { cardType: 'normal', monsterType: 'dragon', pieceType: 'king', color: 'black', texture: 'Faithful_Pal' },
                 { cardType: 'normal', monsterType: 'dragon', pieceType: 'knight', color: 'black', texture: 'Wicked_Assassin' },
                 { cardType: 'normal', monsterType: 'dragon', pieceType: 'queen', color: 'black', texture: 'Chroma_Queen' },
                 { cardType: 'normal', monsterType: 'dragon', pieceType: 'king', color: 'black', texture: 'Faithful_Pal' },
@@ -201,9 +251,32 @@ export class GameState {
     }
 
     public startGame() {
-        // Make sure we have a valid current player
         if (!this.currentPlayer) {
             this.currentPlayer = this.players.get('player_1')!;
+        }
+        
+        // Draw initial hands for both players
+        for (const player of this.players.values()) {
+            // Get the player's initial deck from INITIAL_GAME_STATE
+            const initialDeck = player.color === 'white' ? 
+                [...INITIAL_GAME_STATE.players.white.deck] : 
+                [...INITIAL_GAME_STATE.players.black.deck];
+            
+            // Shuffle the deck
+            for (let i = initialDeck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [initialDeck[i], initialDeck[j]] = [initialDeck[j], initialDeck[i]];
+            }
+            
+            // Set the player's deck
+            player.updateDeck(initialDeck);
+            
+            // Draw 7 cards from deck to hand
+            for (let i = 0; i < 7 && player.getDeck().length > 0; i++) {
+                player.drawCard();
+            }
+            
+            console.log(`Drew initial hand for ${player.color}:`, player.getHand());
         }
         
         this.gameActive = true;

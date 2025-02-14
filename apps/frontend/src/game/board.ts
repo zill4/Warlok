@@ -504,6 +504,15 @@ export class BoardManager {
             return;
         }
 
+        // Get the current player and local player
+        const currentPlayer = this.state.getCurrentPlayer();
+        const localPlayer = this.state.getLocalPlayer();
+
+        // If it's not the local player's turn, ignore all clicks
+        if (currentPlayer.id !== localPlayer.id) {
+            return;
+        }
+
         if (this.possibleMovesHighlighted) {
             this.clearHighlights();
         }
@@ -520,6 +529,12 @@ export class BoardManager {
             }
             
             if (piece instanceof ChessPiece) {
+                // Check if the piece belongs to the local player
+                if (piece.getOwner().id !== localPlayer.id && !this.selectedPiece) {
+                    // If it's not the player's piece and we're not trying to capture, do nothing
+                    return;
+                }
+
                 // If clicking the same piece, just clear selection
                 if (this.selectedPiece === piece) {
                     this.clearSelection();

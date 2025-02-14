@@ -82,6 +82,15 @@ export class Player {
         return [...this.state.hand];
     }
 
+
+    public updateDeck(deck: Card[]): void {
+        this.state.deck = deck;
+    }
+
+    public updateHand(hand: Card[]): void {
+        this.state.hand = hand;
+    }
+
     public capturePiece(piece: ChessPiece): void {
         this.state.capturedPieces.push(piece);
         this.updateScore();

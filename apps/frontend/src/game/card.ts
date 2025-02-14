@@ -81,7 +81,7 @@ export class CardSystem {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.hoveredCard = null;
-        this.initializeDeck('white');
+        // this.initializeDeck('white');
         
         // Load the card frame texture once and ensure it's loaded
         // const textureLoader = new THREE.TextureLoader();
@@ -151,34 +151,34 @@ export class CardSystem {
         console.log(`Debug mode ${CardSystem.debug ? 'enabled' : 'disabled'}`);
     }
 
-    private initializeDeck(playerColor: 'white' | 'black') {
-        this.deck = [];  // Clear existing deck
+    // private initializeDeck(playerColor: 'white' | 'black') {
+    //     this.deck = [];  // Clear existing deck
         
-        // Define all available cards
-        const cardTypes = [
-            'Ace_kunoichi',
-            'Chroma_king',
-            'Chroma_Queen',
-            'Faithful_Pal',
-            'Chroma_Dragon',
-            'Wicked_Assassin',
-            'Ye_Old_Bishop'
-        ];
+    //     // Define all available cards
+    //     const cardTypes = [
+    //         'Ace_kunoichi',
+    //         'Chroma_king',
+    //         'Chroma_Queen',
+    //         'Faithful_Pal',
+    //         'Chroma_Dragon',
+    //         'Wicked_Assassin',
+    //         'Ye_Old_Bishop'
+    //     ];
 
-        // Create one of each card type
-        cardTypes.forEach(cardType => {
-            this.deck.push({
-                cardType: 'normal',
-                monsterType: 'dragon',
-                pieceType: 'pawn', // You might want to map these to appropriate piece types
-                color: playerColor,
-                texture: cardType
-            });
-        });
+    //     // Create one of each card type
+    //     cardTypes.forEach(cardType => {
+    //         this.deck.push({
+    //             cardType: 'normal',
+    //             monsterType: 'dragon',
+    //             pieceType: 'pawn', // You might want to map these to appropriate piece types
+    //             color: playerColor,
+    //             texture: cardType
+    //         });
+    //     });
 
-        this.shuffleDeck();
-        console.log(`Initialized deck with ${this.deck.length} cards:`, this.deck);
-    }
+    //     this.shuffleDeck();
+    //     console.log(`Initialized deck with ${this.deck.length} cards:`, this.deck);
+    // }
 
     private shuffleDeck() {
         for (let i = this.deck.length - 1; i > 0; i--) {
@@ -206,14 +206,16 @@ export class CardSystem {
         return card;
     }
 
-    private drawInitialHand(count: number = 7) {
-        console.log(`Drawing initial hand of ${count} cards for ${this.localPlayer.color}`);
-        for (let i = 0; i < count && this.deck.length > 0; i++) {
-            const card = this.deck.pop()!;
-            this.cards.push(card);
-            this.localPlayer.addToHand(card);
-        }
-        console.log("Initial hand drawn:", this.cards);
+    public drawInitialHand(count: number = 7) {
+        // Get the current hand from the local player
+        const playerHand = this.localPlayer.getHand();
+        console.log("Initial hand from player:", playerHand);
+        
+        // Update our cards array with the player's hand
+        this.cards = [...playerHand];
+        console.log("Updated cards array:", this.cards);
+        
+        // Update the visual display
         this.updateHandDisplay();
     }
 
@@ -228,7 +230,7 @@ export class CardSystem {
         this.cardMeshes.forEach(mesh => this.uiScene.remove(mesh));
         this.cardMeshes = [];
         this.originalPositions.clear();
-        this.initializeDeck(playerColor);
+        // this.initializeDeck(playerColor);
     }
 
     private createCompositeTexture(cardTexture: THREE.Texture): THREE.CanvasTexture {
