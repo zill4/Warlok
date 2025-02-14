@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { WebGPURenderer } from 'three/webgpu';
 import gsap from 'gsap';
 import { BOARD_CONFIG } from './app';  // Import BOARD_CONFIG
+import { GameState } from './state';
+import { Player } from './player';
 
 // Add new interfaces for card properties
 interface CardProperties {
@@ -16,105 +18,167 @@ export interface Card extends CardProperties {
     model?: THREE.Group;
 }
 
+export const CARD_X: number = 2.1;
+export const CARD_Y: number = 3.15;
+export const CARD_SPACING: number = 1;
+export const CARD_Y_POSITION: number = -7;
+
+
 // Rename CardHand to CardSystem for consistency with imports
 export class CardSystem {
+    // Add debug flag as a static property so it's accessible from console
+    public static debug = false;
     private deck: Card[] = [];
     private cards: Card[] = [];
     private cardMeshes: THREE.Mesh[] = [];
     // private scene: THREE.Scene;
     private uiScene: THREE.Scene;  // Separate scene for UI
     private uiCamera: THREE.OrthographicCamera;  // Orthographic camera for UI
-    private frameTexture: THREE.Texture;
-    private raycaster: THREE.Raycaster;
+    public raycaster: THREE.Raycaster;
     private mouse: THREE.Vector2;
     private hoveredCard: THREE.Mesh | null = null;
     private selectedCards: Set<THREE.Mesh> = new Set();  // Change to Set for multiple selections
     private originalPositions: Map<THREE.Mesh, THREE.Vector3> = new Map();
     private readonly MAX_SELECTED_CARDS = 5;  // Maximum cards in hand
+    private gameState: GameState;
+    private localPlayer: Player;
     
-    constructor() {
-        // this.scene = scene;
-        
-        // Create separate scene for UI elements
+    constructor(gameState: GameState) {
+        this.gameState = gameState;
+        this.localPlayer = gameState.getLocalPlayer();
+        // Initialize UI scene
         this.uiScene = new THREE.Scene();
         
-        // Setup raycaster and mouse
-        this.raycaster = new THREE.Raycaster();
-        this.mouse = new THREE.Vector2();
+        // Make CardSystem available in console for debugging
+        (window as any).CardSystem = CardSystem;
         
-        // Adjust camera to better fit cards
-        const aspect = window.innerWidth / window.innerHeight;
+        // Set background based on debug mode
+        this.updateDebugBackground();
+
+        // Set up UI camera with orthographic projection for 2D-style rendering
+        const aspectRatio = window.innerWidth / window.innerHeight;
         this.uiCamera = new THREE.OrthographicCamera(
-            -15 * aspect, 15 * aspect,  // left, right (increased from -10/10)
-            15, -15,                    // top, bottom (increased from 10/-10)
-            0.1, 1000                   // near, far
+            -10 * aspectRatio, 10 * aspectRatio,  // left, right
+            10, -10,                              // top, bottom
+            0.1, 1000                             // near, far
         );
         this.uiCamera.position.z = 10;
+        
+        // Add debug helpers
+        console.log("UI Camera position:", this.uiCamera.position);
+        console.log("UI Camera frustum:", {
+            left: this.uiCamera.left,
+            right: this.uiCamera.right,
+            top: this.uiCamera.top,
+            bottom: this.uiCamera.bottom
+        });
 
+        // Initialize other properties
+        this.cards = [];
+        this.cardMeshes = [];
+        this.originalPositions = new Map();
+        this.selectedCards = new Set();
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2();
+        this.hoveredCard = null;
+        // this.initializeDeck('white');
+        
         // Load the card frame texture once and ensure it's loaded
-        const textureLoader = new THREE.TextureLoader();
-        this.frameTexture = textureLoader.load('/assets/images/Normal_Card.png', 
-            // Success callback
-            (loadedTexture) => {
-                console.log('Frame texture loaded successfully:', loadedTexture);
-                this.frameTexture = loadedTexture; // Use the loaded texture
-                this.updateHandDisplay(); // Refresh cards when frame is loaded
-            },
-            // Progress callback
-            undefined,
-            // Error callback
-            (error) => {
-                console.error('Error loading frame texture:', error);
-            }
-        );
+        // const textureLoader = new THREE.TextureLoader();
+        // this.frameTexture = textureLoader.load('/assets/images/Normal_Card.png', 
+        //     // Success callback
+        //     (loadedTexture) => {
+        //         console.log('Frame texture loaded successfully:', loadedTexture);
+        //         this.frameTexture = loadedTexture; // Use the loaded texture
+        //         this.updateHandDisplay(); // Refresh cards when frame is loaded
+        //     },
+        //     // Progress callback
+        //     undefined,
+        //     // Error callback
+        //     (error) => {
+        //         console.error('Error loading frame texture:', error);
+        //     }
+        // );
 
         // Handle window resize
         window.addEventListener('resize', () => {
             const newAspect = window.innerWidth / window.innerHeight;
-            this.uiCamera.left = -15 * newAspect;
-            this.uiCamera.right = 15 * newAspect;
+            this.uiCamera.left = -10 * newAspect;
+            this.uiCamera.right = 10 * newAspect;
             this.uiCamera.updateProjectionMatrix();
         });
 
-        // Add mouse move listener
-        window.addEventListener('mousemove', (event) => {
-            this.handleMouseMove(event.clientX, event.clientY);
-        });
-
-        // Add click listener
-        window.addEventListener('click', () => this.handleClick(event.clientX, event.clientY));
-
-        this.initializeDeck('white');  // Initialize with player color
+        // Store instance reference for debug access
+        (window as any).cardSystemInstance = this;
     }
 
-    private initializeDeck(playerColor: 'white' | 'black') {
-        this.deck = [];  // Clear existing deck
-        
-        // Define all available cards
-        const cardTypes = [
-            'Ace_kunoichi',
-            'Chroma_king',
-            'Chroma_Queen',
-            'Faithful_Pal',
-            'Chroma_Dragon',
-            'Wicked_Assassin',
-            'Ye_Old_Bishop'
-        ];
-
-        // Create one of each card type
-        cardTypes.forEach(cardType => {
-            this.deck.push({
-                cardType: 'normal',
-                monsterType: 'dragon',
-                pieceType: 'pawn', // You might want to map these to appropriate piece types
-                color: playerColor,
-                texture: cardType
+    // Add method to update debug visualization
+    private updateDebugBackground() {
+        if (CardSystem.debug) {
+            const debugMaterial = new THREE.MeshBasicMaterial({
+                color: 0x0000ff,
+                transparent: true,
+                opacity: 0.1,
+                side: THREE.DoubleSide
             });
-        });
-
-        this.shuffleDeck();
-        console.log(`Initialized deck with ${this.deck.length} cards:`, this.deck);
+            
+            // Create a large plane for the debug background
+            const debugPlane = new THREE.PlaneGeometry(100, 100);
+            const debugMesh = new THREE.Mesh(debugPlane, debugMaterial);
+            debugMesh.name = 'debugBackground';
+            debugMesh.position.z = -1;  // Behind cards
+            this.uiScene.add(debugMesh);
+            
+            console.log('Debug visualization enabled');
+        } else {
+            // Remove debug background if it exists
+            const debugBg = this.uiScene.getObjectByName('debugBackground');
+            if (debugBg) {
+                this.uiScene.remove(debugBg);
+                console.log('Debug visualization disabled');
+            }
+            this.uiScene.background = null;
+        }
     }
+
+    // Add method to toggle debug mode
+    public static toggleDebug() {
+        CardSystem.debug = !CardSystem.debug;
+        const instance = (window as any).cardSystemInstance;
+        if (instance) {
+            instance.updateDebugBackground();
+        }
+        console.log(`Debug mode ${CardSystem.debug ? 'enabled' : 'disabled'}`);
+    }
+
+    // private initializeDeck(playerColor: 'white' | 'black') {
+    //     this.deck = [];  // Clear existing deck
+        
+    //     // Define all available cards
+    //     const cardTypes = [
+    //         'Ace_kunoichi',
+    //         'Chroma_king',
+    //         'Chroma_Queen',
+    //         'Faithful_Pal',
+    //         'Chroma_Dragon',
+    //         'Wicked_Assassin',
+    //         'Ye_Old_Bishop'
+    //     ];
+
+    //     // Create one of each card type
+    //     cardTypes.forEach(cardType => {
+    //         this.deck.push({
+    //             cardType: 'normal',
+    //             monsterType: 'dragon',
+    //             pieceType: 'pawn', // You might want to map these to appropriate piece types
+    //             color: playerColor,
+    //             texture: cardType
+    //         });
+    //     });
+
+    //     this.shuffleDeck();
+    //     console.log(`Initialized deck with ${this.deck.length} cards:`, this.deck);
+    // }
 
     private shuffleDeck() {
         for (let i = this.deck.length - 1; i > 0; i--) {
@@ -129,18 +193,30 @@ export class CardSystem {
             return null;
         }
 
+        if (this.cards.length >= 7) {
+            console.log('Hand is full!');
+            return null;
+        }
+
         const card = this.deck.pop()!;
-        this.addCard(card);
+        console.log("Drawing card:", card);
+        this.cards.push(card);
+        this.localPlayer.addToHand(card);
+        this.updateHandDisplay();
         return card;
     }
 
     public drawInitialHand(count: number = 7) {
-        console.log(`Drawing initial hand of ${count} cards`);
-        for (let i = 0; i < count && this.deck.length > 0; i++) {
-            const card = this.drawCard();
-            console.log(`Drew card ${i + 1}:`, card);
-        }
-        console.log(`Hand size after drawing: ${this.cards.length}`);
+        // Get the current hand from the local player
+        const playerHand = this.localPlayer.getHand();
+        console.log("Initial hand from player:", playerHand);
+        
+        // Update our cards array with the player's hand
+        this.cards = [...playerHand];
+        console.log("Updated cards array:", this.cards);
+        
+        // Update the visual display
+        this.updateHandDisplay();
     }
 
     public getRemainingDeckSize(): number {
@@ -154,7 +230,7 @@ export class CardSystem {
         this.cardMeshes.forEach(mesh => this.uiScene.remove(mesh));
         this.cardMeshes = [];
         this.originalPositions.clear();
-        this.initializeDeck(playerColor);
+        // this.initializeDeck(playerColor);
     }
 
     private createCompositeTexture(cardTexture: THREE.Texture): THREE.CanvasTexture {
@@ -176,16 +252,12 @@ export class CardSystem {
         return new THREE.CanvasTexture(canvas);
     }
 
-    public handleMouseMove(normalizedX: number, normalizedY: number) {
-        this.mouse.x = normalizedX;
-        this.mouse.y = normalizedY;
-
-        // Update the picking ray with the camera and mouse position
+    public handleMouseMove(clientX: number, clientY: number) {
+        this.mouse.x = (clientX / window.innerWidth) * 2 - 1;
+        this.mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+        
         this.raycaster.setFromCamera(this.mouse, this.uiCamera);
-
-        // Calculate objects intersecting the picking ray
         const intersects = this.raycaster.intersectObjects(this.cardMeshes);
-
         // Reset previously hovered card
         if (this.hoveredCard && (!intersects.length || intersects[0].object !== this.hoveredCard)) {
             this.animateCardDown(this.hoveredCard);
@@ -203,39 +275,37 @@ export class CardSystem {
     }
 
     public handleClick(normalizedX: number, normalizedY: number) {
+        // Check if it's local player's turn
+        if (!this.gameState.isPlayerTurn(this.localPlayer.id)) {
+            console.log("Not your turn!");
+            return;
+        }
+
+        console.log("Handling click");
+        
+        // Update mouse position
         this.mouse.x = normalizedX;
         this.mouse.y = normalizedY;
-
+        
+        // Update the picking ray with the camera and mouse position
         this.raycaster.setFromCamera(this.mouse, this.uiCamera);
-        const intersects = this.raycaster.intersectObjects(this.cardMeshes);
 
+        // Calculate objects intersecting the picking ray
+        const intersects = this.raycaster.intersectObjects(this.cardMeshes);
+        console.log("Intersects:", intersects);
+        
         if (intersects.length > 0) {
             const clickedCard = intersects[0].object as THREE.Mesh;
+            console.log("Clicked card:", clickedCard);
             
             if (this.selectedCards.has(clickedCard)) {
                 this.deselectCard(clickedCard);
-            } else if (!this.isHandFull()) {
+                this.updateSelectedCardsPosition(); // Reposition remaining selected cards
+                console.log("Deselected card");
+            } else if (this.selectedCards.size < this.MAX_SELECTED_CARDS) {
                 this.selectCard(clickedCard);
-                
-                // Move to center and up
-                gsap.to(clickedCard.position, {
-                    x: 0, // Center horizontally
-                    y: 0, // Move to vertical center
-                    z: -5, // Bring forward significantly
-                    duration: 0.4,
-                    ease: "power2.out"
-                });
-                
-                gsap.to(clickedCard.scale, {
-                    x: 2.5, // Even larger scale for better readability
-                    y: 2.5,
-                    duration: 0.4,
-                    ease: "power2.out"
-                });
-
-                // Ensure this card renders above others
-                clickedCard.renderOrder = 1;
-                (clickedCard.material as THREE.Material).depthTest = false;
+                this.updateSelectedCardsPosition();
+                console.log("Selected card");
             }
         }
     }
@@ -321,62 +391,83 @@ export class CardSystem {
     }
 
     private updateHandDisplay() {
-        // Clear existing card meshes and their stored positions
-        this.cardMeshes.forEach(mesh => this.uiScene.remove(mesh));
-        this.cardMeshes = [];
-        this.originalPositions.clear();
+        console.log("Updating hand display with cards:", this.cards);
+
+        // Remove only the meshes that are no longer needed
+        const cardsToRemove = this.cardMeshes.slice(this.cards.length);
+        cardsToRemove.forEach(mesh => {
+            this.uiScene.remove(mesh);
+            this.originalPositions.delete(mesh);
+        });
+        this.cardMeshes = this.cardMeshes.slice(0, this.cards.length);
+
+        // Scale down card dimensions
+        const cardWidth = CARD_X;
+        const cardHeight = CARD_Y;
+        const spacing = CARD_SPACING;
 
         // Calculate total width of all cards with spacing
-        const cardWidth = 6;  // Increased from 4
-        const spacing = 1.5;  // Increased from 1
         const totalWidth = (this.cards.length * cardWidth) + ((this.cards.length - 1) * spacing);
         const startX = -totalWidth / 2;
 
+        // Update or create cards as needed
         this.cards.forEach((card, index) => {
-            const cardGeometry = new THREE.PlaneGeometry(6, 9);
-            const material = new THREE.MeshBasicMaterial({
-                transparent: true,
-                side: THREE.DoubleSide,
-                color: 0xcccccc,
-                toneMapped: false
-            });
-
-            const textureLoader = new THREE.TextureLoader();
-            textureLoader.load(
-                `/assets/images/${card.texture}.png`,
-                (cardTexture) => {
-                    cardTexture.encoding = THREE.sRGBEncoding;
-                    cardTexture.colorSpace = 'srgb';
-                    // Increase texture quality
-                    cardTexture.minFilter = THREE.LinearFilter;
-                    cardTexture.magFilter = THREE.LinearFilter;
-                    cardTexture.anisotropy = 16; // Increase texture sharpness
-                    material.map = cardTexture;
-                    material.needsUpdate = true;
-                },
-                undefined,
-                (error) => {
-                    console.error(`Error loading texture for card ${card.texture}:`, error);
-                }
-            );
-
-            const cardMesh = new THREE.Mesh(cardGeometry, material);
+            let cardMesh: THREE.Mesh;
             
+            if (index < this.cardMeshes.length) {
+                // Reuse existing mesh
+                cardMesh = this.cardMeshes[index];
+            } else {
+                // Create new mesh only if needed
+                const cardGeometry = new THREE.PlaneGeometry(cardWidth, cardHeight);
+                const material = new THREE.MeshBasicMaterial({
+                    transparent: true,
+                    side: THREE.DoubleSide,
+                    color: 0xcccccc,
+                    toneMapped: false
+                });
+                
+                cardMesh = new THREE.Mesh(cardGeometry, material);
+                this.cardMeshes.push(cardMesh);
+                this.uiScene.add(cardMesh);
+
+                // Load texture only for new cards
+                const textureLoader = new THREE.TextureLoader();
+                textureLoader.load(
+                    `/assets/images/${card.texture}.png`,
+                    (cardTexture) => {
+                        cardTexture.encoding = THREE.sRGBEncoding;
+                        cardTexture.colorSpace = 'srgb';
+                        cardTexture.minFilter = THREE.LinearFilter;
+                        cardTexture.magFilter = THREE.LinearFilter;
+                        cardTexture.anisotropy = 16;
+                        material.map = cardTexture;
+                        material.needsUpdate = true;
+                    },
+                    undefined,
+                    (error) => {
+                        console.error(`Error loading texture for card ${card.texture}:`, error);
+                    }
+                );
+            }
+
+            // Update position
             const position = new THREE.Vector3(
                 startX + (index * (cardWidth + spacing)),
-                -10,  // Changed from -12 to -7 to move cards up ~40%
+                CARD_Y_POSITION,
                 0
             );
-            
             cardMesh.position.copy(position);
             this.originalPositions.set(cardMesh, position.clone());
-            
-            this.uiScene.add(cardMesh);
-            this.cardMeshes.push(cardMesh);
         });
     }
 
-    public render(renderer: THREE.WebGLRenderer | WebGPURenderer) {
+    public async renderAsync(renderer: WebGPURenderer): Promise<void> {
+        renderer.autoClear = false;  // Don't clear the previous render
+        await renderer.renderAsync(this.uiScene, this.uiCamera);
+    }
+
+    public render(renderer: THREE.WebGLRenderer): void {
         renderer.autoClear = false;  // Don't clear the previous render
         renderer.render(this.uiScene, this.uiCamera);
     }
@@ -388,7 +479,17 @@ export class CardSystem {
     }
 
     public removeCard(index: number) {
-        this.cards.splice(index, 1);
+        const removedCard = this.cards.splice(index, 1)[0];
+        // Sync with player state
+        if (removedCard) {
+            const handIndex = this.localPlayer.getHand().findIndex(c => 
+                c.texture === removedCard.texture && 
+                c.pieceType === removedCard.pieceType
+            );
+            if (handIndex !== -1) {
+                this.localPlayer.removeFromHand(handIndex);
+            }
+        }
         this.updateHandDisplay();
     }
 
@@ -397,41 +498,25 @@ export class CardSystem {
     }
 
     public placeCardOnBoard(gridX: number, gridZ: number) {
+        // Check if it's local player's turn
+        if (!this.gameState.isPlayerTurn(this.localPlayer.id)) {
+            console.log("Not your turn!");
+            return;
+        }
+
+        console.log("CardSystem: Initiating card placement at", gridX, gridZ);
         const selectedCards = this.getSelectedCards();
         if (selectedCards.length === 0) return null;
 
         const card = selectedCards[0];
-        const cardGeometry = new THREE.PlaneGeometry(1.4, 2.1); // Adjusted size to fit board squares
-        const material = new THREE.MeshBasicMaterial({
-            transparent: true,
-            side: THREE.DoubleSide
-        });
-
-        // Load card texture
-        const textureLoader = new THREE.TextureLoader();
-        textureLoader.load(
-            `/assets/images/${card.texture}.png`,
-            (cardTexture) => {
-                material.map = this.createCompositeTexture(cardTexture);
-                material.needsUpdate = true;
-            }
-        );
-
-        const cardMesh = new THREE.Mesh(cardGeometry, material);
+        const boardManager = (window as any).boardManagerInstance;
         
-        // Position card on board
-        const boardX = (gridX - 3.5) * BOARD_CONFIG.SQUARE_SIZE;
-        const boardZ = (gridZ - 3.5) * BOARD_CONFIG.SQUARE_SIZE;
-        
-        cardMesh.position.set(
-            boardX,
-            0.01, // Slightly above board to prevent z-fighting
-            boardZ
-        );
-        cardMesh.rotation.x = -Math.PI / 2; // Lay flat on board
-
-        this.uiScene.add(cardMesh);
-        return cardMesh;
+        if (boardManager) {
+            boardManager.placeCardOnBoard(card, gridX, gridZ);
+            this.removeSelectedCard();
+        } else {
+            console.error("BoardManager instance not found");
+        }
     }
 
     // Update getter to return all selected cards
@@ -482,7 +567,39 @@ export class CardSystem {
             }
         }
     }
-}
 
-// Or alternatively, export CardHand as CardSystem
-// export { CardHand as CardSystem };
+    // Add new method to update selected cards positions
+    private updateSelectedCardsPosition() {
+        console.log("Updating selected cards position");
+        const selectedArray = Array.from(this.selectedCards);
+        const cardSpacing = 4; // Spacing between selected cards
+        const totalWidth = (selectedArray.length * cardSpacing);
+        const startX = -totalWidth / 2 + cardSpacing / 2;
+
+        selectedArray.forEach((card, index) => {
+            gsap.to(card.position, {
+                x: startX + (index * cardSpacing),
+                y: 7, // Center vertically (0 is middle of screen)
+                z: -5, // Bring forward significantly
+                duration: 0.4,
+                ease: "power2.out"
+            });
+            
+            gsap.to(card.scale, {
+                x: 1.5, // Moderate scale for visibility
+                y: 1.5,
+                duration: 0.4,
+                ease: "power2.out"
+            });
+
+            // Ensure selected cards render above others
+            card.renderOrder = 1;
+            (card.material as THREE.Material).depthTest = false;
+        });
+    }
+
+    // Add getter for card meshes
+    public getCardMeshes(): THREE.Mesh[] {
+        return this.cardMeshes;
+    }
+}

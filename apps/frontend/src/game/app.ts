@@ -1,3 +1,4 @@
+import '../utils/debug';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { BoardManager } from './board.js';
@@ -6,6 +7,10 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { WebGPURenderer } from 'three/webgpu';
 import { CardSystem } from './card.js';
+import { InputManager } from './input.js';
+import { Bot } from './bot.js';
+import { LightManager } from './light-manager';
+import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 // Configuration (from constants.py)
 export const BOARD_CONFIG = {
@@ -44,7 +49,8 @@ export class ChessGame {
     private cardHand!: CardSystem;
     private raycaster!: THREE.Raycaster;
     private mouse!: THREE.Vector2;
-    private cards!: CardSystem[];
+    private inputManager!: InputManager;
+    private bot!: Bot;
 
     constructor(containerId: string) {
         if (ChessGame.instance) {
@@ -67,9 +73,9 @@ export class ChessGame {
         this.stats = new Stats();
         const statsElement = this.stats.dom;
         statsElement.style.position = 'fixed';
-        statsElement.style.bottom = '10px';
-        statsElement.style.right = '10px';
-        statsElement.style.transform = 'scale(0.1)';
+        statsElement.style.bottom = '3px';
+        statsElement.style.right = '3px';
+        statsElement.style.transform = 'scale(0.04)';
         statsElement.style.transformOrigin = 'bottom right';
         document.body.appendChild(statsElement);
 
@@ -81,19 +87,35 @@ export class ChessGame {
         
         // Initialize scene and components
         await this.setupScene();
-        this.setupLighting();
         
-        // Initialize card system first
-        this.cardHand = new CardSystem();
-        
-        // Initialize game state and board with card system and camera
+        // Initialize input manager
+        this.inputManager = new InputManager(this.container);
+
+        // Initialize game state first
         this.state = new GameState(this.scene);
+        
+        // Initialize card system with game state
+        this.cardHand = new CardSystem(this.state);
+        
+        // Initialize board manager
         this.boardManager = new BoardManager(
             this.scene, 
             this.state, 
             this.cardHand,
-            this.camera  // Pass camera reference
+            this.camera
         );
+        
+        // Initialize bot after other systems are ready
+        const botPlayer = this.state.getPlayer('black');
+        this.bot = new Bot(
+            this.state,
+            this.boardManager,
+            this.cardHand,
+            botPlayer
+        );
+        
+        // Set bot instance in game state
+        this.state.setBotInstance(this.bot);
         
         // Draw initial hand
         this.cardHand.drawInitialHand(7);
@@ -111,6 +133,13 @@ export class ChessGame {
     private async setupScene(): Promise<void> {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x000000);
+        
+        // Log all lights in scene for debugging
+        this.scene.traverse((object) => {
+            if (object instanceof THREE.Light) {
+                console.log('Found light in scene:', object);
+            }
+        });
         
         const width = window.innerWidth;
         const height = window.innerHeight;
@@ -154,24 +183,13 @@ export class ChessGame {
         this.mouse = new THREE.Vector2();
         
         // Add event listeners for card interactions
-        this.container.addEventListener('mousemove', (event) => this.onMouseMove(event));
-        this.container.addEventListener('click', (event) => this.onMouseClick(event));
+        this.container.addEventListener('mousemove', (event) => this.inputManager.onMouseMove(event, this.cardHand, this.raycaster, this.camera, this.mouse));
+        this.container.addEventListener('click', (event) => this.inputManager.onMouseClick(event, this.mouse, this.raycaster, this.camera, this.cardHand, this.boardManager));
         
         window.addEventListener('resize', () => this.onWindowResize());
-    }
 
-    private setupLighting(): void {
-        // Clear any existing lights
-        this.scene.children
-            .filter(child => child instanceof THREE.Light)
-            .forEach(light => this.scene.remove(light));
-
-        // Single, very subtle ambient light
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
-        this.scene.add(ambientLight);
-
-        // Disable shadow mapping
-        this.renderer.shadowMap.enabled = false;
+        // Setup lighting using LightManager
+        LightManager.getInstance().setupLights(this.scene, this.camera);
     }
 
     private onWindowResize(): void {
@@ -183,8 +201,11 @@ export class ChessGame {
         this.renderer.setSize(width, height);
     }
 
-    private animate(): void {
+    private async animate() { 
         requestAnimationFrame(() => this.animate());
+        
+        // Update board manager (for animations)
+        this.boardManager.update(0);
         
         if (this.stats) {
             this.stats.begin();
@@ -196,12 +217,24 @@ export class ChessGame {
 
         // Render main scene
         if (this.renderer && this.scene && this.camera) {
-            this.renderer.clear();
-            this.renderer.render(this.scene, this.camera);
-            
-            // Render UI/cards on top
-            if (this.cardHand) {
-                this.cardHand.render(this.renderer);
+            if (this.renderer instanceof WebGPURenderer) {
+                await this.renderer.clearAsync();
+                await this.renderer.renderAsync(this.scene, this.camera);
+                // Render UI/cards on top
+                if (this.cardHand) {
+                    this.renderer.autoClear = false;  // Don't clear the previous render
+                    await this.cardHand.renderAsync(this.renderer);
+                }
+            } else {
+                // WebGL path
+                this.renderer.clear();
+                this.renderer.render(this.scene, this.camera);
+                
+                // Render UI/cards on top
+                if (this.cardHand) {
+                    this.renderer.autoClear = false;  // Don't clear the previous render
+                    this.cardHand.render(this.renderer);
+                }
             }
         }
         
@@ -252,7 +285,7 @@ export class ChessGame {
         const types = ['pawn', 'rook', 'knight', 'bishop', 'queen', 'king'];
         
         const loadPromises = types.flatMap(type => {
-            const scale = BOARD_CONFIG.PIECE_SCALES[type.toUpperCase() as keyof typeof BOARD_CONFIG.PIECE_SCALES];
+            const scale = 0.005;
             
             return ['white', 'black'].map(async (color) => {
                 const path = `/assets/models/${color}_${type}.fbx`;
@@ -260,14 +293,34 @@ export class ChessGame {
                     const model = await loader.loadAsync(path);
                     model.scale.setScalar(scale);
                     
-                    // Use basic material for pieces
                     model.traverse((object) => {
+                        if (object instanceof THREE.Light) {
+                            object.intensity = 0;
+                            object.visible = false;
+                        }
                         if (object instanceof THREE.Mesh) {
-                            object.material = new THREE.MeshBasicMaterial({
-                                color: color === 'white' ? 0xdddddd : 0x333333
-                            });
-                            object.castShadow = false;
-                            object.receiveShadow = false;
+                            if (color === 'black') {
+                                object.material = new THREE.MeshPhongMaterial({
+                                    color: 0x000000,
+                                    specular: 0x444444,
+                                    shininess: 100,
+                                    transparent: false,
+                                    side: THREE.FrontSide,
+                                    depthWrite: true,
+                                    depthTest: true
+                                });
+                            } else {
+                                object.material = new THREE.MeshToonMaterial({
+                                    color: 0xFFFFFF,
+                                    gradientMap: null,
+                                    transparent: false,
+                                    side: THREE.FrontSide,
+                                    depthWrite: true,
+                                    depthTest: true
+                                });
+                            }
+                            object.castShadow = true;
+                            object.receiveShadow = true;
                         }
                     });
 
@@ -284,31 +337,6 @@ export class ChessGame {
         console.log('All models loaded successfully');
     }
 
-    private onMouseMove(event: MouseEvent) {
-        const rect = this.container.getBoundingClientRect();
-        this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-        
-        // Update raycaster
-        this.raycaster.setFromCamera(this.mouse, this.camera);
-        
-        // Let the card system handle its own hover detection
-        if (this.cardHand) {
-            this.cardHand.handleMouseMove(this.mouse.x, this.mouse.y);
-        }
-    }
-
-    private onMouseClick(event: MouseEvent) {
-        const rect = this.container.getBoundingClientRect();
-        this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-        
-        // Let the card system handle its own click detection
-        if (this.cardHand) {
-            this.cardHand.handleClick(this.mouse.x, this.mouse.y);
-        }
-    }
-
     private setupControls() {
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         
@@ -321,8 +349,8 @@ export class ChessGame {
 
         // Enable zoom but limit it
         this.controls.enableZoom = true;
-        this.controls.minDistance = 15;
-        this.controls.maxDistance = 40;
+        this.controls.minDistance = 0;
+        this.controls.maxDistance = 1000;
 
         // Disable pan movement
         this.controls.enablePan = false;

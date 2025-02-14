@@ -1,9 +1,12 @@
 import * as THREE from 'three';
+import { Easing, Group, Tween, update as updateTween } from 'three/examples/jsm/libs/tween.module.js';
 import { BOARD_CONFIG } from './config.js';
 import { GameState } from './state.js';
-import { ChessPiece } from './core.js';
+import { ChessPiece, type PieceColor, type PieceType } from './core.js';
 import type { Card } from './card.js';
 import { CardSystem } from './card.js';
+import { Player, type PlayerColor } from './player.js';
+import { ChessRules } from './chess-rules.js';
 
 export class BoardManager {
     private scene: THREE.Scene;
@@ -14,6 +17,13 @@ export class BoardManager {
     private isInitialized = false;
     private cardSystem: CardSystem;
     private camera: THREE.Camera;
+    private readonly playerId: string;
+    private readonly localPlayer: Player;
+    private highlightedSquares: THREE.Mesh[] = [];
+    private selectedPiece: ChessPiece | null = null;
+    private possibleMovesHighlighted: boolean = false;
+    private isPlacingCardPiece: boolean = false;
+    private isMovingPiece: boolean = false;
 
     constructor(scene: THREE.Scene, state: GameState, cardSystem: CardSystem, camera: THREE.Camera) {
         this.scene = scene;
@@ -23,8 +33,12 @@ export class BoardManager {
         this.board = new THREE.Group();
         this.scene.add(this.board);
         
-        window.addEventListener('click', (event) => this.onBoardClick(event));
         console.log("BoardManager initialized");
+        
+        // Make BoardManager available globally for CardSystem
+        (window as any).boardManagerInstance = this;
+        this.playerId = state.getPlayer('white')?.id || '';
+        this.localPlayer = state.getLocalPlayer();
     }
 
     public setPieceModels(models: Map<string, THREE.Group>) {
@@ -50,8 +64,9 @@ export class BoardManager {
             0.2,
             BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE
         );
-        const boardMaterial = new THREE.MeshBasicMaterial({ 
-            color: 0x202020
+        const boardMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x202020,
+            emissive: 0x000000  // Ensure no emission
         });
         const boardBase = new THREE.Mesh(boardGeometry, boardMaterial);
         boardBase.position.y = -0.1;
@@ -69,8 +84,9 @@ export class BoardManager {
         for (let z = 0; z < BOARD_CONFIG.SIZE; z++) {
             for (let x = 0; x < BOARD_CONFIG.SIZE; x++) {
                 const isWhite = (x + z) % 2 === 0;
-                const material = new THREE.MeshBasicMaterial({
-                    color: isWhite ? BOARD_CONFIG.COLORS.WHITE : BOARD_CONFIG.COLORS.BLACK
+                const material = new THREE.MeshStandardMaterial({
+                    color: isWhite ? BOARD_CONFIG.COLORS.WHITE : BOARD_CONFIG.COLORS.BLACK,
+                    emissive: 0x000000  // Ensure no emission
                 });
 
                 const square = new THREE.Mesh(squareGeometry, material);
@@ -87,7 +103,7 @@ export class BoardManager {
         const frameSize = BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE + 0.4;
         const frameThickness = 0.4;
         const frameHeight = 0.3;
-        const frameMaterial = new THREE.MeshBasicMaterial({ color: 0xA5A1A2 });
+        const frameMaterial = new THREE.MeshStandardMaterial({ color: 0xA5A1A2 });
 
         // Create frame pieces with proper typing
         interface FrameSide {
@@ -115,31 +131,6 @@ export class BoardManager {
             this.board.add(framePiece);
         });
 
-        // Add ambient light for better overall visibility
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        this.scene.add(ambientLight);
-
-        // Add directional light for shadows and depth
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(5, 10, 5);
-        directionalLight.castShadow = true;
-        
-        // Adjust shadow properties
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
-        directionalLight.shadow.camera.near = 0.5;
-        directionalLight.shadow.camera.far = 50;
-        directionalLight.shadow.bias = -0.001;
-        
-        this.scene.add(directionalLight);
-
-        // Enable shadow rendering on the board squares
-        this.board.traverse((object) => {
-            if (object instanceof THREE.Mesh) {
-                object.receiveShadow = true;
-            }
-        });
-
         this.isInitialized = true;
     }
 
@@ -150,64 +141,61 @@ export class BoardManager {
         }
         console.log("Setting up initial pieces...");
         
-        // Setup piece positions
+        // Setup piece positions - swapped colors from previous setup
         const pieceSetup = [
-            { type: 'rook', positions: [[0, 0], [7, 0], [0, 7], [7, 7]] },
-            { type: 'knight', positions: [[1, 0], [6, 0], [1, 7], [6, 7]] },
-            { type: 'bishop', positions: [[2, 0], [5, 0], [2, 7], [5, 7]] },
-            { type: 'queen', positions: [[3, 0], [3, 7]] },
-            { type: 'king', positions: [[4, 0], [4, 7]] }
+            // Black pieces on bottom ranks (0,1)
+            { type: 'rook', positions: [[0, 0], [7, 0]], color: 'black' },
+            { type: 'knight', positions: [[1, 0], [6, 0]], color: 'black' },
+            { type: 'bishop', positions: [[2, 0], [5, 0]], color: 'black' },
+            { type: 'queen', positions: [[4, 0]], color: 'black' },
+            { type: 'king', positions: [[3, 0]], color: 'black' },
+            { type: 'pawn', positions: Array.from({length: 8}, (_, i) => [i, 1]), color: 'black' },
+            
+            // White pieces on top ranks (6,7)
+            { type: 'rook', positions: [[0, 7], [7, 7]], color: 'white' },
+            { type: 'knight', positions: [[1, 7], [6, 7]], color: 'white' },
+            { type: 'bishop', positions: [[2, 7], [5, 7]], color: 'white' },
+            { type: 'queen', positions: [[4, 7]], color: 'white' },
+            { type: 'king', positions: [[3, 7]], color: 'white' },
+            { type: 'pawn', positions: Array.from({length: 8}, (_, i) => [i, 6]), color: 'white' }
         ];
 
-        // Place main pieces
-        pieceSetup.forEach(({ type, positions }) => {
+        // Place all pieces
+        pieceSetup.forEach(({ type, positions, color }) => {
             positions.forEach(([x, z]) => {
-                const isBlack = z > 4;
-                const color = isBlack ? 'black' : 'white';
-                this.placeInitialPiece(type, color, x, z);
+                this.placeInitialPiece(type, color as PlayerColor, x, z);
             });
         });
-
-        // Place pawns
-        for (let x = 0; x < BOARD_CONFIG.SIZE; x++) {
-            this.placeInitialPiece('pawn', 'white', x, 1);
-            this.placeInitialPiece('pawn', 'black', x, 6);
-        }
     }
 
-    private placeInitialPiece(type: string, color: 'white' | 'black', x: number, z: number) {
+    private placeInitialPiece(type: string, color: PlayerColor, x: number, z: number) {
         const modelKey = `${color}_${type}`;
         const model = this.pieceModels.get(modelKey);
-        
         if (!model) {
             console.error(`Missing model for ${modelKey}`);
             return;
         }
 
-        const piece = new ChessPiece(type, color === 'black', x, z, model.clone());
-        
-        // Scale up the piece slightly
-        piece.scale.set(1.2, 1.2, 1.2);
-        
-        // Enable shadows and adjust material properties for better lighting
-        piece.traverse((object) => {
-            if (object instanceof THREE.Mesh) {
-                object.castShadow = true;
-                object.receiveShadow = true;
-                
-                // Adjust material properties for better lighting
-                if (object.material instanceof THREE.MeshStandardMaterial) {
-                    object.material.metalness = 0.3;
-                    object.material.roughness = 0.7;
-                    object.material.envMapIntensity = 1.5;
-                }
-            }
-        });
+        // Get the correct player for the piece
+        const owner = this.state.getPlayer(color);
+        if (!owner) {
+            console.error(`No player found for color ${color}`);
+            return;
+        }
+
+        const piece = new ChessPiece(
+            type as PieceType,
+            color,
+            x,
+            z,
+            owner,
+            model.clone()
+        );
         
         const offset = (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE) / 2 - BOARD_CONFIG.SQUARE_SIZE / 2;
         piece.position.set(
             x * BOARD_CONFIG.SQUARE_SIZE - offset,
-            0.1, // Lower the piece closer to the board
+            0.1,
             z * BOARD_CONFIG.SQUARE_SIZE - offset
         );
 
@@ -215,7 +203,8 @@ export class BoardManager {
         this.pieces.push(piece);
         this.state.virtualGrid[z][x] = piece;
         
-        console.log(`Placed ${color} ${type} at (${x}, ${z})`);
+        // Add piece to player's owned pieces
+        owner.addPiece(piece);
     }
 
     // Method to get piece at grid position
@@ -223,65 +212,251 @@ export class BoardManager {
         return this.state.virtualGrid[z][x];
     }
 
+    public getPieces(): THREE.Object3D[] {
+        return this.pieces;
+    }
+
     // Method to move piece
     public movePiece(piece: ChessPiece, newX: number, newZ: number) {
-        const offset = (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE) / 2 - BOARD_CONFIG.SQUARE_SIZE / 2;
+        this.isMovingPiece = true;
+        const oldX = piece.gridX;
+        const oldZ = piece.gridZ;
         
-        // Update virtual grid
-        this.state.virtualGrid[piece.gridZ][piece.gridX] = null;
-        this.state.virtualGrid[newZ][newX] = piece;
+        // Check if there's a piece being captured
+        const targetPiece = this.state.virtualGrid[newZ][newX];
+        if (targetPiece && targetPiece !== piece) {  // Check to prevent self-capture
+            // Only record the capture notification
+            this.state.recordMove({
+                type: 'piece',
+                from: 'CAPTURED',
+                to: 'CAPTURED',
+                pieceType: targetPiece.type,
+                color: targetPiece.color
+            });
+            
+            // Handle the capture without recording additional moves
+            this.state.virtualGrid[targetPiece.gridZ][targetPiece.gridX] = null;
+            this.scene.remove(targetPiece);
+            this.pieces = this.pieces.filter(p => p !== targetPiece);
+            this.state.getCurrentPlayer().capturePiece(targetPiece);
+        }
 
-        // Update piece position
-        piece.gridX = newX;
-        piece.gridZ = newZ;
-        piece.position.set(
-            newX * BOARD_CONFIG.SQUARE_SIZE - offset,
-            0.1, // Keep consistent height with initial placement
-            newZ * BOARD_CONFIG.SQUARE_SIZE - offset
-        );
-    }
-
-    placeCardOnBoard(card: Card, gridX: number, gridZ: number) {
-        // Clean up existing card at position
-        this.state.boardCards = this.state.boardCards.filter(existingCard => {
-            if (existingCard.position.x === gridX && existingCard.position.z === gridZ) {
-                this.scene.remove(existingCard);
-                return false;
-            }
-            return true;
+        // Record the moving piece's movement
+        console.log("Recording move:", `${oldX},${oldZ}`, "to", `${newX},${newZ}`);
+        this.state.recordMove({
+            type: 'piece',
+            from: `${oldX},${oldZ}`,
+            to: `${newX},${newZ}`,
+            pieceType: piece.type,
+            color: piece.color
         });
 
-        // Create new card entity
-        const cardEntity = this.createCardEntity(card);
-        cardEntity.position.set(gridX - 3.5, 0.2, gridZ - 3.5);
-        this.scene.add(cardEntity);
-        this.state.boardCards.push(cardEntity);
+        // Calculate world coordinates
+        const offset = (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE) / 2 - BOARD_CONFIG.SQUARE_SIZE / 2;
+        const targetX = newX * BOARD_CONFIG.SQUARE_SIZE - offset;
+        const targetZ = newZ * BOARD_CONFIG.SQUARE_SIZE - offset;
 
-        // Create piece
-        const piece = new ChessPiece(
-            card.pieceType, 
-            card.color === 'black', 
-            gridX, 
-            gridZ, 
-            this.pieceModels.get(`${card.color === 'black' ? 'black' : 'white'}_${card.pieceType}`)!
-        );
 
-        this.scene.add(piece.mesh);
-        this.state.pieces.push(piece);
+        // Find associated card at the old position
+        const cardMesh = this.state.boardCards.find(card => {
+            const cardPos = this.getGridPosition(card.position);
+            console.log("Checking card at:", cardPos, "looking for:", oldX, oldZ);
+            return Math.round(cardPos.x) === oldX && Math.round(cardPos.z) === oldZ;
+        });
+
+        if (cardMesh) {
+            console.log("Found card at position:", oldX, oldZ);
+        }
+        console.log("Checking for capture at:", targetX, targetZ, 'from', oldX, oldZ, 'virtual grid:', this.state.virtualGrid);
+        // Check if there's a piece to capture at the target position
+        if (targetPiece && targetPiece.color !== piece.color) {
+            console.log(`Capturing ${targetPiece.color} ${targetPiece.type} at ${newX},${newZ}`);
+            this.state.capturePiece(targetPiece, this.state.getCurrentPlayer());
+        }
+
+        // Update piece's grid position
+        piece.gridX = newX;
+        piece.gridZ = newZ;
+
+        const startPosition = { 
+            x: piece.position.x, 
+            y: piece.position.y, 
+            z: piece.position.z 
+        };
+        
+        const endPosition = { 
+            x: targetX, 
+            y: piece.position.y, 
+            z: targetZ 
+        };
+
+        const midPoint = {
+            x: (startPosition.x + endPosition.x) / 2,
+            y: piece.position.y + 1, // Lift piece by 1 unit at peak
+            z: (startPosition.z + endPosition.z) / 2
+        };
+
+        // If we found a card, create its animation positions
+        const cardStartPosition = cardMesh ? {
+            x: cardMesh.position.x,
+            y: cardMesh.position.y,
+            z: cardMesh.position.z
+        } : null;
+
+        const cardEndPosition = cardMesh ? {
+            x: targetX,
+            y: cardMesh.position.y,
+            z: targetZ
+        } : null;
+
+        let animationProgress = 0;
+
+        // First tween (up and halfway for piece, slide for card)
+        const tween1 = new Tween({ progress: 0 })
+            .to({ progress: 1 }, 500)
+            .easing(Easing.Quadratic.Out)
+            .onUpdate((obj) => {
+                piece.position.set(
+                    startPosition.x + (midPoint.x - startPosition.x) * obj.progress,
+                    startPosition.y + (midPoint.y - startPosition.y) * obj.progress,
+                    startPosition.z + (midPoint.z - startPosition.z) * obj.progress
+                );
+                
+                if (cardMesh && cardStartPosition && cardEndPosition) {
+                    // Linear interpolation for card (sliding)
+                    const cardX = cardStartPosition.x + (cardEndPosition.x - cardStartPosition.x) * obj.progress * 0.5;
+                    const cardZ = cardStartPosition.z + (cardEndPosition.z - cardStartPosition.z) * obj.progress * 0.5;
+
+                    cardMesh.position.set(cardX, cardStartPosition.y, cardZ);
+                }
+            });
+
+        // Second tween (down and to target for piece, continue slide for card)
+        const tween2 = new Tween({ progress: 0 })
+            .to({ progress: 1 }, 500)
+            .easing(Easing.Quadratic.In)
+            .onUpdate((obj) => {
+                piece.position.set(
+                    midPoint.x + (endPosition.x - midPoint.x) * obj.progress,
+                    midPoint.y + (endPosition.y - midPoint.y) * obj.progress,
+                    midPoint.z + (endPosition.z - midPoint.z) * obj.progress
+                );
+                
+                if (cardMesh && cardStartPosition && cardEndPosition) {
+                    // Continue linear interpolation for card
+                    const cardX = cardStartPosition.x + (cardEndPosition.x - cardStartPosition.x) * (0.5 + obj.progress * 0.5);
+                    const cardZ = cardStartPosition.z + (cardEndPosition.z - cardStartPosition.z) * (0.5 + obj.progress * 0.5);
+
+                    cardMesh.position.set(cardX, cardStartPosition.y, cardZ);
+                }
+            })
+            .onComplete(() => {
+                console.log("Animation complete");
+                this.state.virtualGrid[oldZ][oldX] = null;
+                this.state.virtualGrid[newZ][newX] = piece;
+                this.clearSelection();
+                this.isMovingPiece = false;
+                
+                // End the turn after piece movement is complete
+                this.state.switchTurn();
+            });
+
+        // Chain the tweens and start
+        tween1.chain(tween2).start();
+        
+        // Force an initial update
+        updateTween();
     }
 
-    private createCardEntity(card: Card): THREE.Mesh {
-        const geometry = new THREE.PlaneGeometry(0.8, 0.8);
-        const texture = new THREE.TextureLoader().load(`assets/cards/${card.texture}.png`);
-        const material = new THREE.MeshBasicMaterial({
-            map: texture,
+    public placeCardOnBoard(card: Card, gridX: number, gridZ: number) {
+        this.isPlacingCardPiece = true;
+        console.log("BoardManager placing card:", card, "at", gridX, gridZ);
+        
+        // Make card smaller than the square size
+        const squareSize = BOARD_CONFIG.SQUARE_SIZE;
+        const cardHeight = squareSize * 0.8;  // 80% of square height
+        const cardWidth = cardHeight * 0.666;  // Maintain aspect ratio (1:1.5)
+        
+        // Create card mesh with adjusted dimensions
+        const cardGeometry = new THREE.PlaneGeometry(cardWidth, cardHeight);
+        const material = new THREE.MeshStandardMaterial({
             transparent: true,
             side: THREE.DoubleSide
         });
+
+        // Load texture
+        const textureLoader = new THREE.TextureLoader();
+        console.log('placing card texture:', card.texture);
+        textureLoader.load(
+            `/assets/images/${card.texture}.png`,
+            (texture) => {
+                material.map = texture;
+                material.needsUpdate = true;
+            }
+        );
+
+        const cardMesh = new THREE.Mesh(cardGeometry, material);
         
-        const cardMesh = new THREE.Mesh(geometry, material);
-        cardMesh.rotation.x = -Math.PI / 2;
-        return cardMesh;
+        // Calculate world position (centered in square)
+        const worldX = (gridX - 3.5) * squareSize;
+        const worldZ = (gridZ - 3.5) * squareSize;
+        
+        cardMesh.position.set(
+            worldX,      // Center X
+            0.1,        // Slightly above board
+            worldZ      // Center Z
+        );
+        cardMesh.rotation.x = -Math.PI / 2; // Lay flat
+        cardMesh.rotation.z = card.color === 'black' ? Math.PI : 0;
+
+        // Add to scene and track
+        this.scene.add(cardMesh);
+        this.state.boardCards.push(cardMesh);
+        
+        console.log("Card mesh added to scene at:", cardMesh.position);
+
+        // Create and place piece if needed
+        if (card.pieceType) {
+            const modelKey = `${card.color}_${card.pieceType}`;
+            const pieceModel = this.pieceModels.get(modelKey);
+            
+            if (pieceModel) {
+                const owner = this.state.getPlayer(card.color);
+                if (!owner) {
+                    console.error(`No player found for color ${card.color}`);
+                    return;
+                }
+
+                const piece = new ChessPiece(
+                    card.pieceType,
+                    card.color as PieceColor,
+                    gridX,
+                    gridZ,
+                    owner,
+                    pieceModel // Pass the model to the constructor
+                );
+                
+                piece.position.set(worldX, 0.125, worldZ);
+                this.scene.add(piece);
+                this.pieces.push(piece);
+                this.state.virtualGrid[gridZ][gridX] = piece;
+                
+                // Add piece to player's owned pieces
+                owner.addPiece(piece);
+            }
+        }
+        this.state.switchTurn();
+        setTimeout(() => {
+            this.isPlacingCardPiece = false;
+        }, 100);
+
+        this.state.recordMove({
+            type: 'card',
+            from: 'HAND',
+            to: `${gridX},${gridZ}`,
+            pieceType: card.pieceType,
+            color: card.color
+        });
     }
 
     // Add method to access cardSystem
@@ -289,27 +464,46 @@ export class BoardManager {
         return this.cardSystem;
     }
 
-    private onBoardClick(event: MouseEvent) {
-        const mouse = new THREE.Vector2(
-            (event.clientX / window.innerWidth) * 2 - 1,
-            -(event.clientY / window.innerHeight) * 2 + 1
-        );
-
-        const raycaster = new THREE.Raycaster();
-        raycaster.setFromCamera(mouse, this.camera);
-
-        const squares = this.board.children.filter(child => 
+    // Add getter for board squares
+    public getBoardSquares(): THREE.Object3D[] {
+        return this.board.children.filter(child => 
             child instanceof THREE.Mesh && 
             child.geometry instanceof THREE.BoxGeometry &&
             child.geometry.parameters.width === BOARD_CONFIG.SQUARE_SIZE * 0.98
         );
+    }
 
+    // Rename onBoardClick to handleBoardClick and update signature
+    public handleBoardClick(mouse: THREE.Vector2, camera: THREE.Camera) {
+        if (this.isPlacingCardPiece || this.isMovingPiece) {
+            return;
+        }
+
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, camera);
+
+        const squares = this.getBoardSquares();
         const intersects = raycaster.intersectObjects(squares);
         
         if (intersects.length > 0) {
             const square = intersects[0].object as THREE.Mesh;
             const gridPosition = this.getGridPosition(square.position);
             
+            // If we have a selected piece and this is a valid move
+            if (this.selectedPiece && this.possibleMovesHighlighted) {
+                const validMoves = this.getValidMoves(this.selectedPiece);
+                const isValidMove = validMoves.some(move => 
+                    move.x === gridPosition.x && move.z === gridPosition.z
+                );
+
+                if (isValidMove) {
+                    console.log("moving piece");
+                    this.movePiece(this.selectedPiece, gridPosition.x, gridPosition.z);
+                    return;
+                }
+            }
+
+            // Handle card placement (existing code)
             if (!this.state.board[gridPosition.z][gridPosition.x]) {
                 const selectedCards = this.cardSystem.getSelectedCards();
                 if (selectedCards.length > 0) {
@@ -321,8 +515,135 @@ export class BoardManager {
     }
 
     private getGridPosition(position: THREE.Vector3): THREE.Vector3 {
-        const gridX = Math.round(position.x / BOARD_CONFIG.SQUARE_SIZE + (BOARD_CONFIG.SIZE - 1) / 2);
-        const gridZ = Math.round(position.z / BOARD_CONFIG.SQUARE_SIZE + (BOARD_CONFIG.SIZE - 1) / 2);
+        const offset = (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE) / 2 - BOARD_CONFIG.SQUARE_SIZE / 2;
+        const gridX = Math.round((position.x + offset) / BOARD_CONFIG.SQUARE_SIZE);
+        const gridZ = Math.round((position.z + offset) / BOARD_CONFIG.SQUARE_SIZE);
         return new THREE.Vector3(gridX, 0, gridZ);
+    }
+
+    // Update computer turn handler to not assume black
+    // private handleComputerTurn() {
+    //     const players = Array.from(this.state.players.values());
+    //     const computerPlayer = players.find(p => p.isComputer());
+        
+    //     if (computerPlayer && this.state.isPlayerTurn(computerPlayer.id)) {
+    //         console.log("Computer thinking about its move...");
+    //         // TODO: Implement computer move logic
+    //     }
+    // }
+
+    // Update handlePieceClick to handle toggle behavior
+    public handlePieceClick(mouse: THREE.Vector2) {
+        if (this.isPlacingCardPiece) {
+            return;
+        }
+
+        // Get the current player and local player
+        const currentPlayer = this.state.getCurrentPlayer();
+        const localPlayer = this.state.getLocalPlayer();
+
+        // If it's not the local player's turn, ignore all clicks
+        if (currentPlayer.id !== localPlayer.id) {
+            return;
+        }
+
+        if (this.possibleMovesHighlighted) {
+            this.clearHighlights();
+        }
+        
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, this.camera);
+        
+        const intersects = raycaster.intersectObjects(this.pieces, true);
+        
+        if (intersects.length > 0) {
+            let piece = intersects[0].object;
+            while (piece && !(piece instanceof ChessPiece)) {
+                piece = piece.parent!;
+            }
+            
+            if (piece instanceof ChessPiece) {
+                // Check if the piece belongs to the local player
+                if (piece.getOwner().id !== localPlayer.id && !this.selectedPiece) {
+                    // If it's not the player's piece and we're not trying to capture, do nothing
+                    return;
+                }
+
+                // If clicking the same piece, just clear selection
+                if (this.selectedPiece === piece) {
+                    this.clearSelection();
+                } else {
+                    this.selectPiece(piece);
+                }
+            }
+        } else {
+            this.clearSelection();
+        }
+    }
+
+    private selectPiece(piece: ChessPiece) {
+        this.selectedPiece = piece;
+        const validMoves = this.getValidMoves(piece);
+        this.highlightSquares(validMoves);
+        this.possibleMovesHighlighted = true;
+    }
+
+    private clearSelection() {
+        this.selectedPiece = null;
+        this.clearHighlights();
+        this.possibleMovesHighlighted = false;
+    }
+
+    private highlightSquares(positions: {x: number, z: number}[]) {
+        this.clearHighlights();
+        
+        const squares = this.getBoardSquares();
+        positions.forEach(pos => {
+            // Find the square at this position
+            const square = squares.find(s => {
+                const gridPos = this.getGridPosition(s.position);
+                return gridPos.x === pos.x && gridPos.z === pos.z;
+            });
+            
+            if (square instanceof THREE.Mesh) {
+                // Store original material
+                const originalMaterial = square.material;
+                
+                // Create highlight material
+                const highlightMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x00ff00,
+                    transparent: true,
+                    opacity: 0.5
+                });
+                
+                square.material = highlightMaterial;
+                this.highlightedSquares.push(square);
+            }
+        });
+    }
+
+    private clearHighlights() {
+        this.highlightedSquares.forEach(square => {
+            if (square instanceof THREE.Mesh) {
+                // Reset to original material (you'll need to store this)
+                const isWhite = (this.getGridPosition(square.position).x + 
+                               this.getGridPosition(square.position).z) % 2 === 0;
+                square.material = new THREE.MeshStandardMaterial({
+                    color: isWhite ? BOARD_CONFIG.COLORS.WHITE : BOARD_CONFIG.COLORS.BLACK
+                });
+            }
+        });
+        this.highlightedSquares = [];
+    }
+
+    private getValidMoves(piece: ChessPiece): {x: number, z: number}[] {
+        return ChessRules.getValidMoves(piece, this.state.virtualGrid);
+    }
+
+    // Update method for animation
+    public update(deltaTime: number) {
+        if (this.isMovingPiece) {
+            updateTween();
+        }
     }
 }
