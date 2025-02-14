@@ -122,12 +122,6 @@ export const INITIAL_GAME_STATE: GameStateData = {
                 { cardType: 'normal', monsterType: 'dragon', pieceType: 'rook', color: 'black', texture: 'Faithful_Pal' },
                 { cardType: 'normal', monsterType: 'dragon', pieceType: 'queen', color: 'black', texture: 'Chroma_Queen' },
                 { cardType: 'normal', monsterType: 'dragon', pieceType: 'king', color: 'black', texture: 'Faithful_Pal' },
-                { cardType: 'normal', monsterType: 'dragon', pieceType: 'pawn', color: 'black', texture: 'Faithful_Pal' },
-                { cardType: 'normal', monsterType: 'dragon', pieceType: 'bishop', color: 'black', texture: 'Ye_Old_Bishop' },
-                { cardType: 'normal', monsterType: 'dragon', pieceType: 'knight', color: 'black', texture: 'Wicked_Assassin' },
-                { cardType: 'normal', monsterType: 'dragon', pieceType: 'rook', color: 'black', texture: 'Faithful_Pal' },
-                { cardType: 'normal', monsterType: 'dragon', pieceType: 'queen', color: 'black', texture: 'Chroma_Queen' },
-                { cardType: 'normal', monsterType: 'dragon', pieceType: 'king', color: 'black', texture: 'Faithful_Pal' },
                 // ... add more cards
             ],
             hand: [],
@@ -172,6 +166,9 @@ export class GameState {
         white: [],
         black: []
     };
+    private gameOver: boolean = false;
+    private winner: PlayerColor | null = null;
+    private finalTurnCount: number = 0;
 
     constructor(scene: THREE.Scene) {
         this._scene = scene;
@@ -292,6 +289,8 @@ export class GameState {
     }
 
     public switchTurn() {
+        if (this.gameOver) return; // Don't switch turns if game is over
+        
         const nextPlayerId = this.currentPlayer.id === 'player_1' ? 'bot' : 'player_1';
         const nextPlayer = this.players.get(nextPlayerId);
         
@@ -305,18 +304,13 @@ export class GameState {
         
         console.log(`Turn ${this.turnCount}: ${this.currentPlayer.id} (${this.currentPlayer.type})`);
         
-        // Notify UI of turn change
-        if (typeof window !== 'undefined' && (window as any).onTurnChange) {
-            (window as any).onTurnChange(this.currentPlayer.color, this.turnCount);
-        }
-        
         // If it's the bot's turn and we have a bot instance, make a move after delay
-        if (this.currentPlayer.id === 'bot' && this.bot) {
-            console.log('Bot turn - waiting before making move');
+        if (!this.gameOver && this.currentPlayer.id === 'bot' && this.bot) {
             setTimeout(() => {
-                console.log('Bot making move');
-                this.bot?.makeMove();
-            }, 1000); // 1 second delay
+                if (!this.gameOver) {
+                    this.bot?.makeMove();
+                }
+            }, 1000);
         }
     }
 
@@ -335,7 +329,12 @@ export class GameState {
     }
 
     public endGame() {
-        this.gameActive = false;
+        this.gameOver = true;
+        this.winner = this.currentPlayer.color;
+        this.finalTurnCount = this.turnCount;
+        
+        // Create and show the end game menu
+        this.showEndGameMenu();
     }
 
     // Add method to get local player
@@ -361,6 +360,11 @@ export class GameState {
         
         // Add to player's captured pieces
         capturedBy.capturePiece(piece);
+        
+        // Check if the captured piece was a king
+        if (piece.type === 'king') {
+            this.endGame(capturedBy.color);
+        }
         
         // Remove from virtual grid
         const [x, z] = piece.getPosition();
@@ -409,6 +413,51 @@ export class GameState {
         
         // Trigger destruction animation
         this.effectsManager.animatePieceDestruction(piece);
+    }
+
+    private showEndGameMenu() {
+        // Create menu container
+        const menuContainer = document.createElement('div');
+        menuContainer.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 2rem;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            z-index: 1000;
+        `;
+
+        // Add content
+        menuContainer.innerHTML = `
+            <h2 style="margin-bottom: 1rem;">Game Over!</h2>
+            <p style="margin-bottom: 0.5rem;">${this.winner} wins!</p>
+            <p style="margin-bottom: 1rem;">Game lasted ${this.finalTurnCount} turns</p>
+            <button id="playAgainBtn" style="
+                padding: 0.5rem 1rem;
+                background: #4CAF50;
+                border: none;
+                border-radius: 5px;
+                color: white;
+                cursor: pointer;
+                font-size: 1rem;
+            ">Play Again</button>
+        `;
+
+        // Add to document
+        document.body.appendChild(menuContainer);
+
+        // Add play again functionality
+        const playAgainBtn = document.getElementById('playAgainBtn');
+        if (playAgainBtn) {
+            playAgainBtn.addEventListener('click', () => {
+                document.body.removeChild(menuContainer);
+                window.location.reload(); // Simple reload for now
+            });
+        }
     }
 
     public recordMove(piece: ChessPiece | Card, to: { x: number, z: number }, from?: { x: number, z: number }, isCapture: boolean = false) {
