@@ -1,8 +1,15 @@
-Notes 02_13_25
-
-TODO:
+Notes 
+TODO 02_13_25
 	Done 0. Define game loop, logic, and design.
 	Done 1. Implement game loop vs. AI.
 	75% 2. Define schema for Cards, Decks, Chess Pieces, Game, etc.
 	0% 3. Infra setup, databases, user identity
-
+TODO 02_14_25
+	0. Infra setup, database, user identity.
+	1. Polish game loop, card effects, fusions/hands
+	2. UI update, turn history, score, better AI
+	3. bugs; can't place card on a piece
+	4. Draw card functionality, and animation.
+	5. More options menu, start game, game history, game options, deck editing, etc.
+	6. FIND THE FUN.
+	7. Asset generation piple update, less faces, bg removal, script to auto pipe into game for card creation..
