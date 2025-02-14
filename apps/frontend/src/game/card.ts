@@ -393,13 +393,13 @@ export class CardSystem {
     private updateHandDisplay() {
         console.log("Updating hand display with cards:", this.cards);
 
-        // Clear existing card meshes
-        this.cardMeshes.forEach(mesh => {
-            console.log("Removing mesh:", mesh.uuid);
+        // Remove only the meshes that are no longer needed
+        const cardsToRemove = this.cardMeshes.slice(this.cards.length);
+        cardsToRemove.forEach(mesh => {
             this.uiScene.remove(mesh);
+            this.originalPositions.delete(mesh);
         });
-        this.cardMeshes = [];
-        this.originalPositions.clear();
+        this.cardMeshes = this.cardMeshes.slice(0, this.cards.length);
 
         // Scale down card dimensions
         const cardWidth = CARD_X;
@@ -410,14 +410,15 @@ export class CardSystem {
         const totalWidth = (this.cards.length * cardWidth) + ((this.cards.length - 1) * spacing);
         const startX = -totalWidth / 2;
 
-        console.log("Hand layout:", {
-            totalWidth,
-            startX,
-            cardCount: this.cards.length
-        });
-
+        // Update or create cards as needed
         this.cards.forEach((card, index) => {
-            try {
+            let cardMesh: THREE.Mesh;
+            
+            if (index < this.cardMeshes.length) {
+                // Reuse existing mesh
+                cardMesh = this.cardMeshes[index];
+            } else {
+                // Create new mesh only if needed
                 const cardGeometry = new THREE.PlaneGeometry(cardWidth, cardHeight);
                 const material = new THREE.MeshBasicMaterial({
                     transparent: true,
@@ -425,17 +426,21 @@ export class CardSystem {
                     color: 0xcccccc,
                     toneMapped: false
                 });
-                console.log("Loading texture for card:", card.texture);
+                
+                cardMesh = new THREE.Mesh(cardGeometry, material);
+                this.cardMeshes.push(cardMesh);
+                this.uiScene.add(cardMesh);
+
+                // Load texture only for new cards
                 const textureLoader = new THREE.TextureLoader();
                 textureLoader.load(
                     `/assets/images/${card.texture}.png`,
                     (cardTexture) => {
                         cardTexture.encoding = THREE.sRGBEncoding;
                         cardTexture.colorSpace = 'srgb';
-                        // Increase texture quality
                         cardTexture.minFilter = THREE.LinearFilter;
                         cardTexture.magFilter = THREE.LinearFilter;
-                        cardTexture.anisotropy = 16; // Increase texture sharpness
+                        cardTexture.anisotropy = 16;
                         material.map = cardTexture;
                         material.needsUpdate = true;
                     },
@@ -444,28 +449,16 @@ export class CardSystem {
                         console.error(`Error loading texture for card ${card.texture}:`, error);
                     }
                 );
-                console.log("Texture loaded for card:", card.texture);
-                const cardMesh = new THREE.Mesh(cardGeometry, material);
-                console.log("Card mesh created for card:", card.texture);
-                const position = new THREE.Vector3(
-                    startX + (index * (cardWidth + spacing)),
-                    CARD_Y_POSITION,
-                    0
-                );
-                console.log("Position set for card:", card.texture);
-                cardMesh.position.copy(position);
-                this.originalPositions.set(cardMesh, position.clone());
-                console.log("Adding card mesh to scene");
-                this.uiScene.add(cardMesh);
-                this.cardMeshes.push(cardMesh);
-                console.log(`Creating card ${index} at position:`, {
-                    x: startX + (index * (cardWidth + spacing)),
-                    y: CARD_Y_POSITION,
-                    z: 0
-                });
-            } catch (error) {
-                console.error('Error updating hand display:', error);
             }
+
+            // Update position
+            const position = new THREE.Vector3(
+                startX + (index * (cardWidth + spacing)),
+                CARD_Y_POSITION,
+                0
+            );
+            cardMesh.position.copy(position);
+            this.originalPositions.set(cardMesh, position.clone());
         });
     }
 

@@ -141,6 +141,19 @@ interface TurnMove {
     isPlacement: boolean;
 }
 
+// Add these types at the top of the file
+type MoveType = 'piece' | 'card';
+
+interface HistoryEntry {
+    type: MoveType;
+    from: string;  // For pieces: "x,z", for cards: "HAND"
+    to: string;    // "x,z"
+    pieceType?: string;
+    color: 'white' | 'black';
+    captured?: string;  // Type of piece captured, if any
+    timestamp: number;
+}
+
 export class GameState {
     private _scene: THREE.Scene;  // Add underscore to indicate private
     selectedPiece: ChessPiece | null = null;
@@ -159,13 +172,7 @@ export class GameState {
     private bot: Bot | null = null;
     private turnCount: number = 1;  // Start at turn 1
     private effectsManager: EffectsManager;
-    private moveHistory: {
-        white: TurnMove[],
-        black: TurnMove[]
-    } = {
-        white: [],
-        black: []
-    };
+    private moveHistory: HistoryEntry[] = [];
     private gameOver: boolean = false;
     private winner: PlayerColor | null = null;
     private finalTurnCount: number = 0;
@@ -302,6 +309,18 @@ export class GameState {
         this.currentPlayer = nextPlayer;
         this.turnCount++;
         
+        // Get the current move history
+        const moveHistory = this.getMoveHistory();
+        
+        // Notify UI of turn change with move history
+        if (typeof (window as any).onTurnChange === 'function') {
+            (window as any).onTurnChange(
+                this.currentPlayer.color,  // 'white' or 'black'
+                this.turnCount,
+                moveHistory  // Pass the move history array
+            );
+        }
+        
         console.log(`Turn ${this.turnCount}: ${this.currentPlayer.id} (${this.currentPlayer.type})`);
         
         // If it's the bot's turn and we have a bot instance, make a move after delay
@@ -358,6 +377,10 @@ export class GameState {
     public capturePiece(piece: ChessPiece, capturedBy: Player) {
         console.log(`${piece.color} ${piece.type} captured by ${capturedBy.color}`);
         
+        // Record the capture
+        const [x, z] = piece.getPosition();
+        this.recordMove(piece, { x, z }, undefined, true);
+        
         // Add to player's captured pieces
         capturedBy.capturePiece(piece);
         
@@ -367,7 +390,6 @@ export class GameState {
         }
         
         // Remove from virtual grid
-        const [x, z] = piece.getPosition();
         this.virtualGrid[z][x] = null;
         
         // Find and remove the associated card mesh
@@ -460,59 +482,35 @@ export class GameState {
         }
     }
 
-    public recordMove(piece: ChessPiece | Card, to: { x: number, z: number }, from?: { x: number, z: number }, isCapture: boolean = false) {
-        const currentColor = this.currentPlayer.color;
-        const move: TurnMove = {
-            piece: 'piece' in piece ? piece.pieceType : piece.pieceType,
-            to: to,
-            from: from,
-            isCapture: isCapture,
-            isPlacement: !from
-        };
-
-        this.moveHistory[currentColor].push(move);
-        
-        // Log the move in chess notation
-        console.log(this.getMoveNotation(move));
+    // Add method to record moves
+    public recordMove(entry: Omit<HistoryEntry, 'timestamp'>) {
+        this.moveHistory.push({
+            ...entry,
+            timestamp: Date.now()
+        });
+        this.notifyHistoryUpdate();
     }
 
-    private getMoveNotation(move: TurnMove): string {
-        let notation = '';
-        
-        // Add piece letter (except for pawns)
-        if (move.piece !== 'pawn') {
-            notation += move.piece[0].toUpperCase();
-        }
-        
-        // Add 'x' if it's a capture
-        if (move.isCapture) {
-            if (move.piece === 'pawn') {
-                notation += String.fromCharCode(97 + move.from!.x); // Add starting file for pawn captures
-            }
-            notation += 'x';
-        }
-        
-        // Add destination square
-        notation += String.fromCharCode(97 + move.to.x); // Convert to a-h
-        notation += (8 - move.to.z); // Convert to 1-8
-        
-        return notation;
+    // Add method to get move history
+    public getMoveHistory(): HistoryEntry[] {
+        return [...this.moveHistory];
     }
 
-    public getMoveHistory(): string[] {
-        const history: string[] = [];
-        const maxMoves = Math.max(this.moveHistory.white.length, this.moveHistory.black.length);
-        
-        for (let i = 0; i < maxMoves; i++) {
-            const moveNum = i + 1;
-            const whiteMoveNotation = this.moveHistory.white[i] ? 
-                this.getMoveNotation(this.moveHistory.white[i]) : '';
-            const blackMoveNotation = this.moveHistory.black[i] ? 
-                this.getMoveNotation(this.moveHistory.black[i]) : '';
-            
-            history.push(`${moveNum}. ${whiteMoveNotation} ${blackMoveNotation}`);
-        }
-        
-        return history;
+    private notifyHistoryUpdate() {
+        // Dispatch a custom event that UI can listen to
+        const event = new CustomEvent('moveHistoryUpdate', {
+            detail: this.moveHistory
+        });
+        window.dispatchEvent(event);
     }
+
+    // Add method to record piece movement
+    // public recordPieceMove(piece: ChessPiece, fromPos: { x: number, z: number }, toPos: { x: number, z: number }) {
+    //     this.recordMove(piece, toPos, fromPos, false);
+    // }
+
+    // // Add method to record card placement
+    // public recordCardPlacement(card: Card, position: { x: number, z: number }) {
+    //     this.recordMove(card, position, undefined, false);
+    // }
 }

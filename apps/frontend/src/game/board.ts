@@ -219,16 +219,43 @@ export class BoardManager {
     // Method to move piece
     public movePiece(piece: ChessPiece, newX: number, newZ: number) {
         this.isMovingPiece = true;
-        console.log("Moving piece to:", newX, newZ);
+        const oldX = piece.gridX;
+        const oldZ = piece.gridZ;
+        
+        // Check if there's a piece being captured
+        const targetPiece = this.state.virtualGrid[newZ][newX];
+        if (targetPiece && targetPiece !== piece) {  // Check to prevent self-capture
+            // Only record the capture notification
+            this.state.recordMove({
+                type: 'piece',
+                from: 'CAPTURED',
+                to: 'CAPTURED',
+                pieceType: targetPiece.type,
+                color: targetPiece.color
+            });
+            
+            // Handle the capture without recording additional moves
+            this.state.virtualGrid[targetPiece.gridZ][targetPiece.gridX] = null;
+            this.scene.remove(targetPiece);
+            this.pieces = this.pieces.filter(p => p !== targetPiece);
+            this.state.getCurrentPlayer().capturePiece(targetPiece);
+        }
+
+        // Record the moving piece's movement
+        console.log("Recording move:", `${oldX},${oldZ}`, "to", `${newX},${newZ}`);
+        this.state.recordMove({
+            type: 'piece',
+            from: `${oldX},${oldZ}`,
+            to: `${newX},${newZ}`,
+            pieceType: piece.type,
+            color: piece.color
+        });
 
         // Calculate world coordinates
         const offset = (BOARD_CONFIG.SIZE * BOARD_CONFIG.SQUARE_SIZE) / 2 - BOARD_CONFIG.SQUARE_SIZE / 2;
         const targetX = newX * BOARD_CONFIG.SQUARE_SIZE - offset;
         const targetZ = newZ * BOARD_CONFIG.SQUARE_SIZE - offset;
 
-        // Store old position for virtual grid update
-        const oldX = piece.gridX;
-        const oldZ = piece.gridZ;
 
         // Find associated card at the old position
         const cardMesh = this.state.boardCards.find(card => {
@@ -242,7 +269,6 @@ export class BoardManager {
         }
         console.log("Checking for capture at:", targetX, targetZ, 'from', oldX, oldZ, 'virtual grid:', this.state.virtualGrid);
         // Check if there's a piece to capture at the target position
-        const targetPiece = this.state.virtualGrid[newZ][newX];
         if (targetPiece && targetPiece.color !== piece.color) {
             console.log(`Capturing ${targetPiece.color} ${targetPiece.type} at ${newX},${newZ}`);
             this.state.capturePiece(targetPiece, this.state.getCurrentPlayer());
@@ -423,6 +449,14 @@ export class BoardManager {
         setTimeout(() => {
             this.isPlacingCardPiece = false;
         }, 100);
+
+        this.state.recordMove({
+            type: 'card',
+            from: 'HAND',
+            to: `${gridX},${gridZ}`,
+            pieceType: card.pieceType,
+            color: card.color
+        });
     }
 
     // Add method to access cardSystem
