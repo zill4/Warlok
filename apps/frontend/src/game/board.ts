@@ -17,6 +17,10 @@ export class BoardManager {
     private camera: THREE.Camera;
     private readonly playerId: string;
     private readonly localPlayer: Player;
+    private highlightedSquares: THREE.Mesh[] = [];
+    private selectedPiece: ChessPiece | null = null;
+    private possibleMovesHighlighted: boolean = false;
+    private isPlacingCardPiece: boolean = false;
 
     constructor(scene: THREE.Scene, state: GameState, cardSystem: CardSystem, camera: THREE.Camera) {
         this.scene = scene;
@@ -164,7 +168,6 @@ export class BoardManager {
     private placeInitialPiece(type: string, color: PlayerColor, x: number, z: number) {
         const modelKey = `${color}_${type}`;
         const model = this.pieceModels.get(modelKey);
-        console.log("placing initial piece:", modelKey);
         if (!model) {
             console.error(`Missing model for ${modelKey}`);
             return;
@@ -183,12 +186,16 @@ export class BoardManager {
         this.pieces.push(piece);
         this.state.virtualGrid[z][x] = piece;
         
-        console.log(`Placed ${color} ${type} at (${x}, ${z})`);
+        // console.log(`Placed ${color} ${type} at (${x}, ${z})`);
     }
 
     // Method to get piece at grid position
     public getPieceAt(x: number, z: number): ChessPiece | null {
         return this.state.virtualGrid[z][x];
+    }
+
+    public getPieces(): THREE.Object3D[] {
+        return this.pieces;
     }
 
     // Method to move piece
@@ -209,9 +216,8 @@ export class BoardManager {
         );
     }
 
-    placeCardOnBoard(card: Card, gridX: number, gridZ: number) {
-        // Check if it's local player's turn
-
+    public placeCardOnBoard(card: Card, gridX: number, gridZ: number) {
+        this.isPlacingCardPiece = true;
         console.log("BoardManager placing card:", card, "at", gridX, gridZ);
         
         // Make card smaller than the square size
@@ -271,15 +277,16 @@ export class BoardManager {
                     pieceModel.clone()
                 );
                 
-                // Position piece
                 piece.position.set(worldX, 0.125, worldZ);
                 this.scene.add(piece);
                 this.pieces.push(piece);
-                
-                // Update virtual grid
                 this.state.virtualGrid[gridZ][gridX] = piece;
             }
         }
+        
+        setTimeout(() => {
+            this.isPlacingCardPiece = false;
+        }, 100);
     }
 
     // Add method to access cardSystem
@@ -298,6 +305,9 @@ export class BoardManager {
 
     // Rename onBoardClick to handleBoardClick and update signature
     public handleBoardClick(mouse: THREE.Vector2, camera: THREE.Camera) {
+        if (this.possibleMovesHighlighted) {
+            this.clearHighlights();
+        }
         const raycaster = new THREE.Raycaster();
         raycaster.setFromCamera(mouse, camera);
 
@@ -333,5 +343,121 @@ export class BoardManager {
             console.log("Computer thinking about its move...");
             // TODO: Implement computer move logic
         }
+    }
+
+    // Update handlePieceClick to handle toggle behavior
+    public handlePieceClick(mouse: THREE.Vector2) {
+        if (this.isPlacingCardPiece) {
+            return;
+        }
+
+        if (this.possibleMovesHighlighted) {
+            this.clearHighlights();
+        }
+        
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, this.camera);
+        
+        const intersects = raycaster.intersectObjects(this.pieces, true);
+        
+        if (intersects.length > 0) {
+            let piece = intersects[0].object;
+            while (piece && !(piece instanceof ChessPiece)) {
+                piece = piece.parent!;
+            }
+            
+            if (piece instanceof ChessPiece) {
+                // If clicking the same piece, just clear selection
+                if (this.selectedPiece === piece) {
+                    this.clearSelection();
+                } else {
+                    this.selectPiece(piece);
+                }
+            }
+        } else {
+            this.clearSelection();
+        }
+    }
+
+    private selectPiece(piece: ChessPiece) {
+        this.selectedPiece = piece;
+        const validMoves = this.getValidMoves(piece);
+        this.highlightSquares(validMoves);
+        this.possibleMovesHighlighted = true;
+    }
+
+    private clearSelection() {
+        this.selectedPiece = null;
+        this.clearHighlights();
+        this.possibleMovesHighlighted = false;
+    }
+
+    private highlightSquares(positions: {x: number, z: number}[]) {
+        this.clearHighlights();
+        
+        const squares = this.getBoardSquares();
+        positions.forEach(pos => {
+            // Find the square at this position
+            const square = squares.find(s => {
+                const gridPos = this.getGridPosition(s.position);
+                return gridPos.x === pos.x && gridPos.z === pos.z;
+            });
+            
+            if (square instanceof THREE.Mesh) {
+                // Store original material
+                const originalMaterial = square.material;
+                
+                // Create highlight material
+                const highlightMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x00ff00,
+                    transparent: true,
+                    opacity: 0.5
+                });
+                
+                square.material = highlightMaterial;
+                this.highlightedSquares.push(square);
+            }
+        });
+    }
+
+    private clearHighlights() {
+        this.highlightedSquares.forEach(square => {
+            if (square instanceof THREE.Mesh) {
+                // Reset to original material (you'll need to store this)
+                const isWhite = (this.getGridPosition(square.position).x + 
+                               this.getGridPosition(square.position).z) % 2 === 0;
+                square.material = new THREE.MeshStandardMaterial({
+                    color: isWhite ? BOARD_CONFIG.COLORS.WHITE : BOARD_CONFIG.COLORS.BLACK
+                });
+            }
+        });
+        this.highlightedSquares = [];
+    }
+
+    private getValidMoves(piece: ChessPiece): {x: number, z: number}[] {
+        // This is a placeholder - implement actual chess move logic
+        const moves: {x: number, z: number}[] = [];
+        const x = piece.gridX;
+        const z = piece.gridZ;
+        
+        // Example: For now, just highlight adjacent squares
+        const directions = [
+            {x: 1, z: 0}, {x: -1, z: 0},
+            {x: 0, z: 1}, {x: 0, z: -1},
+            {x: 1, z: 1}, {x: -1, z: 1},
+            {x: 1, z: -1}, {x: -1, z: -1}
+        ];
+        
+        directions.forEach(dir => {
+            const newX = x + dir.x;
+            const newZ = z + dir.z;
+            
+            if (newX >= 0 && newX < BOARD_CONFIG.SIZE &&
+                newZ >= 0 && newZ < BOARD_CONFIG.SIZE) {
+                moves.push({x: newX, z: newZ});
+            }
+        });
+        
+        return moves;
     }
 }

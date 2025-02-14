@@ -15,7 +15,6 @@ export class LightManager {
 
     public setupLights(scene: THREE.Scene, camera: THREE.Camera): void {
         // Clear any existing lights from the scene
-        console.log("Setting up lights");
         this.clearLights(scene);
 
         // Main overhead light
