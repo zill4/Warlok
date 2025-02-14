@@ -98,30 +98,49 @@ export class GameState {
     // Mirror Python's virtual grid
     public virtualGrid: (ChessPiece | null)[][] = Array(8).fill(null).map(() => Array(8).fill(null));
 
-    public board: (string | null)[][];  // Add board property
-    private players: Map<PlayerColor, Player>;
+    public board: (string | null)[][] = Array(8).fill(null).map(() => Array(8).fill(null));  // Add board property
+    private players: Map<string, Player>;
     private currentPlayer: Player;
-    private gameActive: boolean = false;
     private localPlayer: Player;
+    private gameActive: boolean = false;
     private bot: Bot | null = null;
+    private turnCount: number = 1;  // Start at turn 1
 
-    constructor(private scene: THREE.Scene) {
+    constructor(scene: THREE.Scene) {
         this._scene = scene;
-        // Initialize 8x8 board with null values
-        this.board = Array(8).fill(null).map(() => Array(8).fill(null));
-        // Initialize players
         this.players = new Map();
-        const humanPlayer = new Player('human-1', 'human', 'white'); // Color could be determined by user choice
-        const computerPlayer = new Player('computer-1', 'computer', 'black');
         
-        this.players.set('white', humanPlayer);
-        this.players.set('black', computerPlayer);
+        // Create the two players with consistent IDs
+        const player1 = new Player(
+            'player_1',
+            'human',
+            'white',
+            INITIAL_GAME_STATE.players.white
+        );
         
-        // Set the local player (this could be determined by game configuration)
-        this.localPlayer = humanPlayer;
+        const player2 = new Player(
+            'bot',
+            'computer',
+            'black',
+            INITIAL_GAME_STATE.players.black
+        );
+
+        // Store players in map with consistent IDs
+        this.players.set('player_1', player1);
+        this.players.set('bot', player2);
+
+        // Set initial current player and local player
+        this.currentPlayer = player1;  // White moves first
+        this.localPlayer = player1;    // Local player is always player_1
         
-        // Set initial player
-        this.currentPlayer = humanPlayer;
+        console.log('GameState initialized with players:', {
+            player1: player1.id,
+            player2: player2.id,
+            currentPlayer: this.currentPlayer.id,
+            turn: this.turnCount
+        });
+
+        // Start the game
         this.startGame();
     }
 
@@ -164,7 +183,11 @@ export class GameState {
     }
 
     public startGame() {
-        this.currentPlayer = this.players.get('white')!; // White always starts
+        // Make sure we have a valid current player
+        if (!this.currentPlayer) {
+            this.currentPlayer = this.players.get('player_1')!;
+        }
+        
         this.gameActive = true;
         console.log(`Game started - ${this.currentPlayer.color} (${this.currentPlayer.type}) to play`);
     }
@@ -178,20 +201,42 @@ export class GameState {
     }
 
     public switchTurn() {
-        this.currentPlayer = this.currentPlayer.color === 'white' ? 
-            this.players.get('black')! : 
-            this.players.get('white')!;
-            
-        console.log(`Turn switched to ${this.currentPlayer.color} (${this.currentPlayer.type})`);
+        const nextPlayerId = this.currentPlayer.id === 'player_1' ? 'bot' : 'player_1';
+        const nextPlayer = this.players.get(nextPlayerId);
         
-        // If it's the bot's turn, make a move
-        if (this.currentPlayer.isComputer() && this.bot) {
-            this.bot.makeMove();
+        if (!nextPlayer) {
+            console.error('Failed to find next player:', nextPlayerId);
+            return;
+        }
+
+        this.currentPlayer = nextPlayer;
+        this.turnCount++;
+        
+        console.log(`Turn ${this.turnCount}: ${this.currentPlayer.id} (${this.currentPlayer.type})`);
+        
+        // Notify UI of turn change
+        if (typeof window !== 'undefined' && (window as any).onTurnChange) {
+            (window as any).onTurnChange(this.currentPlayer.color, this.turnCount);
+        }
+        
+        // If it's the bot's turn and we have a bot instance, make a move after delay
+        if (this.currentPlayer.id === 'bot' && this.bot) {
+            console.log('Bot turn - waiting before making move');
+            setTimeout(() => {
+                console.log('Bot making move');
+                this.bot?.makeMove();
+            }, 5000); // 5 second delay
         }
     }
 
-    public getPlayer(color: PlayerColor): Player {
-        return this.players.get(color)!;
+    public getPlayer(color: PlayerColor): Player | undefined {
+        // Find player by color
+        for (const player of this.players.values()) {
+            if (player.color === color) {
+                return player;
+            }
+        }
+        return undefined;
     }
 
     public isGameActive(): boolean {
@@ -209,5 +254,14 @@ export class GameState {
 
     public setBotInstance(bot: Bot) {
         this.bot = bot;
+        console.log('Bot instance set for player:', this.players.get('bot')?.id);
+    }
+
+    public getTurnCount(): number {
+        return this.turnCount;
+    }
+
+    public getCurrentTurnPlayer(): string {
+        return `Turn ${this.turnCount}: ${this.currentPlayer.color}`;
     }
 }

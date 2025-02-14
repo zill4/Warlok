@@ -50,4 +50,9 @@ canvas {
 .card-selected {
     border: 2px solid #D9D9D9;
     transform: scale(1.15);
+}
+
+.thinking-indicator {
+    color: #ffd700;
+    font-style: italic;
 } 

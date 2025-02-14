@@ -7,6 +7,7 @@ export type PlayerColor = 'white' | 'black';
 
 export class Player {
     private state: PlayerState;
+    private readonly MAX_HAND_SIZE = 7;  // Match CardSystem's limit
 
     constructor(
         public readonly id: string,
@@ -24,6 +25,40 @@ export class Player {
             score: 0,
             ...initialState
         };
+    }
+
+    public drawCard(): Card | undefined {
+        if (this.state.hand.length >= this.MAX_HAND_SIZE) {
+            console.log(`${this.color} player's hand is full`);
+            return undefined;
+        }
+
+        if (this.state.deck.length === 0) {
+            console.log(`${this.color} player's deck is empty`);
+            return undefined;
+        }
+
+        const card = this.state.deck.pop()!;
+        this.state.hand.push(card);
+        console.log(`${this.color} player drew:`, card);
+        return card;
+    }
+
+    public addToHand(card: Card): boolean {
+        if (this.state.hand.length >= this.MAX_HAND_SIZE) {
+            console.log(`Cannot add card to ${this.color} player's hand: hand is full`);
+            return false;
+        }
+        this.state.hand.push(card);
+        return true;
+    }
+
+    public removeFromHand(cardIndex: number): Card | undefined {
+        if (cardIndex < 0 || cardIndex >= this.state.hand.length) {
+            console.log(`Invalid card index for ${this.color} player's hand:`, cardIndex);
+            return undefined;
+        }
+        return this.state.hand.splice(cardIndex, 1)[0];
     }
 
     public isComputer(): boolean {
@@ -44,14 +79,6 @@ export class Player {
 
     public getHand(): Card[] {
         return [...this.state.hand];
-    }
-
-    public addToHand(card: Card): void {
-        this.state.hand.push(card);
-    }
-
-    public removeFromHand(cardIndex: number): Card | undefined {
-        return this.state.hand.splice(cardIndex, 1)[0];
     }
 
     public capturePiece(piece: ChessPiece): void {

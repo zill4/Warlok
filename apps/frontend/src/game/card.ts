@@ -34,21 +34,17 @@ export class CardSystem {
     // private scene: THREE.Scene;
     private uiScene: THREE.Scene;  // Separate scene for UI
     private uiCamera: THREE.OrthographicCamera;  // Orthographic camera for UI
-    private frameTexture: THREE.Texture;
     public raycaster: THREE.Raycaster;
     private mouse: THREE.Vector2;
     private hoveredCard: THREE.Mesh | null = null;
     private selectedCards: Set<THREE.Mesh> = new Set();  // Change to Set for multiple selections
     private originalPositions: Map<THREE.Mesh, THREE.Vector3> = new Map();
     private readonly MAX_SELECTED_CARDS = 5;  // Maximum cards in hand
-    private readonly MAX_HAND_SIZE = 7;  // Maximum cards in hand
-    private readonly DEFAULT_DECK_SIZE = 40;  // Maximum cards in deck
     private gameState: GameState;
-    private readonly localPlayer: Player;
+    private localPlayer: Player;
     
     constructor(gameState: GameState) {
         this.gameState = gameState;
-        // Get the local player instead of assuming white
         this.localPlayer = gameState.getLocalPlayer();
         // Initialize UI scene
         this.uiScene = new THREE.Scene();
@@ -88,21 +84,21 @@ export class CardSystem {
         this.initializeDeck('white');
         
         // Load the card frame texture once and ensure it's loaded
-        const textureLoader = new THREE.TextureLoader();
-        this.frameTexture = textureLoader.load('/assets/images/Normal_Card.png', 
-            // Success callback
-            (loadedTexture) => {
-                console.log('Frame texture loaded successfully:', loadedTexture);
-                this.frameTexture = loadedTexture; // Use the loaded texture
-                this.updateHandDisplay(); // Refresh cards when frame is loaded
-            },
-            // Progress callback
-            undefined,
-            // Error callback
-            (error) => {
-                console.error('Error loading frame texture:', error);
-            }
-        );
+        // const textureLoader = new THREE.TextureLoader();
+        // this.frameTexture = textureLoader.load('/assets/images/Normal_Card.png', 
+        //     // Success callback
+        //     (loadedTexture) => {
+        //         console.log('Frame texture loaded successfully:', loadedTexture);
+        //         this.frameTexture = loadedTexture; // Use the loaded texture
+        //         this.updateHandDisplay(); // Refresh cards when frame is loaded
+        //     },
+        //     // Progress callback
+        //     undefined,
+        //     // Error callback
+        //     (error) => {
+        //         console.error('Error loading frame texture:', error);
+        //     }
+        // );
 
         // Handle window resize
         window.addEventListener('resize', () => {
@@ -197,18 +193,28 @@ export class CardSystem {
             return null;
         }
 
+        if (this.cards.length >= 7) {
+            console.log('Hand is full!');
+            return null;
+        }
+
         const card = this.deck.pop()!;
-        this.addCard(card);
+        console.log("Drawing card:", card);
+        this.cards.push(card);
+        this.localPlayer.addToHand(card);
+        this.updateHandDisplay();
         return card;
     }
 
-    public drawInitialHand(count: number = 7) {
-        console.log(`Drawing initial hand of ${count} cards`);
+    private drawInitialHand(count: number = 7) {
+        console.log(`Drawing initial hand of ${count} cards for ${this.localPlayer.color}`);
         for (let i = 0; i < count && this.deck.length > 0; i++) {
-            const card = this.drawCard();
-            console.log(`Drew card ${i + 1}:`, card);
+            const card = this.deck.pop()!;
+            this.cards.push(card);
+            this.localPlayer.addToHand(card);
         }
-        console.log(`Hand size after drawing: ${this.cards.length}`);
+        console.log("Initial hand drawn:", this.cards);
+        this.updateHandDisplay();
     }
 
     public getRemainingDeckSize(): number {
@@ -383,9 +389,9 @@ export class CardSystem {
     }
 
     private updateHandDisplay() {
-        console.log("Updating hand display");
+        console.log("Updating hand display with cards:", this.cards);
 
-        // Clear existing card meshes and their stored positions
+        // Clear existing card meshes
         this.cardMeshes.forEach(mesh => {
             console.log("Removing mesh:", mesh.uuid);
             this.uiScene.remove(mesh);
@@ -478,7 +484,17 @@ export class CardSystem {
     }
 
     public removeCard(index: number) {
-        this.cards.splice(index, 1);
+        const removedCard = this.cards.splice(index, 1)[0];
+        // Sync with player state
+        if (removedCard) {
+            const handIndex = this.localPlayer.getHand().findIndex(c => 
+                c.texture === removedCard.texture && 
+                c.pieceType === removedCard.pieceType
+            );
+            if (handIndex !== -1) {
+                this.localPlayer.removeFromHand(handIndex);
+            }
+        }
         this.updateHandDisplay();
     }
 
