@@ -11,6 +11,8 @@ export class InputManager {
 
     public onMouseClick(event: MouseEvent, mouse: THREE.Vector2, raycaster: THREE.Raycaster, camera: THREE.Camera, cardHand: CardSystem, boardManager: BoardManager) {
         event.preventDefault(); // Prevent any double-clicking
+            // Ignore right clicks
+    if (event.button === 2) return;
         const rect = this.container.getBoundingClientRect();
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -55,5 +57,19 @@ export class InputManager {
         
     }
 
-    
+    public onRightClick(event: MouseEvent, mouse: THREE.Vector2, raycaster: THREE.Raycaster, camera: THREE.Camera, cardHand: CardSystem) {
+        event.preventDefault(); // Prevent context menu
+        const rect = this.container.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        
+        // Update raycaster
+        raycaster.setFromCamera(mouse, camera);
+        
+        // Check for card intersections
+        const cardIntersects = cardHand.raycaster.intersectObjects(cardHand.getCardMeshes());
+        if (cardIntersects.length > 0) {
+            cardHand.handleRightClick(mouse.x, mouse.y);
+        }
+    }
 }

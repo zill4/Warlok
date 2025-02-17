@@ -128,6 +128,12 @@ export class ChessGame {
         });
 
         this.isInitialized = true;
+
+        // Add to your initialization code
+        this.container.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+            this.inputManager.onRightClick(event, this.mouse, this.raycaster, this.camera, this.cardHand);
+        }, false);
     }
 
     private async setupScene(): Promise<void> {
@@ -193,12 +199,25 @@ export class ChessGame {
     }
 
     private onWindowResize(): void {
-        const width = this.container.clientWidth;
-        const height = this.container.clientHeight;
+        const container = document.getElementById('game-container');
+        if (!container) return;
+        
+        const rect = container.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
 
+        // Update main perspective camera
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
+
+        // Update renderer
         this.renderer.setSize(width, height);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+
+        // Update card system
+        if (this.cardHand) {
+            this.cardHand.onContainerResize();
+        }
     }
 
     private async animate() { 
