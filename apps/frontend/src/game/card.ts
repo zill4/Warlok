@@ -294,6 +294,7 @@ export class CardSystem {
         if (!container) return;
         const rect = container.getBoundingClientRect();
         
+
         // Increase offset calculation - more aggressive upward adjustment
         const offsetY = Math.max(0, (1000 - rect.height) * 0.02); // Increased from 0.15 to 0.35
         
@@ -307,7 +308,7 @@ export class CardSystem {
         // Update raycaster and check intersections
         this.raycaster.setFromCamera(this.mouse, this.uiCamera);
         const intersects = this.raycaster.intersectObjects(this.cardMeshes);
-        
+
         // Handle hover states
         if (this.hoveredCard && (!intersects.length || intersects[0].object !== this.hoveredCard)) {
             this.animateCardDown(this.hoveredCard);
@@ -334,8 +335,7 @@ export class CardSystem {
         const intersects = this.raycaster.intersectObjects(this.cardMeshes);
         console.log("Intersects:", intersects);
         if (intersects.length > 0) {
-            const clickedCard = intersects[0].object as THREE.Mesh;
-            console.log("Clicked card:", clickedCard);
+            const clickedCard = intersects[0].object as THREE.Mesh;            
             if (this.selectedCards.has(clickedCard)) {
                 this.deselectCard(clickedCard);
                 this.updateSelectedCardsPosition();
@@ -384,6 +384,9 @@ export class CardSystem {
     }
 
     private animateCardUp(card: THREE.Mesh) {
+        if (this.zoomedCard) {
+            return;
+        }
         if (!this.selectedCards.has(card)) {
             const originalPos = this.originalPositions.get(card)!;
             gsap.to(card.position, {
@@ -401,6 +404,9 @@ export class CardSystem {
     }
 
     private animateCardDown(card: THREE.Mesh) {
+        if (this.zoomedCard) {
+            return;
+        }
         if (!this.selectedCards.has(card)) {
             const originalPos = this.originalPositions.get(card)!;
             gsap.to(card.position, {
@@ -692,7 +698,7 @@ export class CardSystem {
         
         if (intersects.length > 0) {
             const clickedCard = intersects[0].object as THREE.Mesh;
-            
+
             // If we already have a zoomed card, restore it
             if (this.zoomedCard) {
                 this.unzoomCard();
@@ -741,6 +747,7 @@ export class CardSystem {
     }
 
     private unzoomCard() {
+        console.log("Unzooming card");
         if (this.zoomedCard && this.originalScale && this.originalPosition) {
             // Animate back to original state
             gsap.to(this.zoomedCard.position, {
@@ -766,6 +773,7 @@ export class CardSystem {
             this.zoomedCard = null;
             this.originalScale = null;
             this.originalPosition = null;
+            
         }
     }
 

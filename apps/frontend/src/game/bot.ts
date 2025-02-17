@@ -7,8 +7,8 @@ import type { Card } from './card';
 import type { ChessPiece } from './core';
 
 // Define available card types
-// 'Ace_kunoichi',
-// 'Chroma_king',
+// 'Ace_Kunoichi',
+// 'Chroma_King',
 // 'Chroma_Queen',
 // 'Faithful_Pal',
 // 'Chroma_Dragon',
@@ -28,7 +28,7 @@ const CARD_TYPES: Card[] = [
         monsterType: 'dragon',
         pieceType: 'rook',
         color: 'black',
-        texture: 'Ace_kunoichi'
+        texture: 'Ace_Kunoichi'
     },
     {
         cardType: 'normal',
@@ -56,7 +56,7 @@ const CARD_TYPES: Card[] = [
         monsterType: 'dragon',
         pieceType: 'king',
         color: 'black',
-        texture: 'Chroma_king'
+        texture: 'Chroma_King'
     }
 ];
 

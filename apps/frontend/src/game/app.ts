@@ -129,11 +129,7 @@ export class ChessGame {
 
         this.isInitialized = true;
 
-        // Add to your initialization code
-        this.container.addEventListener('contextmenu', (event) => {
-            event.preventDefault();
-            this.inputManager.onRightClick(event, this.mouse, this.raycaster, this.camera, this.cardHand);
-        }, false);
+
     }
 
     private async setupScene(): Promise<void> {
@@ -191,6 +187,7 @@ export class ChessGame {
         // Add event listeners for card interactions
         this.container.addEventListener('mousemove', (event) => this.inputManager.onMouseMove(event, this.cardHand, this.raycaster, this.camera, this.mouse));
         this.container.addEventListener('click', (event) => this.inputManager.onMouseClick(event, this.mouse, this.raycaster, this.camera, this.cardHand, this.boardManager));
+        this.container.addEventListener('contextmenu', (event) => this.inputManager.onRightClick(event, this.mouse, this.raycaster, this.camera, this.cardHand));
         
         window.addEventListener('resize', () => this.onWindowResize());
 
