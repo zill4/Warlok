@@ -1,6 +1,7 @@
 #game-container {
     width: 95%;
     max-width: 2100px;
+    min-width: 800px;
     aspect-ratio: 16/9;
     position: relative;
     background: #000;
@@ -86,4 +87,33 @@ canvas {
 
 .history-toggle:hover {
     color: white;
+}
+
+/* Add new class for card container */
+.card-container {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    min-width: 600px;
+    max-width: 1200px;
+    height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Add responsive adjustments */
+@media (max-width: 1200px) {
+    #game-container {
+        width: 100%;
+        min-width: 600px;
+    }
+    
+    .card-container {
+        width: 90%;
+        min-width: 400px;
+    }
 } 
