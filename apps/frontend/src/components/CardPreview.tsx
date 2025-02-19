@@ -13,6 +13,7 @@ export default function CardPreview({ cardData: initialCardData }: CardPreviewPr
   const [isRotating, setIsRotating] = useState(true);
   const [is3DMode, setIs3DMode] = useState(true);
   const controlsRef = useRef({ isRotating: true });
+  const avatarRef = useRef<HTMLImageElement>();
 
   // Store camera and card state
   const sceneRef = useRef({
@@ -60,27 +61,30 @@ export default function CardPreview({ cardData: initialCardData }: CardPreviewPr
         img.crossOrigin = 'Anonymous';
 
         img.onload = () => {
+          // Define the image area dimensions
           const imageAreaX = 40;
           const imageAreaY = 160;
           const imageAreaWidth = canvas.width - 80;
-          const imageAreaHeight = 720;
+          const imageAreaHeight = canvas.height - 360; // Adjusted to fill the entire card image area
 
           const aspectRatio = img.width / img.height;
           let drawWidth, drawHeight, drawX, drawY;
 
+          // Calculate dimensions to fill the entire image area while maintaining aspect ratio
           if (aspectRatio > imageAreaWidth / imageAreaHeight) {
-            drawWidth = imageAreaWidth;
-            drawHeight = drawWidth / aspectRatio;
-            drawX = imageAreaX;
-            drawY = imageAreaY + (imageAreaHeight - drawHeight) / 2;
-          } else {
             drawHeight = imageAreaHeight;
             drawWidth = drawHeight * aspectRatio;
             drawX = imageAreaX + (imageAreaWidth - drawWidth) / 2;
             drawY = imageAreaY;
+          } else {
+            drawWidth = imageAreaWidth;
+            drawHeight = drawWidth / aspectRatio;
+            drawX = imageAreaX;
+            drawY = imageAreaY + (imageAreaHeight - drawHeight) / 2;
           }
 
-          ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+          // Draw the image to fill the entire image area
+          ctx.drawImage(img, drawX, drawY + 250, 720, 720);
           resolve(canvas);
         };
 
@@ -101,6 +105,10 @@ export default function CardPreview({ cardData: initialCardData }: CardPreviewPr
 
   // Separate function for drawing card elements
   const drawCardElements = (ctx: CanvasRenderingContext2D, isRedCard: boolean) => {
+    // Draw card name background with matching theme
+    ctx.fillStyle = isRedCard ? '#D9D9D9' : '#333333';
+    ctx.fillRect(40, 40, ctx.canvas.width - 80, 80);
+
     // Draw chess piece icon with larger size
     const chessPieceMap = {
       'Pawn': '♟',
@@ -116,7 +124,8 @@ export default function CardPreview({ cardData: initialCardData }: CardPreviewPr
       ctx.fillText(chessPieceMap[cardData.chessPieceType as keyof typeof chessPieceMap], 60, 105);
     }
 
-    // Draw card name
+    // Draw card name with contrasting color
+    ctx.fillStyle = isRedCard ? '#000000' : '#D9D9D9';
     ctx.font = 'bold 48px "Space Mono"';
     ctx.fillText(cardData.name || 'Untitled Card', 150, 105);
 
@@ -212,7 +221,41 @@ export default function CardPreview({ cardData: initialCardData }: CardPreviewPr
     // Draw footer
     ctx.fillStyle = '#000000';
     ctx.font = '20px "Space Mono"';
-    ctx.fillText('Warlok山', 60, ctx.canvas.height - 30);
+    ctx.fillText(' 山 Warlok', 60, ctx.canvas.height - 50);
+    
+    // Draw creator area background
+    ctx.fillStyle = '#D9D9D9';
+    ctx.fillRect(40, ctx.canvas.height - 80, ctx.canvas.width - 80, 40);
+
+    // Draw circular avatar
+    if (avatarRef.current) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(60, ctx.canvas.height - 60, 20, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(avatarRef.current, 40, ctx.canvas.height - 80, 40, 40);
+      ctx.restore();
+    }
+
+    // Draw verified badge
+    ctx.fillStyle = '#1DA1F2'; // Twitter blue
+    ctx.beginPath();
+    ctx.arc(95, ctx.canvas.height - 55, 8, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Draw checkmark
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 12px Arial';
+    ctx.fillText('✓', 91, ctx.canvas.height - 51);
+
+    // Draw text
+    ctx.fillStyle = '#000000';
+    ctx.font = 'bold 20px "Space Mono"';
+    ctx.fillText('Zil14', 110, ctx.canvas.height - 50);
+    
+    ctx.fillStyle = '#666666';
+    ctx.font = '16px "Space Mono"';
+    ctx.fillText('@__Zil14__', 180, ctx.canvas.height - 50);
   };
 
   // Listen for card updates
@@ -367,6 +410,14 @@ export default function CardPreview({ cardData: initialCardData }: CardPreviewPr
     }
   }, [cardData, is3DMode]);
 
+  useEffect(() => {
+    // Load avatar image once
+    const avatar = new Image();
+    avatar.crossOrigin = 'Anonymous';
+    avatar.src = 'https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg';
+    avatarRef.current = avatar;
+  }, []);
+
   const toggleRotation = () => {
     controlsRef.current.isRotating = !controlsRef.current.isRotating;
     setIsRotating(!isRotating);
@@ -375,6 +426,7 @@ export default function CardPreview({ cardData: initialCardData }: CardPreviewPr
   const toggleViewMode = () => {
     setIs3DMode(!is3DMode);
   };
+
 
   return (
     <div class="preview-wrapper">

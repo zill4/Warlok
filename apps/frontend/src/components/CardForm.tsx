@@ -55,7 +55,105 @@ export default function CardForm({ onCardUpdate }: CardFormProps) {
   };
 
   return (
-    <form class="card-form" onSubmit={(e) => e.preventDefault()}>
+    <form class="card-form" autocomplete="off" style={{ 
+      display: 'flex', 
+      flexDirection: 'column',
+      gap: '12px',
+      padding: '20px',
+      background: '#1a1a1a',
+      borderRadius: '8px',
+      height: '100%'
+    }}>
+      {/* Creator section */}
+      <div class="creator-section" style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        marginBottom: '4px'
+      }}>
+        <span style={{ 
+          fontFamily: 'Space Mono', 
+          color: '#D9D9D9',
+          fontSize: '14px'
+        }}>CREATOR:</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <img 
+            src="https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg"
+            alt="Creator avatar"
+            style={{
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%'
+            }}
+          />
+          <span style={{ color: '#D9D9D9', fontWeight: 'bold', fontSize: '14px' }}>Zil14</span>
+          <span style={{
+            background: '#1DA1F2',
+            borderRadius: '50%',
+            width: '14px',
+            height: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontSize: '10px'
+          }}>✓</span>
+          <span style={{ color: '#666666', fontSize: '14px' }}>@__Zil14__</span>
+        </div>
+      </div>
+
+      {/* Form fields with consistent styling */}
+      <style>
+        {`
+          .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+          }
+          
+          .form-group label {
+            color: #D9D9D9;
+            font-family: 'Space Mono';
+            font-size: 14px;
+            min-width: 90%;
+            max-width: 80%;
+          }
+        .form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            background: #2a2a2a;
+            border: none;
+            border-radius: 4px;
+            color: #D9D9D9;
+            font-family: 'Space Mono';
+            font-size: 14px;
+            min-width: 600px;
+            max-width: 600px;
+          }
+       
+          .form-group select,
+          .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            background: #2a2a2a;
+            border: none;
+            border-radius: 4px;
+            color: #D9D9D9;
+            font-family: 'Space Mono';
+            font-size: 14px;
+            min-width: 625px;
+            max-width: 625px;
+          }
+          
+          .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+            min-width: 600px;
+            max-width: 600px;
+          }
+        `}
+      </style>
+
       <div class="form-group">
         <label for="name">Card Name</label>
         <input
@@ -64,6 +162,7 @@ export default function CardForm({ onCardUpdate }: CardFormProps) {
           name="name"
           value={cardData.name}
           onChange={handleInputChange}
+          autocomplete="off"
         />
       </div>
 
@@ -74,6 +173,7 @@ export default function CardForm({ onCardUpdate }: CardFormProps) {
           name="chessPieceType"
           value={cardData.chessPieceType}
           onChange={handleInputChange}
+          autocomplete="off"
         >
           <option value="">Select a piece</option>
           <option value="Pawn">Pawn</option>
@@ -92,6 +192,7 @@ export default function CardForm({ onCardUpdate }: CardFormProps) {
           name="pokerCardSymbol"
           value={cardData.pokerCardSymbol}
           onChange={handleInputChange}
+          autocomplete="off"
         >
           <option value="Clubs">♣ Clubs</option>
           <option value="Diamonds">♦ Diamonds</option>
@@ -107,6 +208,7 @@ export default function CardForm({ onCardUpdate }: CardFormProps) {
           name="pokerCardType"
           value={cardData.pokerCardType}
           onChange={handleInputChange}
+          autocomplete="off"
         >
           <option value="Ace">Ace</option>
           <option value="2">2</option>
@@ -132,6 +234,7 @@ export default function CardForm({ onCardUpdate }: CardFormProps) {
           name="cardType"
           value={cardData.cardType}
           onChange={handleInputChange}
+          autocomplete="off"
         >
           <option value="Dragon">Dragon</option>
           <option value="Fiend">Fiend</option>
@@ -146,6 +249,7 @@ export default function CardForm({ onCardUpdate }: CardFormProps) {
           name="description"
           value={cardData.description}
           onChange={handleInputChange}
+          autocomplete="off"
         />
       </div>
 
@@ -156,6 +260,7 @@ export default function CardForm({ onCardUpdate }: CardFormProps) {
           name="effect"
           value={cardData.effect}
           onChange={handleInputChange}
+          autocomplete="off"
         />
       </div>
 
