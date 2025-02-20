@@ -293,11 +293,13 @@ export class CardSystem {
         const container = document.getElementById('game-container');
         if (!container) return;
         const rect = container.getBoundingClientRect();
-        
-
+      
         // Increase offset calculation - more aggressive upward adjustment
         const offsetY = Math.max(0, (1000 - rect.height) * 0.02); // Increased from 0.15 to 0.35
-        
+ 
+        // Increase offset calculation - more aggressive upward adjustment
+        const offsetY = Math.max(0, (1000 - rect.height) * 0.02); // Increased from 0.15 to 0.35
+
         // Adjust clientY with the increased offset
         const adjustedClientY = clientY - offsetY;
         
@@ -335,7 +337,10 @@ export class CardSystem {
         const intersects = this.raycaster.intersectObjects(this.cardMeshes);
         console.log("Intersects:", intersects);
         if (intersects.length > 0) {
-            const clickedCard = intersects[0].object as THREE.Mesh;            
+
+            const clickedCard = intersects[0].object as THREE.Mesh;
+            console.log("Clicked card:", clickedCard);
+          
             if (this.selectedCards.has(clickedCard)) {
                 this.deselectCard(clickedCard);
                 this.updateSelectedCardsPosition();
@@ -747,7 +752,7 @@ export class CardSystem {
     }
 
     private unzoomCard() {
-        console.log("Unzooming card");
+
         if (this.zoomedCard && this.originalScale && this.originalPosition) {
             // Animate back to original state
             gsap.to(this.zoomedCard.position, {
@@ -773,7 +778,6 @@ export class CardSystem {
             this.zoomedCard = null;
             this.originalScale = null;
             this.originalPosition = null;
-            
         }
     }
 

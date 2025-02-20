@@ -129,6 +129,11 @@ export class ChessGame {
 
         this.isInitialized = true;
 
+        // Add to your initialization code
+        this.container.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+            this.inputManager.onRightClick(event, this.mouse, this.raycaster, this.camera, this.cardHand);
+        }, false);
 
     }
 
