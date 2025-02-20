@@ -1,0 +1,417 @@
+---
+import '../styles/fonts.css';
+import CardForm from '../components/CardForm';
+import CardPreview from '../components/CardPreview';
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Create Card - WARLOK</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono&display=swap" rel="stylesheet">
+		<link rel="icon" type="image/png" href="/assets/images/W.png">
+		<style>
+			body {
+				margin: 0;
+				background: #000;
+				color: #D9D9D9;
+				font-family: 'Space Mono', monospace;
+				min-height: 100vh;
+			}
+
+			.header {
+				padding: 1.5rem;
+				background: rgba(0, 0, 0, 0.9);
+				border-bottom: 1px solid #333;
+			}
+
+			.logo {
+				font-family: 'Bebas Neue', sans-serif;
+				-webkit-font-smoothing: antialiased;
+				font-size: 2rem;
+				color: #D9D9D9;
+				text-decoration: none;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+
+			.container {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 2rem;
+				padding: 2rem;
+				max-width: 1400px;
+				margin: 0 auto;
+			}
+
+			.form-container {
+				background: #1a1a1a;
+				border-radius: 8px;
+				padding: 2rem;
+				height: fit-content;
+                min-height: 1000px;
+			}
+
+			.preview-container {
+				background: #1a1a1a;
+				border-radius: 8px;
+				padding: 2rem;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				min-height: 700px;
+                max-height: 1000px;
+			}
+
+			/* Form Styles */
+			:global(.card-form) {
+				display: flex;
+				flex-direction: column;
+				gap: 1.25rem;
+			}
+
+			:global(.card-form input),
+			:global(.card-form select),
+			:global(.card-form textarea) {
+				width: 100%;
+				padding: 0.75rem;
+				background: #2a2a2a;
+				border: 1px solid #3a3a3a;
+				color: #D9D9D9;
+				font-family: 'Space Mono', monospace;
+				font-size: 0.9rem;
+				border-radius: 4px;
+				transition: border-color 0.2s;
+			}
+
+			:global(.card-form input:focus),
+			:global(.card-form select:focus),
+			:global(.card-form textarea:focus) {
+				outline: none;
+				border-color: #D9D9D9;
+			}
+
+			:global(.card-form textarea) {
+				min-height: 100px;
+				resize: vertical;
+			}
+
+			/* Preview Styles */
+			:global(.card-preview) {
+				width: 100%;
+				height: 100%;
+				min-height: 600px;
+			}
+
+			:global(.card-preview-container) {
+				width: 100%;
+				height: 100%;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				background: #1a1a1a;
+				border-radius: 8px;
+				overflow: hidden;
+			}
+
+			:global(.card-preview-container canvas) {
+				max-width: 100%;
+				max-height: 100%;
+				object-fit: contain;
+			}
+            :global(.preview-wrapper) {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                min-height: 700px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            :global(.preview-controls) {
+                position: absolute;
+                bottom: 0px;
+                right: 10px;
+                pointer-events: none;
+                z-index: 10;
+            }
+
+            :global(.controls-container) {
+                display: flex;
+                gap: 16px;
+                align-items: center;
+                pointer-events: all;
+            }
+
+            :global(.control-button) {
+                background: rgba(26, 26, 26, 0.9);
+                border: 1px solid #3a3a3a;
+                color: #D9D9D9;
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-family: 'Space Mono', monospace;
+                transition: all 0.2s;
+            }
+
+            :global(.control-button:hover) {
+                border-color: #D9D9D9;
+            }
+
+            :global(.view-mode-button) {
+                background: rgba(26, 26, 26, 0.9);
+                border: 1px solid #D9D9D9;
+            }
+
+            :global(.card-preview canvas) {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+            }
+
+            :global(.view-mode-toggle) {
+                width: 120px;
+                height: 40px;
+                position: relative;
+                cursor: pointer;
+            }
+
+            :global(.toggle-slider) {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: #333333;
+                border: 2px solid #000;
+                border-radius: 4px;
+                overflow: hidden;
+            }
+
+            :global(.toggle-slider:before) {
+                content: "";
+                position: absolute;
+                width: 50%;
+                height: 100%;
+                background: #D9D9D9;
+                transition: transform 0.3s ease;
+                left: 0;
+            }
+
+            :global(.toggle-2d),
+            :global(.toggle-3d) {
+                position: absolute;
+                width: 50%;
+                text-align: center;
+                line-height: 36px;
+                font-weight: bold;
+                font-family: 'Space Mono', monospace;
+                transition: color 0.3s ease;
+            }
+
+            :global(.toggle-2d) {
+                left: 0;
+                color: #000;
+            }
+
+            :global(.toggle-3d) {
+                right: 0;
+                color: #D9D9D9;
+            }
+
+            :global(.view-mode-toggle input) {
+                display: none;
+            }
+
+            :global(.view-mode-toggle input:checked + .toggle-slider:before) {
+                transform: translateX(100%);
+            }
+
+            :global(.view-mode-toggle input:checked ~ .toggle-2d) {
+                color: #D9D9D9;
+            }
+
+            :global(.view-mode-toggle input:checked ~ .toggle-3d) {
+                color: #000;
+            }
+
+            :global(.preview-wrapper) {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                min-height: 700px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            :global(.card-preview) {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            :global(.image-upload-container) {
+                width: 100%;
+            }
+
+            :global(.image-upload) {
+                width: 100%;
+                height: 200px;
+                border: 2px dashed #3a3a3a;
+                border-radius: 8px;
+                position: relative;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                margin: 20px 0;
+                overflow: hidden;
+            }
+
+            :global(.image-upload.has-preview) {
+                border-style: solid;
+            }
+
+            :global(.image-upload.dragging) {
+                border-color: #D9D9D9;
+                background: rgba(217, 217, 217, 0.1);
+            }
+
+            :global(.file-input) {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                opacity: 0;
+                cursor: pointer;
+                z-index: -1;
+            }
+
+            :global(.preview-container) {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 10px;
+            }
+
+            :global(.image-preview) {
+                max-height: 140px;
+                max-width: 100%;
+                object-fit: contain;
+                border-radius: 4px;
+            }
+
+            :global(.file-info) {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-top: 10px;
+            }
+
+            :global(.file-name) {
+                color: #D9D9D9;
+                font-size: 14px;
+                max-width: 200px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            :global(.remove-image) {
+                background: none;
+                border: none;
+                color: #D9D9D9;
+                cursor: pointer;
+                padding: 4px 8px;
+                font-size: 16px;
+                opacity: 0.7;
+                transition: opacity 0.2s;
+            }
+
+            :global(.remove-image:hover) {
+                opacity: 1;
+            }
+
+            :global(.upload-content) {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                text-align: center;
+                color: #D9D9D9;
+                width: 100%;
+                padding: 20px;
+            }
+
+            :global(.upload-icon) {
+                font-size: 32px;
+                margin-bottom: 10px;
+                display: block;
+            }
+
+            :global(.upload-hint) {
+                font-size: 14px;
+                color: #666;
+                margin-top: 10px;
+            }
+		</style>
+	</head>
+	<body>
+		<header class="header">
+			<a href="/" class="logo">山 W̵a̵r̵l̵o̵k̵</a>
+		</header>
+		<main class="container">
+			<div class="form-container">
+				<CardForm client:load />
+			</div>
+			<div class="preview-container">
+				<CardPreview client:load cardData={{
+					name: '',
+					chessPieceType: '',
+					pokerCardSymbol: 'Clubs',
+					pokerCardType: 'Ace',
+					cardType: 'Dragon',
+					description: '',
+					effect: '',
+					image: ''
+				}} />
+			</div>
+		</main>
+
+		<script>
+			// Create a store for the card data
+			const store = {
+				cardData: {
+					name: '',
+					chessPieceType: '',
+					pokerCardSymbol: 'Clubs',
+					pokerCardType: 'Ace',
+					cardType: 'Dragon',
+					description: '',
+					effect: '',
+					image: ''
+				}
+			};
+
+			// Listen for form updates
+			document.addEventListener('cardupdate', (event: any) => {
+				if (event.detail) {
+					store.cardData = event.detail;
+					// Dispatch a new event for the preview
+					const updateEvent = new CustomEvent('previewupdate', {
+						detail: store.cardData
+					});
+					document.dispatchEvent(updateEvent);
+				}
+			});
+		</script>
+	</body>
+</html> 

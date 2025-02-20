@@ -1,31 +1,33 @@
-import Fastify from 'fastify';
-import fastifyIO from 'fastify-socket.io';
-import dotenv from 'dotenv';
+import express from 'express';
+import userRoutes from './routes/user';
+import profileRoutes from './routes/profile';
+import cardRoutes from './routes/card';
+import gameRoutes from './routes/game';
 
-dotenv.config();
-const fastify = Fastify({ logger: true });
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-fastify.register(fastifyIO, { cors: { origin: '*' } });
+// Middleware
+app.use(express.json());
 
-fastify.get('/api/health', async () => ({ status: 'ok' }));
+// Route Mounting
+app.use('/api/users', userRoutes);
+app.use('/api/profiles', profileRoutes);
+app.use('/api/cards', cardRoutes);
+app.use('/api/games', gameRoutes);
 
-fastify.ready().then(() => {
-  fastify.io.on('connection', (socket) => {
-    fastify.log.info(`Socket connected: ${socket.id}`);
-    socket.on('chat-message', (msg) => {
-      fastify.io.emit('chat-message', msg);
-    });
-  });
+// Root Route (Optional)
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to the Turbo Monorepo Backend!' });
 });
 
-const start = async () => {
-  try {
-    await fastify.listen({ port: process.env.PORT ? Number(process.env.PORT) : 3001, host: '0.0.0.0' });
-    fastify.log.info('Server started');
-  } catch (err) {
-    fastify.log.error(err);
-    process.exit(1);
-  }
-};
+// Error Handling Middleware
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
+});
 
-start();
+// Start Server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
