@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import * as THREE from 'three';
 import type { CardData } from '../types/card';
+import { cardStore } from '../store/cardStore';
 
 interface CardPreviewProps {
   cardData: CardData;
@@ -427,6 +428,49 @@ export default function CardPreview({ cardData: initialCardData }: CardPreviewPr
     setIs3DMode(!is3DMode);
   };
 
+  // Method to capture the 2D rendered card
+  const captureImage = async (): Promise<string> => {
+    // Create a new canvas with the card design
+    const canvas = document.createElement('canvas');
+    canvas.width = 500;
+    canvas.height = 700;
+    
+    // Get the rendered card
+    const cardCanvas = await createCardTexture();
+    const ctx = canvas.getContext('2d');
+    
+    if (ctx && cardCanvas) {
+      // Draw the card at full resolution
+      ctx.drawImage(cardCanvas, 0, 0, canvas.width, canvas.height);
+      return canvas.toDataURL('image/png', 1.0);
+    }
+    
+    throw new Error('Failed to capture card image');
+  };
+
+  // Expose captureImage method
+  useEffect(() => {
+    const element = mountRef.current;
+    if (element) {
+      element.captureImage = captureImage;
+    }
+  }, [cardData]); // Update when card data changes
+
+  // Update the store with the rendered card image whenever card data changes
+  useEffect(() => {
+    const updateCardImage = async () => {
+      const canvas = await createCardTexture();
+      if (canvas) {
+        const imageData = canvas.toDataURL('image/png', 1.0);
+        cardStore.value = {
+          ...cardStore.value,
+          cardImage: imageData
+        };
+      }
+    };
+    
+    updateCardImage();
+  }, [cardData]);
 
   return (
     <div class="preview-wrapper">

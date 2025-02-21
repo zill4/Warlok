@@ -38,8 +38,11 @@ model Card {
   description   String
   effect        String
   image         String?  // URL or file path
+  edition       String   @default(uuid()) // Random hex string for edition
   ownerWallet   String   // Current owner's wallet address
   createdAt     DateTime @default(now())
+
+  @@index([creatorId])
 }
 
 model Game {

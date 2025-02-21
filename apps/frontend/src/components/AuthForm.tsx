@@ -1,14 +1,8 @@
 import { useState, useEffect } from 'preact/hooks';
 import { signal } from '@preact/signals';
+import type { AuthFormData, UserData, AuthResponse } from '@warlok/shared-types';
 
-const userSignal = signal(null);
-
-interface AuthFormData {
-    email: string;
-    username?: string;
-    password: string;
-    confirmPassword?: string;
-}
+const userSignal = signal<UserData | null>(null);
 
 export default function AuthForm() {
     const [isLogin, setIsLogin] = useState(true);
@@ -61,15 +55,37 @@ export default function AuthForm() {
                 throw new Error(await response.text());
             }
 
-            const userData = await response.json();
+            const userData: AuthResponse = await response.json();
             
-            // Store token in localStorage
+            // Store auth data in localStorage
             localStorage.setItem('token', userData.token);
+            localStorage.setItem('userId', userData.user.id);
+            localStorage.setItem('email', userData.user.email);
+            localStorage.setItem('wallet', userData.user.wallet);
             
-            // Update user signal
-            userSignal.value = userData.user;
+            if (userData.user.profile) {
+                localStorage.setItem('username', userData.user.profile.username);
+                if (userData.user.profile.bio) {
+                    localStorage.setItem('bio', userData.user.profile.bio);
+                }
+            }
             
-            window.location.href = '/';
+            localStorage.setItem('authTimestamp', Date.now().toString());
+            
+            // Update userSignal with the complete user data
+            userSignal.value = {
+                id: userData.user.id,
+                email: userData.user.email,
+                wallet: userData.user.wallet,
+                profile: userData.user.profile || {
+                    id: '',
+                    userId: userData.user.id,
+                    username: '',
+                    bio: undefined
+                },
+                authTimestamp: Date.now()
+            };
+            window.location.href = '/profile';
         } catch (err: unknown) {
             setError((err as Error).message || 'An error occurred');
         } finally {

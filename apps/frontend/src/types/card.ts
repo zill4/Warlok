@@ -6,4 +6,5 @@ export interface CardData {
     cardType: 'Dragon' | 'Fiend' | 'Fairy' | string; // Expand as needed
     description: string;
     effect: string;
-    image?: File | string; // Added optional image field (File or URL)  }
+    image?: File | string; // Added optional image field (File or URL)  
+    }

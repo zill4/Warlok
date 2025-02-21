@@ -56,8 +56,7 @@ router.post('/login', async (req, res) => {
     const token = generateToken(user.id);
 
     res.json({ 
-      user: { id: user.id, email: user.email },
-      profile: user.profile,
+      user: user,
       token 
     });
   } catch (error) {

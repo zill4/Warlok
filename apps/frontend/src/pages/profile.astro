@@ -27,9 +27,8 @@ export const tempCards = [
       image: '/assets/images/Ace_Kunoichi.png'
     },
   ];
+  
 ---
-
-
 <Layout title="Profile">
   <div class="profile-container">
     <div class="profile-header">
@@ -38,6 +37,7 @@ export const tempCards = [
         <div class="username">Zi114</div>
         <!-- <div class="verified">✓ @_Zi114_</div> -->
         <div class="edit-profile">✎</div>
+        <div class="logout" onclick="handleLogout()" style="cursor: pointer;">Logout</div>  
       </div>
     </div>
 
@@ -52,7 +52,6 @@ export const tempCards = [
     </div>
   </div>
 </Layout>
-
 <style>
   .profile-container {
     max-width: 1200px;
@@ -139,4 +138,24 @@ export const tempCards = [
     background: transparent;
     border-radius: 8px;
   }
+
+  .logout {
+    margin-left: 1rem;
+    color: #666;
+    transition: color 0.2s ease;
+  }
+
+  .logout:hover {
+    color: #ff4444;  /* Red tint on hover */
+  }
 </style>
+
+<script is:inline>
+    function handleLogout() {
+      // Remove the token from localStorage
+      localStorage.removeItem('token');
+      
+      // Redirect to the root route
+      window.location.href = '/';
+    }
+  </script>
