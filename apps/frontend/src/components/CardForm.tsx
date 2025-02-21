@@ -1,28 +1,27 @@
 // src/components/CardForm.tsx
 import { useState, useEffect } from 'preact/hooks';
-import type { CardData } from '../types/card';
+import type { CardData } from '@warlok/shared-types';
 import ImageUpload from './ImageUpload';
+import { cardStore } from '../store/cardStore';
 
 interface CardFormProps {
   onCardUpdate?: (card: CardData) => void;
+  cardPreviewId: string; // Changed from ref to id
 }
 
-export default function CardForm({ onCardUpdate }: CardFormProps) {
-  const [cardData, setCardData] = useState<CardData>({
-    name: '',
-    chessPieceType: '',
-    pokerCardSymbol: 'Clubs',
-    pokerCardType: 'Ace',
-    cardType: 'Dragon',
-    description: '',
-    effect: '',
-    image: '',
-  });
+export default function CardForm({ onCardUpdate, cardPreviewId }: CardFormProps) {
+  const [cardData, setCardData] = useState<CardData>(cardStore.value.cardData);
 
   const handleInputChange = (e: Event) => {
     const target = e.target as HTMLInputElement | HTMLSelectElement;
     const newCardData = { ...cardData, [target.name]: target.value };
     setCardData(newCardData);
+    
+    // Update global store
+    cardStore.value = {
+      ...cardStore.value,
+      cardData: newCardData
+    };
     
     // Emit custom event
     const event = new CustomEvent('cardupdate', {
@@ -54,16 +53,106 @@ export default function CardForm({ onCardUpdate }: CardFormProps) {
     }
   };
 
+  const captureCardPreview = async (): Promise<string> => {
+    const previewElement = document.getElementById(cardPreviewId);
+    console.log(previewElement);
+    if (!previewElement || !('captureImage' in previewElement)) {
+      throw new Error('Card preview not available');
+    }
+
+    try {
+      // Get the 2D rendered version
+      const imageData = await (previewElement as any).captureImage();
+      if (!imageData) {
+        throw new Error('Failed to capture card preview');
+      }
+      return imageData;
+    } catch (error) {
+      console.error('Error capturing card preview:', error);
+      throw error;
+    }
+  };
+
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
+    
+    try {
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+
+      if (!cardStore.value.cardImage) {
+        throw new Error('Card image not ready');
+      }
+
+      const formData = new FormData();
+      formData.append('cardData', JSON.stringify({
+        ...cardData,
+        creatorId: userId
+      }));
+
+      // Convert the stored image data to blob
+      const response = await fetch(cardStore.value.cardImage);
+      const blob = await response.blob();
+      formData.append('image', blob, `${cardData.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.png`);
+
+      const res = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/cards`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to create card');
+      }
+
+      const newCard = await res.json();
+      console.log('Card created:', newCard);
+      
+      // Reset form and store
+      const emptyCard = {
+        name: '',
+        chessPieceType: '',
+        pokerCardSymbol: 'Clubs',
+        pokerCardType: 'Ace',
+        cardType: 'Dragon',
+        description: '',
+        effect: '',
+        image: ''
+      };
+      
+      setCardData(emptyCard);
+      cardStore.value = {
+        cardData: emptyCard,
+        cardImage: null
+      };
+
+    } catch (error) {
+      console.error('Error creating card:', error);
+      // Handle error (show message to user, etc.)
+    }
+  };
+
   return (
-    <form class="card-form" autocomplete="off" style={{ 
-      display: 'flex', 
-      flexDirection: 'column',
-      gap: '12px',
-      padding: '20px',
-      background: '#1a1a1a',
-      borderRadius: '8px',
-      height: '100%'
-    }}>
+    <form 
+      class="card-form" 
+      autocomplete="off" 
+      onSubmit={handleSubmit}
+      style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        gap: '12px',
+        padding: '20px',
+        background: '#1a1a1a',
+        borderRadius: '8px',
+        height: '100%',
+        cursor: 'pointer'
+      }}
+    >
       {/* Creator section */}
       <div class="creator-section" style={{
         display: 'flex',
@@ -268,6 +357,8 @@ export default function CardForm({ onCardUpdate }: CardFormProps) {
         <label>Card Image</label>
         <ImageUpload onImageUpload={handleImageUpload} />
       </div>
+
+      <button type="submit">Submit</button>
     </form>
   );
 }

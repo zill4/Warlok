@@ -1,0 +1,146 @@
+---
+import '../styles/fonts.css';
+import AuthForm from '../components/AuthForm';
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Authentication - WARLOK</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono&display=swap" rel="stylesheet">
+		<link rel="icon" type="image/png" href="/assets/images/W.png">
+		<style>
+			body {
+				margin: 0;
+				background: #000;
+				color: #D9D9D9;
+				font-family: 'Space Mono', monospace;
+				min-height: 100vh;
+			}
+
+			.header {
+				padding: 1.5rem;
+				background: rgba(0, 0, 0, 0.9);
+				border-bottom: 1px solid #333;
+			}
+
+			.logo {
+				font-family: 'Bebas Neue', sans-serif;
+				-webkit-font-smoothing: antialiased;
+				font-size: 2rem;
+				color: #D9D9D9;
+				text-decoration: none;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+
+			.container {
+				display: flex;
+				flex-direction: row;
+				justify-content: space-between;
+				padding: 2rem;
+				margin: 0 auto;
+				max-width: 1200px;
+			}
+
+			.auth-box {
+				background: #1a1a1a;
+				border-radius: 8px;
+				padding: 2rem;
+				height: fit-content;
+				width: 400px;
+			}
+
+			.welcome-box {
+				padding: 2rem;
+				text-align: left;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				max-width: 500px;
+			}
+
+			.welcome-title {
+				font-family: 'Bebas Neue', sans-serif;
+				font-size: 2rem;
+				margin-bottom: 1rem;
+				color: #D9D9D9;
+			}
+
+			.welcome-text {
+				color: #666;
+				line-height: 1.5;
+			}
+
+			/* Form Styles */
+			:global(.auth-form) {
+				display: flex;
+				flex-direction: column;
+				gap: 1.25rem;
+			}
+
+			:global(.auth-form input) {
+				width: 100%;
+				padding: 0.75rem;
+				background: #2a2a2a;
+				border: 1px solid #3a3a3a;
+				color: #D9D9D9;
+				font-family: 'Space Mono', monospace;
+				font-size: 0.9rem;
+				border-radius: 4px;
+				transition: border-color 0.2s;
+			}
+
+			:global(.auth-form input:focus) {
+				outline: none;
+				border-color: #D9D9D9;
+			}
+
+			:global(.auth-form button[type="submit"]) {
+				width: 100%;
+				padding: 0.75rem;
+				background: #D9D9D9;
+				border: none;
+				color: #000;
+				font-family: 'Space Mono', monospace;
+				font-size: 0.9rem;
+				border-radius: 4px;
+				cursor: pointer;
+				transition: opacity 0.2s;
+			}
+
+			:global(.auth-form button[type="submit"]:hover) {
+				opacity: 0.9;
+			}
+
+			:global(.auth-form button[type="button"]) {
+				background: none;
+				border: none;
+				color: #D9D9D9;
+				font-family: 'Space Mono', monospace;
+				font-size: 0.9rem;
+				cursor: pointer;
+				text-decoration: underline;
+				margin-top: 1rem;
+			}
+		</style>
+	</head>
+	<body>
+		<header class="header">
+			<a href="/" class="logo">山 W̵a̵r̵l̵o̵k̵</a>
+		</header>
+		<main class="container">
+			<div class="welcome-box">
+				<h2 class="welcome-title">Welcome to WARLOK</h2>
+				<p class="welcome-text">Create an account to start building your deck and playing against others.</p>
+			</div>
+			<div class="auth-box">
+				<AuthForm client:load />
+			</div>
+		</main>
+	</body>
+</html>

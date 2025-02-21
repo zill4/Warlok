@@ -1,0 +1,56 @@
+Notes 
+TODO 02_13_25
+	Done 0. Define game loop, logic, and design.
+	Done 1. Implement game loop vs. AI.
+	75% 2. Define schema for Cards, Decks, Chess Pieces, Game, etc.
+	0% 3. Infra setup, databases, user identity
+
+TODO 02_i14_25
+	0. Infra setup, database, user identity.
+	1. Polish game loop, card effects, fusions/hands
+	Done 2. UI update, turn history, score, better AI
+	Done 3. bugs; can't place card on a piece
+	4. Draw card functionality, and animation.
+	30% 5. More options menu, start game, game history, game options, deck editing, etc.
+	-10% 6. FIND THE FUN.
+	7. Asset generation piple update, less faces, bg removal, script to auto pipe into game for card creation..
+
+TODO 02_20_25
+	0. Backend infra setup
+		- User sign up and login: routes, controllers, schema... (true
+		  for all below)
+		- Profile: (attach username, X account, Decks, Cards, games,
+		  Solana)
+		- Card creation flow: Create account / login -> Profile Page -> Create Card -> Generate Model -> Save to Deck
+		- Deck Editor Page
+	Done 1. Shared types package
+	2. Solana integration
+	3. DO NOT DEPLOY W/ PLAIN TEXT PASSWORDS FROM STREAM..., fix auth security offstream, don't store as plain text ANYWHERE.i
+	50% (initial mockup) 4. Profile page
+		- Username
+		- cards 75%
+		- games
+		- decks
+	5. Create card page done, but needs to upload to DB and bucket for image.
+	6. Deck builder page
+	7. 3D asset generator + bg removal. In card creator space.i
+	8. settings page.
+	9. We need buckets for uploading card creations, and sourcing them, local_dev_bucket
+		- Card Image upload
+		- Profile Image
+		- Store 3D files
+Flattened TODO 02_20_25
+	0. Backend infra set up for dev, with buckets
+	1. Backend infra SECURELY for prod with buckets
+	2. Asset Generation Pipeline: take image -> Remove BG -> Run 3D Model Generator -> Store in bucket linked to Account
+	3. Profile Page Design - View Cards, Decks
+		- Viewing a card should also show the 3D model kinda like Digimon evolution
+		- Deck construction will need to be linked to an account
+	4. Creating real games
+		- A real game requires deck, we will need save the game state, allow users to start new games, and view old games.
+	5. Privacy Policy / terms of use for when we deploy sign-up
+	6. X account linking (first citizen)
+	7. Solana wallet and minting, really think about this so its not cringe af
+	8. Make Money? I need pay for infra, so if we use Solana how can I make when a user generates a model it looks good.
+	9. Support forms, or some way for people to let me know something broke....
+	-1. BUGS: NEED TO MAKE SURE THE PAGE DOESN'T FREEZE OR BREAK (doing this after letting it idle for too long).

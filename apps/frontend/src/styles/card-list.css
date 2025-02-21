@@ -1,0 +1,128 @@
+.card-list-container {
+  display: flex;
+  gap: 2rem;
+  height: 100%;
+  font-family: 'Courier New', monospace;
+}
+
+.card-list {
+  flex: 1;
+  background: #0a0a0a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+.search-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.search-bar input {
+  flex: 1;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: #d9d9d9;
+  padding: 0.5rem;
+  font-family: 'Courier New', monospace;
+}
+
+.search-bar button {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: #d9d9d9;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.card-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.card-item:hover {
+  background: #252525;
+  border-color: #666;
+}
+
+.card-item.selected {
+  background: #252525;
+  border-color: #666;
+  box-shadow: 0 0 0 1px #666;
+}
+
+.card-item .index {
+  color: #666;
+  font-family: 'Courier New', monospace;
+}
+
+.card-item .name {
+  flex: 1;
+  color: #d9d9d9;
+}
+
+.card-item .type {
+  color: #d9d9d9;
+  font-family: 'Courier New', monospace;
+}
+
+.card-preview {
+  width: 300px;
+  background: #0a0a0a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+.card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card-image {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.card-info {
+  color: #d9d9d9;
+}
+
+.card-info h2 {
+  margin: 0 0 0.5rem 0;
+  font-family: 'Courier New', monospace;
+}
+
+.card-info p {
+  margin: 0.25rem 0;
+  font-family: 'Courier New', monospace;
+}
+
+.description {
+  color: #999;
+}
+
+.effect {
+  color: #666;
+}
+
+.creator {
+  color: #666;
+  font-size: 0.9em;
+} 

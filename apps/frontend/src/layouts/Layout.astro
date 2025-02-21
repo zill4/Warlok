@@ -1,0 +1,145 @@
+---
+import '../styles/fonts.css';
+import { userSignal } from '../components/AuthForm';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} - WARLOK</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="/assets/images/W.png">
+  </head>
+  <body>
+    <header class="header">
+      <a href="/" class="logo">山 W̵a̵r̵l̵o̵k̵</a>
+      <div class="auth-buttons" id="authButtons">
+        <a href="/auth?signup=true" class="auth-button">Sign_Up</a>
+        <span class="divider">/</span>
+        <a href="/auth?login=true" class="auth-button">Login</a>
+      </div>
+    </header>
+    <main>
+      <slot />
+    </main>
+
+    <script>
+      // Client-side auth check
+      import { checkAuth } from '../utils/auth';
+      
+      const updateAuthButtons = async () => {
+        const isAuthed = await checkAuth();
+        const authButtons = document.getElementById('authButtons');
+        
+        if (isAuthed && authButtons) {
+          authButtons.innerHTML = `
+            <div class="profile-menu">
+              <a href="/profile" class="profile-button">
+                <img src="https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg" alt="Profile" class="avatar" style="width: 32px; height: 32px; border-radius: 50%;"/>
+              </a>
+            </div>
+          `;
+        }
+      };
+
+      // Run auth check when the page loads
+      updateAuthButtons();
+    </script>
+  </body>
+</html>
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background: #000;
+    color: #D9D9D9;
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+  }
+
+  .header {
+    padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.9);
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    font-size: 2rem;
+    color: #D9D9D9;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .auth-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .auth-button {
+    font-family: 'Space Mono', monospace;
+    background-color: #D9D9D9;
+    color: #000;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+
+  .auth-button:hover {
+    opacity: 0.9;
+  }
+
+  .divider {
+    color: #D9D9D9;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .profile-menu {
+    position: relative;
+  }
+
+  .profile-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    color: #D9D9D9;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+  }
+
+  main {
+    width: 100%;
+    min-height: calc(100vh - 80px);
+  }
+</style> 
