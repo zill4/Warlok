@@ -10,6 +10,7 @@ datasource db {
 model User {
   id          String   @id @default(uuid())
   email       String   @unique
+  password    String
   wallet      String   @unique // Public key of custodial wallet
   profile     Profile?
   createdCards Card[]
@@ -37,7 +38,7 @@ model Card {
   description   String
   effect        String
   image         String?  // URL or file path
-  ownerWallet   String   // Current owner’s wallet address
+  ownerWallet   String   // Current owner's wallet address
   createdAt     DateTime @default(now())
 }
 

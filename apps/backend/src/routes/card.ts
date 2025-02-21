@@ -1,24 +1,24 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import { transferCard } from '../services/solana';
-import { CardData } from '@your-monorepo/shared-types'; // From shared-types package
+// import { transferCard } from '../services/solana';
+import { CardData } from '@warlok/shared-types'; // From shared-types package
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Create Card
 router.post('/', async (req, res) => {
-  const cardData: CardData = req.body;
-  const { creatorId } = req.body; // Assume authenticated user ID
+  const { creatorId, ...cardInput }: { creatorId: string } & Omit<CardData, 'image'> & { image?: string } = req.body;
   try {
     const user = await prisma.user.findUnique({ where: { id: creatorId } });
     if (!user) return res.status(404).json({ error: 'User not found' });
     
+    // At this point, image should already be uploaded and we should have its URL/path
     const card = await prisma.card.create({
       data: {
-        ...cardData,
+        ...cardInput,
         creatorId,
-        ownerWallet: user.wallet, // Initially owned by creator
+        ownerWallet: user.wallet,
       },
     });
     res.status(201).json(card);
@@ -42,7 +42,7 @@ router.get('/:id', async (req, res) => {
 // Update Card
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const updates: Partial<CardData> = req.body;
+  const updates: Omit<Partial<CardData>, 'image'> & { image?: string } = req.body;
   try {
     const card = await prisma.card.update({
       where: { id },
@@ -66,18 +66,18 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Trade Card (Buy/Sell/Trade via Solana)
-router.post('/trade/:id', async (req, res) => {
-  const { id } = req.params;
-  const { toWallet } = req.body; // Buyer’s wallet
-  try {
-    const card = await prisma.card.findUnique({ where: { id } });
-    if (!card) return res.status(404).json({ error: 'Card not found' });
+// router.post('/trade/:id', async (req, res) => {
+//   const { id } = req.params;
+//   const { toWallet } = req.body; // Buyer's wallet
+//   try {
+//     const card = await prisma.card.findUnique({ where: { id } });
+//     if (!card) return res.status(404).json({ error: 'Card not found' });
 
-    const signature = await transferCard(id, card.ownerWallet, toWallet);
-    res.json({ signature, card });
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-});
+//     const signature = await transferCard(id, card.ownerWallet, toWallet);
+//     res.json({ signature, card });
+//   } catch (error) {
+//     res.status(500).json({ error: (error as Error).message });
+//   }
+// });
 
 export default router;

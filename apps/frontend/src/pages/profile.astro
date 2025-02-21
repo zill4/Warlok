@@ -1,0 +1,142 @@
+---
+// Component Imports
+import CardList from '../components/CardList';
+import '../styles/fonts.css';
+import Layout from '../layouts/Layout.astro';
+import '../styles/card-list.css';
+
+export const tempCards = [
+      {
+        id: '1',
+      name: 'Chroma Queen',
+      type: 'A ♦',
+      rarity: 'Rook',
+      description: 'A powerful cyber entity.',
+      effect: 'Can be placed anywhere on the board.',
+      creator: 'Zi114',
+      image: '/assets/images/Chroma_Queen.png'
+    },
+    {
+      id: '2',
+      name: 'Ace Kunoichi',
+      type: 'A ♦',
+      rarity: 'Ace',
+      description: 'Ace cyberrunner ninja.',
+      effect: 'Can be placed anywhere on the board when played as a straight.',
+      creator: 'Zi114',
+      image: '/assets/images/Ace_Kunoichi.png'
+    },
+  ];
+---
+
+
+<Layout title="Profile">
+  <div class="profile-container">
+    <div class="profile-header">
+      <div class="profile-info">
+        <img src="https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg" alt="Profile" class="avatar" />
+        <div class="username">Zi114</div>
+        <!-- <div class="verified">✓ @_Zi114_</div> -->
+        <div class="edit-profile">✎</div>
+      </div>
+    </div>
+
+    <div class="navigation">
+      <button class="nav-button active">CARDS</button>
+      <button class="nav-button">DECKS</button>
+      <button class="nav-button">GAMES</button>
+    </div>
+
+    <div class="content">
+      <CardList client:load cards={tempCards} />
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    color: #D9D9D9;
+    font-family: 'Courier New', monospace;
+  }
+
+  .profile-header {
+    margin-bottom: 2rem;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 1.5rem;
+  }
+
+  .profile-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid #333;
+  }
+
+  .username {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #fff;
+  }
+
+  .verified {
+    color: #1DA1F2;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .edit-profile {
+    margin-left: auto;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.2s ease;
+  }
+
+  .edit-profile:hover {
+    color: #fff;
+  }
+
+  .navigation {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .nav-button {
+    background: #0a0a0a;
+    border: 1px solid #333;
+    padding: 0.75rem 1.5rem;
+    color: #D9D9D9;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    transition: all 0.2s ease;
+  }
+
+  .nav-button:hover {
+    background: #1a1a1a;
+    border-color: #666;
+  }
+
+  .nav-button.active {
+    background: #1a1a1a;
+    border-color: #666;
+    color: #fff;
+  }
+
+  .content {
+    background: transparent;
+    border-radius: 8px;
+  }
+</style>

@@ -1,6 +1,6 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import { HistoryEntry } from '@your-monorepo/shared-types';
+import { HistoryEntry } from '@warlok/shared-types';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -27,7 +27,10 @@ router.get('/:id', async (req, res) => {
   try {
     const game = await prisma.game.findUnique({
       where: { id },
-      include: { players: true },
+      include: { 
+        players: true,
+        turns: true 
+      },
     });
     if (!game) return res.status(404).json({ error: 'Game not found' });
     res.json(game);
@@ -39,15 +42,21 @@ router.get('/:id', async (req, res) => {
 // Add Turn to Game
 router.post('/:id/turn', async (req, res) => {
   const { id } = req.params;
-  const turn: HistoryEntry = req.body;
+  const turnData: Omit<HistoryEntry, 'id' | 'gameId'> = req.body;
   try {
     const game = await prisma.game.update({
       where: { id },
       data: {
         turns: {
-          push: turn,
-        },
+          create: {
+            ...turnData,
+            timestamp: new Date()
+          }
+        }
       },
+      include: {
+        turns: true
+      }
     });
     res.json(game);
   } catch (error) {

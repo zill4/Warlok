@@ -1,5 +1,5 @@
 // Debug flag - set to true to enable console.logs
-const DEBUG_MODE = false;
+const DEBUG_MODE = true;
 
 // Store the original console.log
 const originalConsoleLog = console.log;
