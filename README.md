@@ -1,4 +1,7 @@
 #  warlok 
+
+the below text is stupid af, need to fix it.
+
 **Warning: This repo contains 99% pure adrenaline-fueled code.**  
 We're building the ultimate hybrid of chess, card battles, and AI-generated nightmares. Join the madness.
 
@@ -69,8 +72,8 @@ npm run build  # Forge that production beast
 ```.env
 # apps/backend/.env
 DATABASE_URL="postgresql://user:password@localhost:5432/cyberforge?schema=public"
-AWS_ACCESS_KEY="your-key-here" 
-AWS_SECRET_KEY="your-secret-here"
+ACCESS_KEY="your-key-here" 
+SECRET_KEY="your-secret-here"
 S3_BUCKET_NAME="digital-armory"
 ```
 

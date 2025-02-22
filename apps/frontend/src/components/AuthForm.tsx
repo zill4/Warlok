@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { signal } from '@preact/signals';
-import type { AuthFormData, UserData, AuthResponse } from '@warlok/shared-types';
+import type { AuthFormData, UserData, AuthResponse } from '../types/shared';
 
 const userSignal = signal<UserData | null>(null);
 

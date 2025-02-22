@@ -1,7 +1,7 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 // import { transferCard } from '../services/solana';
-import { CardData } from '@warlok/shared-types'; // From shared-types package
+import { CardData } from '../types/shared'; // From shared-types package
 import multer from 'multer';
 import { uploadCardImage } from '../services/s3';
 import { v4 as uuidv4 } from 'uuid';

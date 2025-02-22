@@ -1,4 +1,4 @@
-import type { UserData, User, Profile } from '@warlok/shared-types';
+import type { UserData, User, Profile } from '../types/shared';
 import { userSignal } from '../components/AuthForm';
 
 export const checkAuth = async () => {

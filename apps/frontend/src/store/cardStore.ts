@@ -1,5 +1,5 @@
 import { signal } from '@preact/signals';
-import type { CardData } from '@warlok/shared-types';
+import type { CardData } from '../types/shared';
 
 export interface CardStore {
   cardData: CardData;
