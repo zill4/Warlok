@@ -43,7 +43,8 @@ export default function AuthForm() {
 
         try {
             const endpoint = isLogin ? 'login' : 'signup';
-            const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/users/${endpoint}`, {
+            const baseUrl = import.meta.env.PUBLIC_API_URL || 'https://warlok-backend.fly.dev';
+            const response = await fetch(`${baseUrl}/api/users/${endpoint}`.replace(/\/+/g, '/').replace('http:/', 'http://').replace('https:/', 'https://'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
