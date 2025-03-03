@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+import path from 'path';
 import express from 'express';
 import cors from 'cors';
 import userRoutes from './routes/user';
@@ -5,8 +7,12 @@ import profileRoutes from './routes/profile';
 import cardRoutes from './routes/card';
 import gameRoutes from './routes/game';
 
+// Load environment variables before any other imports
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
+const HOST = '0.0.0.0';
 
 async function startServer() {
   try {
@@ -34,8 +40,8 @@ async function startServer() {
     });
 
     // Start server
-    app.listen(PORT, () => {
-      console.log(`✅ Server running on http://localhost:${PORT}`);
+    app.listen(PORT, HOST, () => {
+      console.log(`✅ Server running on http://${HOST}:${PORT}`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

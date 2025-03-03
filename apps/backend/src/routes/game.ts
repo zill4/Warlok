@@ -1,6 +1,6 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import { HistoryEntry } from '@warlok/shared-types';
+import { HistoryEntry } from '../types/shared';
 
 const router = express.Router();
 const prisma = new PrismaClient();

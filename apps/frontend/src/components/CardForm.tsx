@@ -1,6 +1,6 @@
 // src/components/CardForm.tsx
 import { useState, useEffect } from 'preact/hooks';
-import type { CardData } from '@warlok/shared-types';
+import type { CardData } from '../types/shared';
 import ImageUpload from './ImageUpload';
 import { cardStore } from '../store/cardStore';
 

@@ -296,10 +296,10 @@ export class CardSystem {
       
         // Increase offset calculation - more aggressive upward adjustment
         const offsetY = Math.max(0, (1000 - rect.height) * 0.02); // Increased from 0.15 to 0.35
- 
+
 
         // Adjust clientY with the increased offset
-        const adjustedClientY = clientY - offsetY;
+        const adjustedClientY = clientY - offsetY1;
         
         // Calculate normalized coordinates
         this.mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;

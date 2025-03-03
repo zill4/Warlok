@@ -12,7 +12,6 @@
     "@astrojs/preact": "^4.0.4",
     "@preact/signals": "^2.0.1",
     "@types/gsap": "^1.20.2",
-    "@warlok/shared-types": "*",
     "@webgpu/types": "^0.1.54",
     "astro": "^5.2.5",
     "gsap": "^3.12.7",
