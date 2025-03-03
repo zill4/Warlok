@@ -7,6 +7,7 @@ interface Props {
   footerText?: string;
   showViewOptions?: boolean;
   centerFooter?: boolean;
+  is3DModel?: boolean;
 }
 
 const { 
@@ -15,7 +16,8 @@ const {
   creator = "Zi114", 
   footerText, 
   showViewOptions = false,
-  centerFooter = false
+  centerFooter = false,
+  is3DModel = false
 } = Astro.props;
 ---
 
@@ -36,7 +38,7 @@ const {
     
     {footerText && <span>{footerText}</span>}
     
-    {showViewOptions && (
+    {showViewOptions && is3DModel && (
       <div class="view-options">
         <button class="view-button">2D</button>
         <button class="view-button active">3D</button>

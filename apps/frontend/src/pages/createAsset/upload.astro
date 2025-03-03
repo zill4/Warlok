@@ -1,0 +1,838 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CardComponent from '../../components/CardComponent.astro';
+---
+
+<Layout title="Upload Art Asset">
+  <div class="create-asset">
+    <div class="content">
+      <div class="step-counter">2/3</div>
+
+      <div class="form-container">
+        <div class="form-section">
+          <div class="form-group">
+            <label for="assetName">ASSET NAME <span class="required">*</span></label>
+            <input type="text" id="assetName" placeholder="Enter asset name" class="input-field" required />
+            <div class="error-message" id="nameError"></div>
+          
+            <label for="assetDescription">DESCRIPTION <span class="optional">(optional)</span></label>
+            <textarea id="assetDescription" placeholder="Enter asset description" class="input-field textarea" rows="3"></textarea>
+            
+            <label for="assetTags">TAGS <span class="optional">(optional)</span></label>
+            <input type="text" id="assetTags" placeholder="Enter asset tags (comma separated)" class="input-field" />
+            <div class="error-message" id="tagsError"></div>
+            
+            <label for="creatorSearch">CREATOR <span class="required">*</span></label>
+            <div class="creator-search-container">
+              <input type="text" id="creatorSearch" placeholder="Search for creator" class="input-field" />
+              <div class="creator-search-results" id="creatorSearchResults"></div>
+              <div class="selected-creator" id="selectedCreator">
+                <div class="creator-info">
+                  <img id="creatorAvatar" src="https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg" alt="Creator" class="creator-avatar" />
+                  <span id="creatorName">You</span>
+                </div>
+                <button id="resetCreator" class="reset-btn">×</button>
+              </div>
+            </div>
+            <div class="error-message" id="creatorError"></div>
+            
+            <div class="form-row">
+              <div class="form-col">
+                <label for="royaltyRate">ROYALTY RATE <span class="required">*</span></label>
+                <input type="text" id="royaltyRate" value="10%" placeholder="Enter royalty rate" class="input-field" required />
+                <div class="error-message" id="rateError"></div>
+                <p class="price-note">Maximum royalty rate: 30%</p>
+              </div>
+              
+              <div class="form-col">
+                <label for="assetPrice">PRICE <span class="required">*</span></label>
+                <input type="text" id="assetPrice" value="FREE" placeholder="Enter asset price" class="input-field" required />
+                <div class="error-message" id="priceError"></div>
+                <p class="price-note">Maximum price: $1.00</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="upload-section">
+          <div class="small-upload">
+            <label>UPLOAD IMAGE <span class="required">*</span></label>
+            <div class="upload-box" id="uploadBox">
+              <input type="file" id="fileInput" accept="image/*" class="file-input" required />
+              <div class="upload-content" id="uploadContent">
+                <span class="plus">+</span>
+                <p class="upload-text">Drag and Drop, Paste, or<br />Upload Image directly.</p>
+              </div>
+              <div class="file-preview" id="filePreview" style="display: none;">
+                <img id="smallPreview" class="small-preview-image" />
+                <div class="file-info">
+                  <span class="file-name" id="fileName"></span>
+                  <button class="delete-btn" id="deleteBtn" aria-label="Remove file">×</button>
+                </div>
+              </div>
+            </div>
+            <div class="error-message" id="imageError"></div>
+          </div>
+
+          <div class="preview-area">
+            <label>PREVIEW</label>
+            <div class="card-preview-container" id="cardPreviewContainer">
+              <div id="emptyPreview" class="empty-preview">
+                <p>Your asset preview will appear here</p>
+              </div>
+              <div id="cardPreview" style="display: none;">
+                <!-- CardComponent will be inserted here dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button class="cancel-btn" id="cancelBtn">Cancel</button>
+        <button class="submit-btn" id="submitBtn">Create Asset</button>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .create-asset {
+    min-height: calc(100vh - var(--header-height));
+    color: white;
+  }
+
+  .content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .step-counter {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+  }
+
+  .form-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+
+  .form-section {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .form-col {
+    display: flex;
+    flex-direction: column;
+  }
+
+  label {
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+  }
+
+  .input-field {
+    width: 100%;
+    padding: 0.5rem;
+    background: none;
+    border: none;
+    color: white;
+    border-bottom: 1px solid #333;
+    font-family: inherit;
+  }
+
+  .textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .price-note {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 0.25rem;
+  }
+
+  .upload-section {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .small-upload, .preview-area {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .preview-area label, .small-upload label {
+    margin-bottom: 0.5rem;
+  }
+
+  .card-preview-container {
+    margin-top: 0;
+  }
+
+  .empty-preview {
+    border: 1px solid white;
+    width: 100%;
+    aspect-ratio: 3/4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+  }
+
+  #cardPreview {
+    width: 300px; /* Adjust as needed */
+  }
+
+  .file-input {
+    display: none;
+  }
+
+  .preview-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  .file-preview {
+    width: 100%;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .small-preview-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 0;
+  }
+
+  .file-info {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .file-name {
+    font-size: 0.85rem;
+    color: #D9D9D9;
+    word-break: break-word;
+    max-width: calc(100% - 30px);
+  }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    color: #ff4d4d;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    margin: 0;
+  }
+
+  .delete-btn:hover {
+    color: #ff0000;
+  }
+
+  .action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .cancel-btn, .submit-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .cancel-btn {
+    background: none;
+    color: white;
+    border: 1px solid white;
+  }
+
+  .submit-btn {
+    background: white;
+    color: black;
+  }
+
+  @media (max-width: 992px) {
+    .form-container {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .upload-section {
+      grid-template-columns: 1fr;
+    }
+
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .required {
+    color: #ff4444;
+  }
+
+  .optional {
+    color: #888;
+    font-size: 0.8rem;
+    font-weight: normal;
+  }
+
+  .error-message {
+    color: #ff4444;
+    font-size: 0.8rem;
+    min-height: 1rem;
+    margin-top: 0.25rem;
+  }
+
+  .creator-search-container {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+
+  .creator-search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    background: #111;
+    border: 1px solid #333;
+    z-index: 10;
+    display: none;
+  }
+
+  .creator-search-results.active {
+    display: block;
+  }
+
+  .creator-result {
+    padding: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .creator-result:hover {
+    background: #222;
+  }
+
+  .selected-creator {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem;
+    background: #222;
+    margin-top: 0.5rem;
+    border-radius: 4px;
+  }
+
+  .creator-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .creator-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+  }
+
+  .reset-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .reset-btn:hover {
+    color: #ff4444;
+  }
+
+  .input-field.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .upload-box {
+    width: 100%;
+    min-height: 120px;
+    border: 2px dashed #D9D9D9;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+  }
+
+  .upload-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    padding: 1rem;
+  }
+
+  .plus {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #D9D9D9;
+  }
+
+  .upload-text {
+    font-size: 0.8rem;
+    color: #D9D9D9;
+    margin: 0;
+  }
+</style>
+
+<script>
+  import { validateAssetName, validateRoyaltyRate, validateAssetPrice, validateAssetTags } from '../../utils/validation';
+
+  const uploadBox = document.getElementById('uploadBox');
+  const fileInput = document.getElementById('fileInput');
+  const previewImage = document.getElementById('previewImage');
+  const uploadContent = document.getElementById('uploadContent');
+  const filePreview = document.getElementById('filePreview');
+  const smallPreview = document.getElementById('smallPreview');
+  const fileName = document.getElementById('fileName');
+  const deleteBtn = document.getElementById('deleteBtn');
+  const emptyPreview = document.getElementById('emptyPreview');
+  const cardPreview = document.getElementById('cardPreview');
+  
+  // Form fields
+  const assetName = document.getElementById('assetName');
+  const assetDescription = document.getElementById('assetDescription');
+  const assetTags = document.getElementById('assetTags');
+  const royaltyRate = document.getElementById('royaltyRate');
+  const assetPrice = document.getElementById('assetPrice');
+  const creatorSearch = document.getElementById('creatorSearch');
+  const creatorSearchResults = document.getElementById('creatorSearchResults');
+  const selectedCreator = document.getElementById('selectedCreator');
+  const creatorName = document.getElementById('creatorName');
+  const creatorAvatar = document.getElementById('creatorAvatar');
+  const resetCreator = document.getElementById('resetCreator');
+  
+  // Error message elements
+  const nameError = document.getElementById('nameError');
+  const tagsError = document.getElementById('tagsError');
+  const rateError = document.getElementById('rateError');
+  const priceError = document.getElementById('priceError');
+  const imageError = document.getElementById('imageError');
+  const creatorError = document.getElementById('creatorError');
+  
+  // Set default values
+  royaltyRate.value = "10%";
+  assetPrice.value = "FREE";
+
+  // Current user info
+  let currentUser = null;
+  let isCurrentUserCreator = true;
+
+  // Mock user data for search (this would be replaced with API calls)
+  const mockUsers = [
+    { id: 1, username: 'Zi114', avatar: 'https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg' },
+    { id: 2, username: 'JohnDoe', avatar: 'https://randomuser.me/api/portraits/men/1.jpg' },
+    { id: 3, username: 'JaneSmith', avatar: 'https://randomuser.me/api/portraits/women/1.jpg' },
+    { id: 4, username: 'ArtistX', avatar: 'https://randomuser.me/api/portraits/men/2.jpg' },
+    { id: 5, username: 'CreatorY', avatar: 'https://randomuser.me/api/portraits/women/2.jpg' }
+  ];
+
+  // Get username from localStorage
+  function getCurrentUser() {
+    try {
+      const username = localStorage.getItem('username')
+      const userid = localStorage.getItem('userid')
+
+      if (username) {
+        return {
+          id: userid,
+          username: username,
+          avatar: 'https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg'
+        };
+      }
+      return { id: 0, username: 'You', avatar: 'https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg' };
+    } catch (e) {
+      console.error('Error parsing user from localStorage:', e);
+      return { id: 0, username: 'You', avatar: 'https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg' };
+    }
+  }
+
+  // Initialize current user
+  function initializeUser() {
+    currentUser = getCurrentUser();
+    creatorName.textContent = currentUser.username;
+    creatorAvatar.src = currentUser.avatar;
+    updateCreatorFields(true);
+  }
+
+  // Update creator fields based on whether current user is creator
+  function updateCreatorFields(isCurrentUser) {
+    isCurrentUserCreator = isCurrentUser;
+    
+    if (isCurrentUser) {
+      royaltyRate.classList.remove('disabled');
+      assetPrice.classList.remove('disabled');
+      royaltyRate.removeAttribute('disabled');
+      assetPrice.removeAttribute('disabled');
+    } else {
+      royaltyRate.classList.add('disabled');
+      assetPrice.classList.add('disabled');
+      royaltyRate.setAttribute('disabled', 'disabled');
+      assetPrice.setAttribute('disabled', 'disabled');
+    }
+  }
+
+  // Search for creators
+  function searchCreators(query) {
+    if (!query) {
+      creatorSearchResults.innerHTML = '';
+      creatorSearchResults.classList.remove('active');
+      return;
+    }
+    
+    // Filter mock users (would be replaced with API call)
+    const filteredUsers = mockUsers.filter(user => 
+      user.username.toLowerCase().includes(query.toLowerCase())
+    );
+    
+    // Display results
+    creatorSearchResults.innerHTML = '';
+    
+    if (filteredUsers.length === 0) {
+      const noResults = document.createElement('div');
+      noResults.className = 'creator-result';
+      noResults.textContent = 'No users found';
+      creatorSearchResults.appendChild(noResults);
+    } else {
+      filteredUsers.forEach(user => {
+        const result = document.createElement('div');
+        result.className = 'creator-result';
+        result.innerHTML = `
+          <img src="${user.avatar}" alt="${user.username}" class="creator-avatar" />
+          <span>${user.username}</span>
+        `;
+        result.addEventListener('click', () => selectCreator(user));
+        creatorSearchResults.appendChild(result);
+      });
+    }
+    
+    creatorSearchResults.classList.add('active');
+  }
+
+  // Select a creator
+  function selectCreator(user) {
+    creatorName.textContent = user.username;
+    creatorAvatar.src = user.avatar;
+    creatorSearch.value = '';
+    creatorSearchResults.innerHTML = '';
+    creatorSearchResults.classList.remove('active');
+    
+    // Check if selected creator is current user
+    const isCurrentUser = user.id === currentUser.id || 
+                         (user.username === currentUser.username && user.username !== 'You');
+    
+    updateCreatorFields(isCurrentUser);
+    updatePreviewCard();
+  }
+
+  // Reset creator to current user
+  function resetToCurrentUser() {
+    creatorName.textContent = currentUser.username;
+    creatorAvatar.src = currentUser.avatar;
+    updateCreatorFields(true);
+    updatePreviewCard();
+  }
+
+  // Update preview card when name changes
+  assetName.addEventListener('input', () => updatePreviewCard());
+
+  // Creator search events
+  creatorSearch.addEventListener('input', (e) => {
+    searchCreators(e.target.value);
+  });
+
+  creatorSearch.addEventListener('focus', () => {
+    if (creatorSearch.value) {
+      searchCreators(creatorSearch.value);
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!creatorSearch.contains(e.target) && !creatorSearchResults.contains(e.target)) {
+      creatorSearchResults.classList.remove('active');
+    }
+  });
+
+  resetCreator.addEventListener('click', resetToCurrentUser);
+
+  // Price validation
+  assetPrice.addEventListener('blur', () => {
+    if (isCurrentUserCreator) {
+      const value = assetPrice.value.trim();
+      if (value === "" || value.toLowerCase() === "free") {
+        assetPrice.value = "FREE";
+        return;
+      }
+
+      let numValue = parseFloat(value.replace(/[^0-9.]/g, ''));
+      if (isNaN(numValue)) {
+        assetPrice.value = "FREE";
+        return;
+      }
+
+      // Limit to $1.00 max
+      numValue = Math.min(numValue, 1.00);
+      assetPrice.value = `$${numValue.toFixed(2)}`;
+    }
+  });
+
+  // Handle click to upload
+  uploadBox.addEventListener('click', (e) => {
+    if (e.target === deleteBtn) return;
+    if (filePreview.style.display === 'none' || filePreview.style.display === '') {
+      fileInput.click();
+    }
+  });
+
+  // Handle file selection
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleFile(file);
+    }
+  });
+
+  // Handle drag and drop
+  uploadBox.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadBox.classList.add('dragover');
+  });
+
+  uploadBox.addEventListener('dragleave', () => {
+    uploadBox.classList.remove('dragover');
+  });
+
+  uploadBox.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadBox.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      handleFile(file);
+    }
+  });
+
+  // Handle paste
+  document.addEventListener('paste', (e) => {
+    const items = e.clipboardData.items;
+    for (let item of items) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        handleFile(file);
+        break;
+      }
+    }
+  });
+
+  // Handle delete
+  deleteBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearFile();
+  });
+
+  function handleFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imageUrl = e.target.result;
+      smallPreview.src = imageUrl;
+      fileName.textContent = file.name;
+      uploadContent.style.display = 'none';
+      filePreview.style.display = 'flex';
+      
+      // Update the preview card with the new image
+      updatePreviewCard(imageUrl);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearFile() {
+    fileInput.value = '';
+    smallPreview.src = '';
+    fileName.textContent = '';
+    uploadContent.style.display = 'flex';
+    filePreview.style.display = 'none';
+    
+    // Reset the preview
+    emptyPreview.style.display = 'flex';
+    cardPreview.style.display = 'none';
+  }
+
+  function updatePreviewCard(newImageUrl = null) {
+    const title = assetName.value || 'Asset Name';
+    const creator = creatorName.textContent;
+    const creatorImg = creatorAvatar.src;
+    
+    // If we have a new image, use it; otherwise keep the existing one if available
+    const imageUrl = newImageUrl || smallPreview.src;
+    
+    if (!imageUrl) {
+      emptyPreview.style.display = 'flex';
+      cardPreview.style.display = 'none';
+      return;
+    }
+    
+    // Create card HTML structure similar to CardComponent.astro
+    const cardHtml = `
+      <div class="card">
+        <div class="card-header">${title}</div>
+        <div class="card-image-container">
+          <div class="image-wrapper">
+            <img src="${imageUrl}" alt="${title}" class="card-image" />
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="creator-info">
+            <img src="${creatorImg}" alt="${creator}" class="creator-avatar" />
+            <span>${creator}</span>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    cardPreview.innerHTML = cardHtml;
+    emptyPreview.style.display = 'none';
+    cardPreview.style.display = 'block';
+  }
+
+  // Initialize the page
+  document.addEventListener('DOMContentLoaded', () => {
+    initializeUser();
+    
+    // Check if we already have an image to display
+    if (smallPreview.src) {
+      updatePreviewCard();
+    }
+
+    // Ensure the upload content is centered initially
+    if (uploadBox && uploadContent) {
+      uploadContent.style.display = 'flex';
+      uploadContent.style.alignItems = 'center';
+      uploadContent.style.justifyContent = 'center';
+    }
+  });
+</script>
+
+<style is:global>
+  /* Styles for the dynamically created card */
+  #cardPreview .card {
+    background: #D9D9D9;
+    outline: 2px solid #D9D9D9;
+    outline-offset: -1px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    color: #000;
+  }
+  
+  #cardPreview .card-header {
+    background: #D9D9D9;
+    padding: 0.5rem;
+    font-weight: bold;
+  }
+  
+  #cardPreview .card-image-container {
+    aspect-ratio: 4/5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+  }
+
+  #cardPreview .image-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+  }
+  
+  #cardPreview .card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    border-radius: 0;
+  }
+  
+  #cardPreview .card-footer {
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 2px solid #000;
+    font-size: 0.8rem;
+    background: #D9D9D9;
+  }
+  
+  #cardPreview .creator-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  #cardPreview .creator-avatar {
+    width: 20px;
+    height: 20px;
+  }
+</style> 
