@@ -1,6 +1,10 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import CardComponent from '../../components/CardComponent.astro';
+import FormField from '../../components/FormField.astro';
+import ImageUploader from '../../components/ImageUploader.astro';
+import CreatorSearch from '../../components/CreatorSearch.astro';
+import CardPreview from '../../components/CardPreview.astro';
+import StatusModal from '../../components/StatusModal.astro';
 ---
 
 <Layout title="Upload Art Asset">
@@ -11,44 +15,47 @@ import CardComponent from '../../components/CardComponent.astro';
       <div class="form-container">
         <div class="form-section">
           <div class="form-group">
-            <label for="assetName">ASSET NAME <span class="required">*</span></label>
-            <input type="text" id="assetName" placeholder="Enter asset name" class="input-field" required />
-            <div class="error-message" id="nameError"></div>
-          
-            <label for="assetDescription">DESCRIPTION <span class="optional">(optional)</span></label>
-            <textarea id="assetDescription" placeholder="Enter asset description" class="input-field textarea" rows="3"></textarea>
+            <FormField 
+              id="assetName"
+              label="ASSET NAME"
+              required={true}
+            />
             
-            <label for="assetTags">TAGS <span class="optional">(optional)</span></label>
-            <input type="text" id="assetTags" placeholder="Enter asset tags (comma separated)" class="input-field" />
-            <div class="error-message" id="tagsError"></div>
+            <FormField 
+              id="assetDescription"
+              label="DESCRIPTION"
+              type="textarea"
+              optional={true}
+            />
             
-            <label for="creatorSearch">CREATOR <span class="required">*</span></label>
-            <div class="creator-search-container">
-              <input type="text" id="creatorSearch" placeholder="Search for creator" class="input-field" />
-              <div class="creator-search-results" id="creatorSearchResults"></div>
-              <div class="selected-creator" id="selectedCreator">
-                <div class="creator-info">
-                  <img id="creatorAvatar" src="https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg" alt="Creator" class="creator-avatar" />
-                  <span id="creatorName">You</span>
-                </div>
-                <button id="resetCreator" class="reset-btn">×</button>
-              </div>
-            </div>
-            <div class="error-message" id="creatorError"></div>
+            <FormField 
+              id="assetTags"
+              label="TAGS"
+              placeholder="Enter asset tags (comma separated)"
+              optional={true}
+            />
+            
+            <CreatorSearch />
             
             <div class="form-row">
               <div class="form-col">
-                <label for="royaltyRate">ROYALTY RATE <span class="required">*</span></label>
-                <input type="text" id="royaltyRate" value="10%" placeholder="Enter royalty rate" class="input-field" required />
-                <div class="error-message" id="rateError"></div>
-                <p class="price-note">Maximum royalty rate: 30%</p>
+                <FormField 
+                  id="royaltyRate"
+                  label="ROYALTY RATE"
+                  value="10%"
+                  required={true}
+                  helperText="Maximum royalty rate: 30%"
+                />
               </div>
               
               <div class="form-col">
-                <label for="assetPrice">PRICE <span class="required">*</span></label>
-                <input type="text" id="assetPrice" value="FREE" placeholder="Enter asset price" class="input-field" required />
-                <div class="error-message" id="priceError"></div>
-                <p class="price-note">Maximum price: $1.00</p>
+                <FormField 
+                  id="assetPrice"
+                  label="PRICE"
+                  value="FREE"
+                  required={true}
+                  helperText="Maximum price: $1.00"
+                />
               </div>
             </div>
           </div>
@@ -56,41 +63,20 @@ import CardComponent from '../../components/CardComponent.astro';
 
         <div class="upload-section">
           <div class="small-upload">
-            <label>UPLOAD IMAGE <span class="required">*</span></label>
-            <div class="upload-box" id="uploadBox">
-              <input type="file" id="fileInput" accept="image/*" class="file-input" required />
-              <div class="upload-content" id="uploadContent">
-                <span class="plus">+</span>
-                <p class="upload-text">Drag and Drop, Paste, or<br />Upload Image directly.</p>
-              </div>
-              <div class="file-preview" id="filePreview" style="display: none;">
-                <img id="smallPreview" class="small-preview-image" />
-                <div class="file-info">
-                  <span class="file-name" id="fileName"></span>
-                  <button class="delete-btn" id="deleteBtn" aria-label="Remove file">×</button>
-                </div>
-              </div>
-            </div>
-            <div class="error-message" id="imageError"></div>
+            <ImageUploader />
           </div>
 
           <div class="preview-area">
-            <label>PREVIEW</label>
-            <div class="card-preview-container" id="cardPreviewContainer">
-              <div id="emptyPreview" class="empty-preview">
-                <p>Your asset preview will appear here</p>
-              </div>
-              <div id="cardPreview" style="display: none;">
-                <!-- CardComponent will be inserted here dynamically -->
-              </div>
-            </div>
+            <CardPreview />
           </div>
         </div>
-      </div>
 
-      <div class="action-buttons">
-        <button class="cancel-btn" id="cancelBtn">Cancel</button>
-        <button class="submit-btn" id="submitBtn">Create Asset</button>
+        <div class="action-buttons">
+          <button class="cancel-btn" id="cancelBtn">Cancel</button>
+          <button class="submit-btn" id="submitBtn" disabled>Create Asset</button>
+        </div>
+        
+        <StatusModal />
       </div>
     </div>
   </div>
@@ -141,33 +127,6 @@ import CardComponent from '../../components/CardComponent.astro';
     flex-direction: column;
   }
 
-  label {
-    text-transform: uppercase;
-    font-weight: bold;
-    margin-bottom: 0.25rem;
-  }
-
-  .input-field {
-    width: 100%;
-    padding: 0.5rem;
-    background: none;
-    border: none;
-    color: white;
-    border-bottom: 1px solid #333;
-    font-family: inherit;
-  }
-
-  .textarea {
-    resize: vertical;
-    min-height: 80px;
-  }
-
-  .price-note {
-    font-size: 0.75rem;
-    color: #888;
-    margin-top: 0.25rem;
-  }
-
   .upload-section {
     display: grid;
     grid-template-columns: 1fr 2fr;
@@ -178,86 +137,6 @@ import CardComponent from '../../components/CardComponent.astro';
   .small-upload, .preview-area {
     display: flex;
     flex-direction: column;
-  }
-
-  .preview-area label, .small-upload label {
-    margin-bottom: 0.5rem;
-  }
-
-  .card-preview-container {
-    margin-top: 0;
-  }
-
-  .empty-preview {
-    border: 1px solid white;
-    width: 100%;
-    aspect-ratio: 3/4;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #666;
-  }
-
-  #cardPreview {
-    width: 300px; /* Adjust as needed */
-  }
-
-  .file-input {
-    display: none;
-  }
-
-  .preview-image {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-  }
-
-  .file-preview {
-    width: 100%;
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .small-preview-image {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 0;
-  }
-
-  .file-info {
-    flex: 1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .file-name {
-    font-size: 0.85rem;
-    color: #D9D9D9;
-    word-break: break-word;
-    max-width: calc(100% - 30px);
-  }
-
-  .delete-btn {
-    background: none;
-    border: none;
-    color: #ff4d4d;
-    font-size: 1.5rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    padding: 0;
-    margin: 0;
-  }
-
-  .delete-btn:hover {
-    color: #ff0000;
   }
 
   .action-buttons {
@@ -318,124 +197,11 @@ import CardComponent from '../../components/CardComponent.astro';
     min-height: 1rem;
     margin-top: 0.25rem;
   }
-
-  .creator-search-container {
-    position: relative;
-    margin-bottom: 1rem;
-  }
-
-  .creator-search-results {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-    max-height: 200px;
-    overflow-y: auto;
-    background: #111;
-    border: 1px solid #333;
-    z-index: 10;
-    display: none;
-  }
-
-  .creator-search-results.active {
-    display: block;
-  }
-
-  .creator-result {
-    padding: 0.5rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .creator-result:hover {
-    background: #222;
-  }
-
-  .selected-creator {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.5rem;
-    background: #222;
-    margin-top: 0.5rem;
-    border-radius: 4px;
-  }
-
-  .creator-info {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .creator-avatar {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-  }
-
-  .reset-btn {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: 0;
-  }
-
-  .reset-btn:hover {
-    color: #ff4444;
-  }
-
-  .input-field.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .upload-box {
-    width: 100%;
-    min-height: 120px;
-    border: 2px dashed #D9D9D9;
-    border-radius: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    cursor: pointer;
-    background-color: rgba(255, 255, 255, 0.05);
-    overflow: hidden;
-  }
-
-  .upload-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    width: 100%;
-    height: 100%;
-    padding: 1rem;
-  }
-
-  .plus {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #D9D9D9;
-  }
-
-  .upload-text {
-    font-size: 0.8rem;
-    color: #D9D9D9;
-    margin: 0;
-  }
 </style>
 
 <script>
   import { validateAssetName, validateRoyaltyRate, validateAssetPrice, validateAssetTags } from '../../utils/validation';
+  import { generateModel, checkJobStatus } from '../../services/modelGeneration';
 
   const uploadBox = document.getElementById('uploadBox');
   const fileInput = document.getElementById('fileInput');
@@ -768,6 +534,87 @@ import CardComponent from '../../components/CardComponent.astro';
       uploadContent.style.justifyContent = 'center';
     }
   });
+
+  // Add form submission handler
+  const submitBtn = document.getElementById('submitBtn');
+  
+  async function handleSubmit() {
+    try {
+      const file = window.imageUploader.getFile();
+      if (!file) {
+        throw new Error('Please upload an image');
+      }
+      
+      const assetName = document.getElementById('assetName').value;
+      if (!assetName) {
+        throw new Error('Please enter an asset name');
+      }
+      
+      // Show status modal
+      window.statusModal.show('Uploading', 'Preparing your image...', 0);
+      
+      // Create form data
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('assetName', assetName);
+      
+      // Upload to backend using the service
+      const data = await generateModel(formData);
+      
+      // Update status modal
+      window.statusModal.updateTitle('Processing');
+      window.statusModal.updateMessage('Generating 3D model...');
+      
+      // Start polling for status
+      pollJobStatus(data.jobId);
+      
+    } catch (error) {
+      console.error('Error:', error);
+      window.statusModal.updateTitle('Error');
+      window.statusModal.updateMessage(error.message);
+      window.statusModal.enableClose(true);
+    }
+  }
+  
+  async function pollJobStatus(jobId) {
+    try {
+      const data = await checkJobStatus(jobId);
+      
+      window.statusModal.updateProgress(data.progress || 0);
+      
+      if (data.status === 'completed') {
+        window.statusModal.updateTitle('Success');
+        window.statusModal.updateMessage('3D model generated successfully!');
+        window.statusModal.enableClose(true);
+      } else if (data.status === 'failed') {
+        throw new Error(data.message || 'Failed to generate 3D model');
+      } else {
+        // Continue polling
+        setTimeout(() => pollJobStatus(jobId), 5000);
+      }
+      
+    } catch (error) {
+      console.error('Error:', error);
+      window.statusModal.updateTitle('Error');
+      window.statusModal.updateMessage(error.message);
+      window.statusModal.enableClose(true);
+    }
+  }
+  
+  if (submitBtn) {
+    submitBtn.addEventListener('click', handleSubmit);
+  }
+  
+  // Enable submit button when both image and name are present
+  function updateSubmitButton() {
+    const hasImage = window.imageUploader.getFile() !== null;
+    const hasName = assetName.value.trim() !== '';
+    submitBtn.disabled = !(hasImage && hasName);
+  }
+  
+  assetName.addEventListener('input', updateSubmitButton);
+  document.addEventListener('image-loaded', updateSubmitButton);
+  document.addEventListener('image-cleared', updateSubmitButton);
 </script>
 
 <style is:global>

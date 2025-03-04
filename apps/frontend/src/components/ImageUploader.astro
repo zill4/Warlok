@@ -1,0 +1,298 @@
+---
+interface Props {
+  label?: string;
+  required?: boolean;
+  id?: string;
+}
+
+const { 
+  label = "UPLOAD IMAGE", 
+  required = true,
+  id = "fileInput"
+} = Astro.props;
+---
+
+<div class="image-uploader">
+  {label && (
+    <label for={id}>
+      {label} {required && <span class="required">*</span>}
+    </label>
+  )}
+  
+  <div class="upload-box" id="uploadBox">
+    <input type="file" id={id} accept="image/*" class="file-input" required={required} />
+    <div class="upload-content" id="uploadContent">
+      <span class="plus">+</span>
+      <p class="upload-text">Drag and Drop, Paste, or<br />Upload Image directly.</p>
+    </div>
+    <div class="file-preview" id="filePreview" style="display: none;">
+      <img id="smallPreview" class="small-preview-image" />
+      <div class="file-info">
+        <span class="file-name" id="fileName"></span>
+        <button class="delete-btn" id="deleteBtn" aria-label="Remove file">×</button>
+      </div>
+    </div>
+  </div>
+  <div class="error-message" id="imageError"></div>
+</div>
+
+<style>
+  .image-uploader {
+    display: flex;
+    flex-direction: column;
+  }
+
+  label {
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  .upload-box {
+    width: 100%;
+    min-height: 120px;
+    border: 2px dashed #D9D9D9;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+  }
+
+  .upload-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    padding: 1rem;
+  }
+
+  .plus {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #D9D9D9;
+  }
+
+  .upload-text {
+    font-size: 0.8rem;
+    color: #D9D9D9;
+    margin: 0;
+  }
+
+  .file-input {
+    display: none;
+  }
+
+  .file-preview {
+    width: 100%;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .small-preview-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 0;
+  }
+
+  .file-info {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .file-name {
+    font-size: 0.85rem;
+    color: #D9D9D9;
+    word-break: break-word;
+    max-width: calc(100% - 30px);
+  }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    color: #ff4d4d;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    margin: 0;
+  }
+
+  .delete-btn:hover {
+    color: #ff0000;
+  }
+
+  .error-message {
+    color: #ff4d4d;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    min-height: 1rem;
+  }
+
+  .required {
+    color: #ff4444;
+  }
+</style>
+
+<script>
+  class ImageUploader {
+    constructor(elementId = 'uploadBox') {
+      // Elements
+      this.uploadBox = document.getElementById(elementId);
+      this.fileInput = this.uploadBox?.querySelector('input[type="file"]');
+      this.uploadContent = this.uploadBox?.querySelector('.upload-content');
+      this.filePreview = this.uploadBox?.querySelector('.file-preview');
+      this.smallPreview = this.uploadBox?.querySelector('#smallPreview');
+      this.fileName = this.uploadBox?.querySelector('#fileName');
+      this.deleteBtn = this.uploadBox?.querySelector('#deleteBtn');
+      this.errorMessage = this.uploadBox?.parentElement?.querySelector('.error-message');
+      
+      // Add reference to asset name input
+      this.assetNameInput = document.getElementById('assetName');
+      
+      // Bind event handlers
+      if (this.uploadBox) this.initialize();
+    }
+    
+    initialize() {
+      // Click to upload
+      this.uploadBox.addEventListener('click', (e) => {
+        if (e.target === this.deleteBtn) return;
+        if (this.filePreview.style.display === 'none' || this.filePreview.style.display === '') {
+          this.fileInput.click();
+        }
+      });
+      
+      // File selection
+      this.fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          this.handleFile(file);
+        }
+      });
+      
+      // Drag and drop
+      this.uploadBox.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        this.uploadBox.classList.add('dragover');
+      });
+      
+      this.uploadBox.addEventListener('dragleave', () => {
+        this.uploadBox.classList.remove('dragover');
+      });
+      
+      this.uploadBox.addEventListener('drop', (e) => {
+        e.preventDefault();
+        this.uploadBox.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+          this.handleFile(file);
+        }
+      });
+      
+      // Delete file
+      this.deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.clearFile();
+        
+        // Custom event for clearing file
+        const clearEvent = new CustomEvent('image-cleared');
+        document.dispatchEvent(clearEvent);
+      });
+      
+      // Center upload content initially
+      this.uploadContent.style.display = 'flex';
+      this.uploadContent.style.alignItems = 'center';
+      this.uploadContent.style.justifyContent = 'center';
+    }
+    
+    handleFile(file) {
+      if (!file) return;
+      
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        if (this.errorMessage) this.errorMessage.textContent = 'Please upload an image file';
+        return;
+      }
+      
+      if (this.errorMessage) this.errorMessage.textContent = '';
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageUrl = e.target.result;
+        this.smallPreview.src = imageUrl;
+        this.fileName.textContent = file.name.length > 20 
+          ? file.name.substring(0, 17) + '...' 
+          : file.name;
+        
+        this.uploadContent.style.display = 'none';
+        this.filePreview.style.display = 'flex';
+        
+        // Custom event for image loaded
+        const imageEvent = new CustomEvent('image-loaded', { 
+          detail: { 
+            file, 
+            imageUrl,
+            assetName: this.assetNameInput?.value || 'untitled'
+          } 
+        });
+        document.dispatchEvent(imageEvent);
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    clearFile() {
+      this.fileInput.value = '';
+      this.smallPreview.src = '';
+      this.fileName.textContent = '';
+      this.uploadContent.style.display = 'flex';
+      this.filePreview.style.display = 'none';
+      
+      if (this.errorMessage) this.errorMessage.textContent = '';
+    }
+    
+    getFile() {
+      return this.fileInput.files?.[0] || null;
+    }
+    
+    getImageUrl() {
+      return this.smallPreview.src || null;
+    }
+  }
+  
+  // Initialize on DOM content loaded
+  document.addEventListener('DOMContentLoaded', () => {
+    // Create global instance
+    window.imageUploader = new ImageUploader();
+    
+    // Handle paste anywhere in the document
+    document.addEventListener('paste', (e) => {
+      const items = e.clipboardData.items;
+      for (let item of items) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          window.imageUploader.handleFile(file);
+          break;
+        }
+      }
+    });
+  });
+</script> 

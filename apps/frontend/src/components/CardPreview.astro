@@ -1,0 +1,203 @@
+---
+interface Props {
+  title?: string;
+  id?: string;
+}
+
+const {
+  title = "PREVIEW",
+  id = "cardPreviewContainer"
+} = Astro.props;
+---
+
+<div class="card-preview-component">
+  <label>{title}</label>
+  <div class="card-preview-container" id={id}>
+    <div id="emptyPreview" class="empty-preview">
+      <p>Your asset preview will appear here</p>
+    </div>
+    <div id="cardPreview" style="display: none;">
+      <!-- Card preview content will be generated dynamically -->
+    </div>
+  </div>
+</div>
+
+<style>
+  .card-preview-component {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  label {
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+  
+  .card-preview-container {
+    width: 100%;
+  }
+  
+  .empty-preview {
+    border: 1px solid white;
+    width: 100%;
+    aspect-ratio: 3/4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+  }
+  
+  #cardPreview {
+    width: 300px; /* Adjust as needed */
+  }
+</style>
+
+<style is:global>
+  /* Styles for the dynamically created card */
+  #cardPreview .card {
+    background: #D9D9D9;
+    outline: 2px solid #D9D9D9;
+    outline-offset: -1px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    color: #000;
+  }
+  
+  #cardPreview .card-header {
+    background: #D9D9D9;
+    padding: 0.5rem;
+    font-weight: bold;
+  }
+  
+  #cardPreview .card-image-container {
+    aspect-ratio: 4/5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+  }
+
+  #cardPreview .image-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+  }
+  
+  #cardPreview .card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    border-radius: 0;
+  }
+  
+  #cardPreview .card-footer {
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 2px solid #000;
+    font-size: 0.8rem;
+    background: #D9D9D9;
+  }
+  
+  #cardPreview .creator-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  #cardPreview .creator-avatar {
+    width: 20px;
+    height: 20px;
+  }
+</style>
+
+<script>
+  class CardPreview {
+    constructor() {
+      this.emptyPreview = document.getElementById('emptyPreview');
+      this.cardPreview = document.getElementById('cardPreview');
+      this.assetName = document.getElementById('assetName');
+      
+      this.initialize();
+    }
+    
+    initialize() {
+      // Update preview when asset name changes
+      if (this.assetName) {
+        this.assetName.addEventListener('input', () => this.updatePreview());
+      }
+      
+      // Listen for creator changes
+      document.addEventListener('creator-changed', (e) => {
+        this.updatePreview(undefined, e.detail.username, e.detail.avatar);
+      });
+      
+      // Listen for image changes
+      document.addEventListener('image-loaded', (e) => {
+        this.updatePreview(e.detail.imageUrl);
+      });
+      
+      // Listen for image clearing
+      document.addEventListener('image-cleared', () => {
+        this.resetPreview();
+      });
+    }
+    
+    updatePreview(imageUrl, creatorName, creatorAvatar) {
+      // Get current values if not provided
+      const title = this.assetName?.value || 'Asset Name';
+      
+      // If we have a new image, use it; otherwise keep the existing one
+      const currentImageUrl = imageUrl || (window.imageUploader ? window.imageUploader.getImageUrl() : null);
+      
+      if (!currentImageUrl) {
+        this.resetPreview();
+        return;
+      }
+      
+      // Get creator info
+      const creator = creatorName || (window.creatorSearch ? window.creatorSearch.getSelectedCreator().username : 'You');
+      const avatar = creatorAvatar || (window.creatorSearch ? window.creatorSearch.getSelectedCreator().avatar : '');
+      
+      // Create card HTML structure
+      const cardHtml = `
+        <div class="card">
+          <div class="card-header">${title}</div>
+          <div class="card-image-container">
+            <div class="image-wrapper">
+              <img src="${currentImageUrl}" alt="${title}" class="card-image" />
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="creator-info">
+              <img src="${avatar}" alt="${creator}" class="creator-avatar" />
+              <span>${creator}</span>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      this.cardPreview.innerHTML = cardHtml;
+      this.emptyPreview.style.display = 'none';
+      this.cardPreview.style.display = 'block';
+    }
+    
+    resetPreview() {
+      this.emptyPreview.style.display = 'flex';
+      this.cardPreview.style.display = 'none';
+    }
+  }
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    window.cardPreview = new CardPreview();
+  });
+</script> 
