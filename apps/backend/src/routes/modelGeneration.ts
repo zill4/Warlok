@@ -12,17 +12,21 @@ const prisma = new PrismaClient();
 
 // Define types for Azure function responses
 interface AzureTriggerResponse {
+  success: boolean;
   job_id: string;
   status: string;
   message: string;
-  status_url: string;
+  status_url?: string;
 }
 
 interface AzureStatusResponse {
+  PartitionKey?: string;  // 'jobs'
+  RowKey?: string;        // job_id
   status: string;
   progress?: number;
-  message?: string;
+  error?: string;
   model_url?: string;
+  [key: string]: any;     // For any additional fields from Table Storage
 }
 
 // Validate required environment variables
@@ -31,7 +35,9 @@ const requiredEnvVars = {
   AZURE_STORAGE_KEY: process.env.AZURE_STORAGE_KEY,
   AZURE_STORAGE_CONTAINER: process.env.AZURE_STORAGE_CONTAINER || 'images',
   AZURE_FUNCTION_KEY: process.env.AZURE_FUNCTION_KEY,
-  AZURE_FUNCTION_URL: process.env.AZURE_FUNCTION_URL || 'https://z3d-functions.azurewebsites.net/api/ProcessImageTrigger'
+  AZURE_FUNCTION_URL: process.env.AZURE_FUNCTION_URL || 'https://z3d-functions.azurewebsites.net/api',
+  AZURE_PROCESS_FUNCTION: 'ProcessImageTrigger',
+  AZURE_STATUS_FUNCTION: 'GetJobStatus',
 };
 
 // Check for missing environment variables
@@ -139,8 +145,7 @@ router.post('/generate', auth, upload.single('image'), async (req: AuthRequest, 
     const imagePath = urlParts.pathname.split('/').slice(2).join('/'); // Remove container name and first slash
     
     // Call the Azure function with the image path
-    const azureFunctionUrl = process.env.AZURE_FUNCTION_URL || 
-      'https://z3d-functions.azurewebsites.net/api/ProcessImageTrigger';
+    const azureFunctionUrl = `${requiredEnvVars.AZURE_FUNCTION_URL}/${requiredEnvVars.AZURE_PROCESS_FUNCTION}`;
     
     console.log('Calling Azure Function:', {
       url: azureFunctionUrl,
@@ -148,17 +153,48 @@ router.post('/generate', auth, upload.single('image'), async (req: AuthRequest, 
       jobId
     });
 
-    const azureResponse = await fetch(azureFunctionUrl, {
+    // Add debug logging for the key
+    console.log('Function key check:', {
+      keyPresent: !!process.env.AZURE_FUNCTION_KEY,
+      keyLength: process.env.AZURE_FUNCTION_KEY?.length || 0
+    });
+
+    const functionKey = process.env.AZURE_FUNCTION_KEY;
+    console.log('Using function key:', functionKey); // We'll remove this after debugging
+
+    if (!functionKey) {
+      throw new Error('Azure function key is not configured');
+    }
+
+    // Try with both header variations
+    const headers = {
+      'Content-Type': 'application/json',
+      'x-functions-key': functionKey,
+      // Add these variations
+      'code': functionKey,  // Try as query parameter instead
+      'Origin': process.env.BACKEND_URL || 'http://localhost:3000'
+    };
+
+    // Add the code as a query parameter as well
+    const urlWithCode = `${azureFunctionUrl}?code=${encodeURIComponent(functionKey)}`;
+
+    const azureResponse = await fetch(urlWithCode, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-functions-key': process.env.AZURE_FUNCTION_KEY || '',
-        'Origin': process.env.BACKEND_URL || 'http://localhost:3000'
-      },
+      headers,
       body: JSON.stringify({
         job_id: jobId,
         image_url: imageUrl
       })
+    });
+
+    console.log('Complete request details:', {
+      url: urlWithCode,
+      method: 'POST',
+      headers,
+      body: {
+        job_id: jobId,
+        image_url: imageUrl
+      }
     });
 
     // Read the response text once and store it
@@ -172,7 +208,23 @@ router.post('/generate', auth, upload.single('image'), async (req: AuthRequest, 
     });
 
     if (!azureResponse.ok) {
-      throw new Error(`Azure function error (${azureResponse.status}): ${responseText}`);
+      let errorDetails = responseText;
+      
+      try {
+        // Try to parse the error response as JSON
+        const errorJson = JSON.parse(responseText);
+        errorDetails = JSON.stringify(errorJson, null, 2);
+      } catch (e) {
+        // If it's not JSON, use the raw text
+      }
+      
+      console.error('Azure Function Error Details:', {
+        status: azureResponse.status,
+        statusText: azureResponse.statusText,
+        errorDetails
+      });
+      
+      throw new Error(`Azure function error (${azureResponse.status}): ${errorDetails}`);
     }
 
     let azureData: AzureTriggerResponse;
@@ -183,14 +235,29 @@ router.post('/generate', auth, upload.single('image'), async (req: AuthRequest, 
       throw new Error(`Invalid response from Azure function: ${responseText}`);
     }
 
+    // Add this before creating the database record
+    console.log('Azure Data for DB creation:', {
+      jobId,
+      userId,
+      status: azureData.status,
+      imageUrl,
+      statusUrl: azureData.status_url,
+      metadata: {
+        assetName
+      }
+    });
+
+    // Generate a status URL using the status function
+    const statusUrl = `${requiredEnvVars.AZURE_FUNCTION_URL}/${requiredEnvVars.AZURE_STATUS_FUNCTION}/${jobId}`;
+
     // Store job information in database for tracking
     await prisma.modelJob.create({
       data: {
         id: jobId,
         userId,
-        status: 'queued',
+        status: azureData.status,
         imageUrl,
-        statusUrl: azureData.status_url,
+        statusUrl, // Use our generated status URL
         metadata: {
           assetName
         }
@@ -231,21 +298,45 @@ router.get('/status/:jobId', auth, async (req: AuthRequest, res) => {
       return res.status(403).json({ error: 'Not authorized to view this job' });
     }
 
-    // Call Azure status endpoint
-    const statusResponse = await fetch(job.statusUrl);
+    // Call Azure status endpoint with job_id as query parameter
+    const statusUrl = `${requiredEnvVars.AZURE_FUNCTION_URL}/${requiredEnvVars.AZURE_STATUS_FUNCTION}?job_id=${encodeURIComponent(jobId)}`;
     
+    console.log('Checking status at:', statusUrl);
+
+    const statusResponse = await fetch(statusUrl, {
+      headers: {
+        'x-functions-key': process.env.AZURE_FUNCTION_KEY!,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    // Log the complete response for debugging
+    console.log('Status Response:', {
+      status: statusResponse.status,
+      statusText: statusResponse.statusText,
+      headers: Object.fromEntries(statusResponse.headers.entries())
+    });
+
     if (!statusResponse.ok) {
-      const errorData = await statusResponse.text();
-      throw new Error(`Status check failed: ${errorData}`);
+      const errorText = await statusResponse.text();
+      console.error('Status check error:', errorText);
+      
+      // Handle 404 specifically since we know the function returns this for unknown jobs
+      if (statusResponse.status === 404) {
+        return res.status(404).json({ error: 'Job status not found in Azure' });
+      }
+      
+      throw new Error(`Status check failed: ${errorText}`);
     }
 
-    const statusData = await statusResponse.json() as AzureStatusResponse;
+    const statusData = await statusResponse.json();
+    console.log('Status Data:', statusData);
 
     // Update job status in database
     await prisma.modelJob.update({
       where: { id: jobId },
       data: {
-        status: statusData.status,
+        status: statusData.status || job.status,
         progress: statusData.progress || 0,
         modelUrl: statusData.model_url,
         updatedAt: new Date()
