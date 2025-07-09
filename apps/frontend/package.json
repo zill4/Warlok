@@ -10,18 +10,25 @@
   },
   "dependencies": {
     "@astrojs/preact": "^4.0.4",
+    "@google/model-viewer": "^4.1.0",
     "@preact/signals": "^2.0.1",
     "@types/gsap": "^1.20.2",
     "@webgpu/types": "^0.1.54",
+    "@webspatial/core-sdk": "^1.0.0",
+    "@webspatial/react-sdk": "^1.0.0",
     "astro": "^5.2.5",
     "gsap": "^3.12.7",
     "html2canvas": "^1.4.1",
     "preact": "^10.25.4",
-    "three": "^0.173.0"
+    "three": "^0.172.0"
   },
   "devDependencies": {
     "@flydotio/dockerfile": "^0.7.4",
-    "@types/three": "^0.173.0",
-    "typescript": "^5.7.3"
+    "@types/three": "^0.172.0",
+    "@webspatial/builder": "^1.0.0",
+    "@webspatial/platform-visionos": "^1.0.0",
+    "@webspatial/vite-plugin": "^0.1.8",
+    "typescript": "^5.7.3",
+    "vite-plugin-html": "^3.2.2"
   }
 }
