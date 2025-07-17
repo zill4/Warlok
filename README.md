@@ -1,90 +1,163 @@
-#  warlok 
+# Warlok
 
-the below text is stupid af, need to fix it.
+A chess-card game hybrid built with Three.js and modern web technologies. Players use cards from their deck to place chess pieces on a 3D board, combining strategic chess gameplay with card game mechanics.
 
-**Warning: This repo contains 99% pure adrenaline-fueled code.**  
-We're building the ultimate hybrid of chess, card battles, and AI-generated nightmares. Join the madness.
+## Features
 
+- **3D Chess Game**: Interactive chess board rendered with Three.js
+- **Card System**: Play cards from your deck to place pieces on the board
+- **AI Opponent**: Play against a bot with strategic decision-making
+- **User Profiles**: Create accounts and manage your card collection
+- **Card Creation**: Design custom cards with different chess pieces and artwork
+- **Real-time Gameplay**: Smooth animations and responsive 3D interactions
 
+## Tech Stack
 
-## 🚀 Quickstart
+- **Frontend**: Astro + Preact + Three.js
+- **Backend**: Node.js + Fastify + Prisma
+- **Database**: PostgreSQL
+- **Monorepo**: Turborepo for efficient builds
+- **Planned**: Solana integration for NFT minting, S3 for asset storage
 
-```sh
-# Clone this beast
-git clone https://github.com/your-repo/cyberforge.git
-cd cyberforge
+## Project Structure
 
-# Install the juice
-npm install
-cd apps/backend && npm install
-cd ../../apps/frontend && npm install
-
-# Wake the database demon
-npx prisma generate
-npx prisma migrate dev --name init
-
-# Launch systems (separate terminals)
-npm run dev --filter=backend  # Starts the beast core
-npm run dev  # Frontend portal
-
-# For the curious
-npx prisma studio  # Peek into the matrix
+```
+Warlok/
+├── apps/
+│   ├── frontend/     # Astro + Preact app with 3D chess game
+│   └── backend/      # Node.js API server with Prisma
+├── packages/
+│   ├── shared-types/ # Shared TypeScript types
+│   ├── ui/           # Reusable UI components
+│   └── eslint-config/ # ESLint configuration
 ```
 
-## 🔥 Current Warfront (02/20/25)
-```diff
-+ [IN PROGRESS] Building the Card Creation Crucible:
-- [ ] Backend Infra w/ Secure Auth & Buckets (70%)
-- [ ] 3D Asset Forge Pipeline (40%) 
-- [ ] Profile Page Armory (50%)
-- [ ] Solana Integration Experiments (10%)
-+ [X] Core Game Loop Validated 
-+ [X] AI Oppressor v0.9 Deployed
-```
+## Quick Start
 
-## 🧰 Tech Arsenal
-### Apps & Packages
-| Component       | Tech                | Status   |
-|-----------------|---------------------|----------|
-| `frontend`      | Next.js + Three.js  | 🔥 Hot   |
-| `backend`       | Node.js + Prisma    | 🛠️ Forging|
-| `@repo/types`   | Shared Types        | ⚡ Live   |
-| `@repo/ai-core` | LLM Battle Logic    | 🤖 Learning|
+### Prerequisites
 
-### Core Weapons
-- **Turborepo** - For build speeds that break the sound barrier
-- **Prisma** - Database ops so smooth they feel illegal  
-- **S3 Buckets** - Where we stash the digital contraband
-- **Next.js 14** - Frontend so sharp it could cut steel
+- Node.js 18+
+- PostgreSQL database
+- npm or yarn
 
-## 💀 Contribute (If You Dare)
-```sh
-# Make your mark
-git checkout -b yourname/feature-from-hell
+### Installation
 
-# When ready to face the CI demons:
-npm run lint  # Code must be TIGHT
-npm run test  # Break it and you buy the beers
-npm run build  # Forge that production beast
-```
+1. **Clone the repository**
 
-## 🔐 Black Magic (Env Vars)
-```.env
-# apps/backend/.env
-DATABASE_URL="postgresql://user:password@localhost:5432/cyberforge?schema=public"
-ACCESS_KEY="your-key-here" 
-SECRET_KEY="your-secret-here"
-S3_BUCKET_NAME="digital-armory"
-```
+   ```bash
+   git clone https://github.com/your-username/warlok.git
+   cd warlok
+   ```
 
-> **⚠️ WARNING**  
-> This project contains:  
-> - 87% more edge than daily recommended allowance  
-> - Experimental AI integrations  
-> - Code that stares back  
-> Proceed with caffeinated caution.
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Set up the database**
+
+   ```bash
+   # Navigate to backend and set up Prisma
+   cd apps/backend
+   npx prisma generate
+   npx prisma migrate dev --name init
+   ```
+
+4. **Configure environment variables**
+   Create `.env` files in both apps:
+
+   **Backend (`apps/backend/.env`):**
+
+   ```env
+   DATABASE_URL="postgresql://user:password@localhost:5432/warlok?schema=public"
+   JWT_SECRET="your-jwt-secret"
+   ```
+
+   **Frontend (`apps/frontend/.env`):**
+
+   ```env
+   PUBLIC_API_URL="http://localhost:3001"
+   ```
+
+5. **Start the development servers**
+
+   ```bash
+   # In the root directory
+   npm run dev
+   ```
+
+   This will start:
+
+   - Frontend: http://localhost:4321
+   - Backend: http://localhost:3001
+
+## How to Play
+
+1. **Move Chess Pieces**: Click and drag pieces like traditional chess
+2. **Play Cards**: Use cards from your hand to place new pieces on the board
+3. **Strategic Gameplay**: Combine chess tactics with card game resource management
+4. **AI Opponent**: Challenge the computer bot that adapts to your playstyle
+
+## Development
+
+### Available Scripts
+
+- `npm run dev` - Start all development servers
+- `npm run build` - Build all apps for production
+- `npm run lint` - Run linting across all packages
+- `npm run format` - Format code with Prettier
+
+### Game Development
+
+The core game logic is in `apps/frontend/src/game/`:
+
+- `app.ts` - Main game initialization
+- `board.ts` - Chess board management
+- `card.ts` - Card system logic
+- `bot.ts` - AI opponent behavior
+- `state.ts` - Game state management
+
+### Backend API
+
+The backend provides:
+
+- User authentication and profiles
+- Card creation and management
+- Game history tracking
+- Database management with Prisma
+
+## Current Status
+
+✅ **Complete**
+
+- 3D chess game with Three.js
+- Card system integration
+- AI opponent
+- Basic user authentication
+- Profile management
+
+🚧 **In Progress**
+
+- Card creation UI improvements
+- Multiplayer support
+- Advanced card effects
+- Asset generation pipeline
+
+🔮 **Planned**
+
+- Solana NFT integration (maybe...)
+- Tournament system
+- Advanced AI difficulty levels
+- Mobile responsiveness
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Make your changes and test thoroughly
+4. Submit a pull request with a clear description
 
 ---
 
-**Made with 🩸, 💧, and 🖤 by zill4**  
-*"We don't ship bugs - we release features with attitude - meow"*
+_Built with <3_
