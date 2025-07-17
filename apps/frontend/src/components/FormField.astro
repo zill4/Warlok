@@ -1,0 +1,123 @@
+---
+interface Props {
+  type?: 'text' | 'textarea' | 'number' | 'email';
+  id: string;
+  name?: string;
+  label: string;
+  placeholder?: string;
+  value?: string;
+  required?: boolean;
+  optional?: boolean;
+  disabled?: boolean;
+  rows?: number;
+  errorId?: string;
+  helperText?: string;
+}
+
+const {
+  type = 'text',
+  id,
+  name = id,
+  label,
+  placeholder = `Enter ${label.toLowerCase()}`,
+  value = '',
+  required = false,
+  optional = false,
+  disabled = false,
+  rows = 3,
+  errorId = `${id}Error`,
+  helperText = ''
+} = Astro.props;
+---
+
+<div class="form-field">
+  <label for={id}>
+    {label} 
+    {required && <span class="required">*</span>}
+    {optional && <span class="optional">(optional)</span>}
+  </label>
+  
+  {type === 'textarea' ? (
+    <textarea
+      id={id}
+      name={name}
+      placeholder={placeholder}
+      class:list={["input-field", "textarea", { disabled }]}
+      rows={rows}
+      disabled={disabled}
+      required={required}
+    >{value}</textarea>
+  ) : (
+    <input
+      type={type}
+      id={id}
+      name={name}
+      placeholder={placeholder}
+      value={value}
+      class:list={["input-field", { disabled }]}
+      disabled={disabled}
+      required={required}
+    />
+  )}
+  
+  <div class="error-message" id={errorId}></div>
+  
+  {helperText && <p class="helper-text">{helperText}</p>}
+</div>
+
+<style>
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+  }
+  
+  label {
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+  }
+  
+  .input-field {
+    width: 100%;
+    padding: 0.5rem;
+    background: none;
+    border: none;
+    color: white;
+    border-bottom: 1px solid #333;
+    font-family: inherit;
+  }
+  
+  .textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+  
+  .input-field.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .required {
+    color: #ff4444;
+  }
+  
+  .optional {
+    color: #888;
+    font-size: 0.8rem;
+    font-weight: normal;
+  }
+  
+  .error-message {
+    color: #ff4444;
+    font-size: 0.8rem;
+    min-height: 1rem;
+    margin-top: 0.25rem;
+  }
+  
+  .helper-text {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 0.25rem;
+  }
+</style> 

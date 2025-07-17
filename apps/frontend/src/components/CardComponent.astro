@@ -1,0 +1,138 @@
+---
+// Card component for displaying model/asset cards
+interface Props {
+  title: string;
+  image: string;
+  creator?: string;
+  footerText?: string;
+  showViewOptions?: boolean;
+  centerFooter?: boolean;
+  is3DModel?: boolean;
+}
+
+const { 
+  title, 
+  image, 
+  creator = "Zi114", 
+  footerText, 
+  showViewOptions = false,
+  centerFooter = false,
+  is3DModel = false
+} = Astro.props;
+---
+
+<div class="card">
+  <div class="card-header">{title}</div>
+  <div class="card-image-container">
+    <div class="image-wrapper">
+      <img src={image} alt={title} class="card-image" />
+    </div>
+  </div>
+  <div class={`card-footer ${centerFooter ? 'center' : ''}`}>
+    {!centerFooter && (
+      <div class="creator-info">
+        <img src="https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg" alt="Creator" class="creator-avatar" />
+        <span>{creator}</span>
+      </div>
+    )}
+    
+    {footerText && <span>{footerText}</span>}
+    
+    {showViewOptions && is3DModel && (
+      <div class="view-options">
+        <button class="view-button">2D</button>
+        <button class="view-button active">3D</button>
+      </div>
+    )}
+  </div>
+</div>
+
+<style>
+  .card {
+    background: #D9D9D9;
+    outline: 2px solid #D9D9D9;
+    outline-offset: -1px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    color: #000;
+  }
+  
+  .card-header {
+    background: #D9D9D9;
+    padding: 0.5rem;
+    font-weight: bold;
+  }
+  
+  .card-image-container {
+    aspect-ratio: 4/5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+  }
+
+  .image-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    border-radius: 0;
+  }
+  
+  .card-footer {
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 2px solid #000;
+    font-size: 0.8rem;
+    background: #D9D9D9;
+  }
+  
+  .card-footer.center {
+    justify-content: center;
+    font-style: italic;
+  }
+  
+  .creator-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .creator-avatar {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .view-options {
+    display: flex;
+    gap: 0.25rem;
+  }
+  
+  .view-button {
+    background: #1a1a1a;
+    border: 1px solid #000;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+    cursor: pointer;
+    color: #D9D9D9;
+  }
+  
+  .view-button.active {
+    background: #333;
+    color: #fff;
+  }
+</style> 

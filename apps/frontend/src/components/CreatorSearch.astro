@@ -1,0 +1,305 @@
+---
+interface Props {
+  label?: string;
+  id?: string;
+  required?: boolean;
+}
+
+const {
+  label = "CREATOR",
+  id = "creatorSearch",
+  required = true
+} = Astro.props;
+---
+
+<div class="creator-search-component">
+  <label for={id}>
+    {label} {required && <span class="required">*</span>}
+  </label>
+  
+  <div class="creator-search-container">
+    <input type="text" id={id} placeholder="Search for creator" class="input-field" />
+    <div class="creator-search-results" id="creatorSearchResults"></div>
+    <div class="selected-creator" id="selectedCreator">
+      <div class="creator-info">
+        <img id="creatorAvatar" src="https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg" alt="Creator" class="creator-avatar" />
+        <span id="creatorName">You</span>
+      </div>
+      <button id="resetCreator" class="reset-btn">×</button>
+    </div>
+  </div>
+  <div class="error-message" id="creatorError"></div>
+</div>
+
+<style>
+  .creator-search-component {
+    margin-bottom: 1.5rem;
+  }
+  
+  label {
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+    display: block;
+  }
+  
+  .required {
+    color: #ff4444;
+  }
+  
+  .input-field {
+    width: 100%;
+    padding: 0.5rem;
+    background: none;
+    border: none;
+    color: white;
+    border-bottom: 1px solid #333;
+    font-family: inherit;
+  }
+  
+  .creator-search-container {
+    position: relative;
+    margin-bottom: 0.5rem;
+  }
+  
+  .creator-search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    background: #111;
+    border: 1px solid #333;
+    z-index: 10;
+    display: none;
+  }
+  
+  .creator-search-results.active {
+    display: block;
+  }
+  
+  .creator-result {
+    padding: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .creator-result:hover {
+    background: #222;
+  }
+  
+  .selected-creator {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem;
+    background: #222;
+    margin-top: 0.5rem;
+    border-radius: 4px;
+  }
+  
+  .creator-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .creator-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 0;
+  }
+  
+  .reset-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0;
+  }
+  
+  .reset-btn:hover {
+    color: #ff4444;
+  }
+  
+  .error-message {
+    color: #ff4444;
+    font-size: 0.8rem;
+    min-height: 1rem;
+    margin-top: 0.25rem;
+  }
+</style>
+
+<script>
+  class CreatorSearch {
+    constructor() {
+      this.creatorSearch = document.getElementById('creatorSearch');
+      this.creatorSearchResults = document.getElementById('creatorSearchResults');
+      this.selectedCreator = document.getElementById('selectedCreator');
+      this.creatorName = document.getElementById('creatorName');
+      this.creatorAvatar = document.getElementById('creatorAvatar');
+      this.resetCreator = document.getElementById('resetCreator');
+      
+      // Fields affected by creator selection
+      this.royaltyRate = document.getElementById('royaltyRate');
+      this.assetPrice = document.getElementById('assetPrice');
+      
+      this.currentUser = this.getCurrentUser();
+      this.isCurrentUserCreator = true;
+      
+      // Mock user data for search (replace with API calls)
+      this.mockUsers = [
+        { id: 1, username: 'Zi114', avatar: 'https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg' },
+        { id: 2, username: 'JohnDoe', avatar: 'https://randomuser.me/api/portraits/men/1.jpg' },
+        { id: 3, username: 'JaneSmith', avatar: 'https://randomuser.me/api/portraits/women/1.jpg' },
+        { id: 4, username: 'ArtistX', avatar: 'https://randomuser.me/api/portraits/men/2.jpg' },
+        { id: 5, username: 'CreatorY', avatar: 'https://randomuser.me/api/portraits/women/2.jpg' }
+      ];
+      
+      this.initialize();
+    }
+    
+    initialize() {
+      // Set up initial user
+      this.creatorName.textContent = this.currentUser.username;
+      this.creatorAvatar.src = this.currentUser.avatar;
+      this.updateCreatorFields(true);
+      
+      // Set up event listeners
+      this.creatorSearch.addEventListener('input', (e) => {
+        this.searchCreators(e.target.value);
+      });
+      
+      this.creatorSearch.addEventListener('focus', () => {
+        if (this.creatorSearch.value) {
+          this.searchCreators(this.creatorSearch.value);
+        }
+      });
+      
+      document.addEventListener('click', (e) => {
+        if (!this.creatorSearch.contains(e.target) && !this.creatorSearchResults.contains(e.target)) {
+          this.creatorSearchResults.classList.remove('active');
+        }
+      });
+      
+      this.resetCreator.addEventListener('click', () => this.resetToCurrentUser());
+    }
+    
+    getCurrentUser() {
+      try {
+        const username = localStorage.getItem('username')
+        const userid = localStorage.getItem('userid')
+
+        if (username) {
+          return {
+            id: userid,
+            username: username,
+            avatar: 'https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg'
+          };
+        }
+        return { id: 0, username: 'You', avatar: 'https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg' };
+      } catch (e) {
+        console.error('Error parsing user from localStorage:', e);
+        return { id: 0, username: 'You', avatar: 'https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg' };
+      }
+    }
+    
+    updateCreatorFields(isCurrentUser) {
+      this.isCurrentUserCreator = isCurrentUser;
+      
+      if (isCurrentUser) {
+        this.royaltyRate.classList.remove('disabled');
+        this.assetPrice.classList.remove('disabled');
+        this.royaltyRate.removeAttribute('disabled');
+        this.assetPrice.removeAttribute('disabled');
+      } else {
+        this.royaltyRate.classList.add('disabled');
+        this.assetPrice.classList.add('disabled');
+        this.royaltyRate.setAttribute('disabled', 'disabled');
+        this.assetPrice.setAttribute('disabled', 'disabled');
+      }
+      
+      // Dispatch event for other components to update
+      const creatorEvent = new CustomEvent('creator-changed', {
+        detail: { 
+          username: this.creatorName.textContent,
+          avatar: this.creatorAvatar.src,
+          isCurrentUser 
+        }
+      });
+      document.dispatchEvent(creatorEvent);
+    }
+    
+    searchCreators(query) {
+      if (!query) {
+        this.creatorSearchResults.innerHTML = '';
+        this.creatorSearchResults.classList.remove('active');
+        return;
+      }
+      
+      // Filter mock users (would be replaced with API call)
+      const filteredUsers = this.mockUsers.filter(user => 
+        user.username.toLowerCase().includes(query.toLowerCase())
+      );
+      
+      // Display results
+      this.creatorSearchResults.innerHTML = '';
+      
+      if (filteredUsers.length === 0) {
+        const noResults = document.createElement('div');
+        noResults.className = 'creator-result';
+        noResults.textContent = 'No users found';
+        this.creatorSearchResults.appendChild(noResults);
+      } else {
+        filteredUsers.forEach(user => {
+          const result = document.createElement('div');
+          result.className = 'creator-result';
+          result.innerHTML = `
+            <img src="${user.avatar}" alt="${user.username}" class="creator-avatar" />
+            <span>${user.username}</span>
+          `;
+          result.addEventListener('click', () => this.selectCreator(user));
+          this.creatorSearchResults.appendChild(result);
+        });
+      }
+      
+      this.creatorSearchResults.classList.add('active');
+    }
+    
+    selectCreator(user) {
+      this.creatorName.textContent = user.username;
+      this.creatorAvatar.src = user.avatar;
+      this.creatorSearch.value = '';
+      this.creatorSearchResults.innerHTML = '';
+      this.creatorSearchResults.classList.remove('active');
+      
+      // Check if selected creator is current user
+      const isCurrentUser = user.id === this.currentUser.id || 
+                         (user.username === this.currentUser.username && user.username !== 'You');
+      
+      this.updateCreatorFields(isCurrentUser);
+    }
+    
+    resetToCurrentUser() {
+      this.creatorName.textContent = this.currentUser.username;
+      this.creatorAvatar.src = this.currentUser.avatar;
+      this.updateCreatorFields(true);
+    }
+    
+    getSelectedCreator() {
+      return {
+        username: this.creatorName.textContent,
+        avatar: this.creatorAvatar.src,
+        isCurrentUser: this.isCurrentUserCreator
+      };
+    }
+  }
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    window.creatorSearch = new CreatorSearch();
+  });
+</script> 

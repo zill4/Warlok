@@ -1,0 +1,685 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import FormField from '../../components/FormField.astro';
+import ImageUploader from '../../components/ImageUploader.astro';
+import CreatorSearch from '../../components/CreatorSearch.astro';
+import CardPreview from '../../components/CardPreview.astro';
+import StatusModal from '../../components/StatusModal.astro';
+---
+
+<Layout title="Upload Art Asset">
+  <div class="create-asset">
+    <div class="content">
+      <div class="step-counter">2/3</div>
+
+      <div class="form-container">
+        <div class="form-section">
+          <div class="form-group">
+            <FormField 
+              id="assetName"
+              label="ASSET NAME"
+              required={true}
+            />
+            
+            <FormField 
+              id="assetDescription"
+              label="DESCRIPTION"
+              type="textarea"
+              optional={true}
+            />
+            
+            <FormField 
+              id="assetTags"
+              label="TAGS"
+              placeholder="Enter asset tags (comma separated)"
+              optional={true}
+            />
+            
+            <CreatorSearch />
+            
+            <div class="form-row">
+              <div class="form-col">
+                <FormField 
+                  id="royaltyRate"
+                  label="ROYALTY RATE"
+                  value="10%"
+                  required={true}
+                  helperText="Maximum royalty rate: 30%"
+                />
+              </div>
+              
+              <div class="form-col">
+                <FormField 
+                  id="assetPrice"
+                  label="PRICE"
+                  value="FREE"
+                  required={true}
+                  helperText="Maximum price: $1.00"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="upload-section">
+          <div class="small-upload">
+            <ImageUploader />
+          </div>
+
+          <div class="preview-area">
+            <CardPreview />
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button class="cancel-btn" id="cancelBtn">Cancel</button>
+          <button class="submit-btn" id="submitBtn" disabled>Create Asset</button>
+        </div>
+        
+        <StatusModal />
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .create-asset {
+    min-height: calc(100vh - var(--header-height));
+    color: white;
+  }
+
+  .content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .step-counter {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+  }
+
+  .form-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+
+  .form-section {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .form-col {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .upload-section {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .small-upload, .preview-area {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .cancel-btn, .submit-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .cancel-btn {
+    background: none;
+    color: white;
+    border: 1px solid white;
+  }
+
+  .submit-btn {
+    background: white;
+    color: black;
+  }
+
+  @media (max-width: 992px) {
+    .form-container {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .upload-section {
+      grid-template-columns: 1fr;
+    }
+
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .required {
+    color: #ff4444;
+  }
+
+  .optional {
+    color: #888;
+    font-size: 0.8rem;
+    font-weight: normal;
+  }
+
+  .error-message {
+    color: #ff4444;
+    font-size: 0.8rem;
+    min-height: 1rem;
+    margin-top: 0.25rem;
+  }
+</style>
+
+<script>
+  import { validateAssetName, validateRoyaltyRate, validateAssetPrice, validateAssetTags } from '../../utils/validation';
+  import { generateModel, checkJobStatus } from '../../services/modelGeneration';
+
+  const uploadBox = document.getElementById('uploadBox');
+  const fileInput = document.getElementById('fileInput');
+  const previewImage = document.getElementById('previewImage');
+  const uploadContent = document.getElementById('uploadContent');
+  const filePreview = document.getElementById('filePreview');
+  const smallPreview = document.getElementById('smallPreview');
+  const fileName = document.getElementById('fileName');
+  const deleteBtn = document.getElementById('deleteBtn');
+  const emptyPreview = document.getElementById('emptyPreview');
+  const cardPreview = document.getElementById('cardPreview');
+  
+  // Form fields
+  const assetName = document.getElementById('assetName');
+  const assetDescription = document.getElementById('assetDescription');
+  const assetTags = document.getElementById('assetTags');
+  const royaltyRate = document.getElementById('royaltyRate');
+  const assetPrice = document.getElementById('assetPrice');
+  const creatorSearch = document.getElementById('creatorSearch');
+  const creatorSearchResults = document.getElementById('creatorSearchResults');
+  const selectedCreator = document.getElementById('selectedCreator');
+  const creatorName = document.getElementById('creatorName');
+  const creatorAvatar = document.getElementById('creatorAvatar');
+  const resetCreator = document.getElementById('resetCreator');
+  
+  // Error message elements
+  const nameError = document.getElementById('nameError');
+  const tagsError = document.getElementById('tagsError');
+  const rateError = document.getElementById('rateError');
+  const priceError = document.getElementById('priceError');
+  const imageError = document.getElementById('imageError');
+  const creatorError = document.getElementById('creatorError');
+  
+  // Set default values
+  royaltyRate.value = "10%";
+  assetPrice.value = "FREE";
+
+  // Current user info
+  let currentUser = null;
+  let isCurrentUserCreator = true;
+
+  // Mock user data for search (this would be replaced with API calls)
+  const mockUsers = [
+    { id: 1, username: 'Zi114', avatar: 'https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg' },
+    { id: 2, username: 'JohnDoe', avatar: 'https://randomuser.me/api/portraits/men/1.jpg' },
+    { id: 3, username: 'JaneSmith', avatar: 'https://randomuser.me/api/portraits/women/1.jpg' },
+    { id: 4, username: 'ArtistX', avatar: 'https://randomuser.me/api/portraits/men/2.jpg' },
+    { id: 5, username: 'CreatorY', avatar: 'https://randomuser.me/api/portraits/women/2.jpg' }
+  ];
+
+  // Get username from localStorage
+  function getCurrentUser() {
+    try {
+      const username = localStorage.getItem('username')
+      const userid = localStorage.getItem('userid')
+
+      if (username) {
+        return {
+          id: userid,
+          username: username,
+          avatar: 'https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg'
+        };
+      }
+      return { id: 0, username: 'You', avatar: 'https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg' };
+    } catch (e) {
+      console.error('Error parsing user from localStorage:', e);
+      return { id: 0, username: 'You', avatar: 'https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg' };
+    }
+  }
+
+  // Initialize current user
+  function initializeUser() {
+    currentUser = getCurrentUser();
+    creatorName.textContent = currentUser.username;
+    creatorAvatar.src = currentUser.avatar;
+    updateCreatorFields(true);
+  }
+
+  // Update creator fields based on whether current user is creator
+  function updateCreatorFields(isCurrentUser) {
+    isCurrentUserCreator = isCurrentUser;
+    
+    if (isCurrentUser) {
+      royaltyRate.classList.remove('disabled');
+      assetPrice.classList.remove('disabled');
+      royaltyRate.removeAttribute('disabled');
+      assetPrice.removeAttribute('disabled');
+    } else {
+      royaltyRate.classList.add('disabled');
+      assetPrice.classList.add('disabled');
+      royaltyRate.setAttribute('disabled', 'disabled');
+      assetPrice.setAttribute('disabled', 'disabled');
+    }
+  }
+
+  // Search for creators
+  function searchCreators(query) {
+    if (!query) {
+      creatorSearchResults.innerHTML = '';
+      creatorSearchResults.classList.remove('active');
+      return;
+    }
+    
+    // Filter mock users (would be replaced with API call)
+    const filteredUsers = mockUsers.filter(user => 
+      user.username.toLowerCase().includes(query.toLowerCase())
+    );
+    
+    // Display results
+    creatorSearchResults.innerHTML = '';
+    
+    if (filteredUsers.length === 0) {
+      const noResults = document.createElement('div');
+      noResults.className = 'creator-result';
+      noResults.textContent = 'No users found';
+      creatorSearchResults.appendChild(noResults);
+    } else {
+      filteredUsers.forEach(user => {
+        const result = document.createElement('div');
+        result.className = 'creator-result';
+        result.innerHTML = `
+          <img src="${user.avatar}" alt="${user.username}" class="creator-avatar" />
+          <span>${user.username}</span>
+        `;
+        result.addEventListener('click', () => selectCreator(user));
+        creatorSearchResults.appendChild(result);
+      });
+    }
+    
+    creatorSearchResults.classList.add('active');
+  }
+
+  // Select a creator
+  function selectCreator(user) {
+    creatorName.textContent = user.username;
+    creatorAvatar.src = user.avatar;
+    creatorSearch.value = '';
+    creatorSearchResults.innerHTML = '';
+    creatorSearchResults.classList.remove('active');
+    
+    // Check if selected creator is current user
+    const isCurrentUser = user.id === currentUser.id || 
+                         (user.username === currentUser.username && user.username !== 'You');
+    
+    updateCreatorFields(isCurrentUser);
+    updatePreviewCard();
+  }
+
+  // Reset creator to current user
+  function resetToCurrentUser() {
+    creatorName.textContent = currentUser.username;
+    creatorAvatar.src = currentUser.avatar;
+    updateCreatorFields(true);
+    updatePreviewCard();
+  }
+
+  // Update preview card when name changes
+  assetName.addEventListener('input', () => updatePreviewCard());
+
+  // Creator search events
+  creatorSearch.addEventListener('input', (e) => {
+    searchCreators(e.target.value);
+  });
+
+  creatorSearch.addEventListener('focus', () => {
+    if (creatorSearch.value) {
+      searchCreators(creatorSearch.value);
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!creatorSearch.contains(e.target) && !creatorSearchResults.contains(e.target)) {
+      creatorSearchResults.classList.remove('active');
+    }
+  });
+
+  resetCreator.addEventListener('click', resetToCurrentUser);
+
+  // Price validation
+  assetPrice.addEventListener('blur', () => {
+    if (isCurrentUserCreator) {
+      const value = assetPrice.value.trim();
+      if (value === "" || value.toLowerCase() === "free") {
+        assetPrice.value = "FREE";
+        return;
+      }
+
+      let numValue = parseFloat(value.replace(/[^0-9.]/g, ''));
+      if (isNaN(numValue)) {
+        assetPrice.value = "FREE";
+        return;
+      }
+
+      // Limit to $1.00 max
+      numValue = Math.min(numValue, 1.00);
+      assetPrice.value = `$${numValue.toFixed(2)}`;
+    }
+  });
+
+  // Handle click to upload
+  uploadBox.addEventListener('click', (e) => {
+    if (e.target === deleteBtn) return;
+    if (filePreview.style.display === 'none' || filePreview.style.display === '') {
+      fileInput.click();
+    }
+  });
+
+  // Handle file selection
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleFile(file);
+    }
+  });
+
+  // Handle drag and drop
+  uploadBox.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadBox.classList.add('dragover');
+  });
+
+  uploadBox.addEventListener('dragleave', () => {
+    uploadBox.classList.remove('dragover');
+  });
+
+  uploadBox.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadBox.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      handleFile(file);
+    }
+  });
+
+  // Handle paste
+  document.addEventListener('paste', (e) => {
+    const items = e.clipboardData.items;
+    for (let item of items) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        handleFile(file);
+        break;
+      }
+    }
+  });
+
+  // Handle delete
+  deleteBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearFile();
+  });
+
+  function handleFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imageUrl = e.target.result;
+      smallPreview.src = imageUrl;
+      fileName.textContent = file.name;
+      uploadContent.style.display = 'none';
+      filePreview.style.display = 'flex';
+      
+      // Update the preview card with the new image
+      updatePreviewCard(imageUrl);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearFile() {
+    fileInput.value = '';
+    smallPreview.src = '';
+    fileName.textContent = '';
+    uploadContent.style.display = 'flex';
+    filePreview.style.display = 'none';
+    
+    // Reset the preview
+    emptyPreview.style.display = 'flex';
+    cardPreview.style.display = 'none';
+  }
+
+  function updatePreviewCard(newImageUrl = null) {
+    const title = assetName.value || 'Asset Name';
+    const creator = creatorName.textContent;
+    const creatorImg = creatorAvatar.src;
+    
+    // If we have a new image, use it; otherwise keep the existing one if available
+    const imageUrl = newImageUrl || smallPreview.src;
+    
+    if (!imageUrl) {
+      emptyPreview.style.display = 'flex';
+      cardPreview.style.display = 'none';
+      return;
+    }
+    
+    // Create card HTML structure similar to CardComponent.astro
+    const cardHtml = `
+      <div class="card">
+        <div class="card-header">${title}</div>
+        <div class="card-image-container">
+          <div class="image-wrapper">
+            <img src="${imageUrl}" alt="${title}" class="card-image" />
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="creator-info">
+            <img src="${creatorImg}" alt="${creator}" class="creator-avatar" />
+            <span>${creator}</span>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    cardPreview.innerHTML = cardHtml;
+    emptyPreview.style.display = 'none';
+    cardPreview.style.display = 'block';
+  }
+
+  // Initialize the page
+  document.addEventListener('DOMContentLoaded', () => {
+    initializeUser();
+    
+    // Check if we already have an image to display
+    if (smallPreview.src) {
+      updatePreviewCard();
+    }
+
+    // Ensure the upload content is centered initially
+    if (uploadBox && uploadContent) {
+      uploadContent.style.display = 'flex';
+      uploadContent.style.alignItems = 'center';
+      uploadContent.style.justifyContent = 'center';
+    }
+  });
+
+  // Add form submission handler
+  const submitBtn = document.getElementById('submitBtn');
+  
+  async function handleSubmit() {
+    try {
+      const file = window.imageUploader.getFile();
+      if (!file) {
+        throw new Error('Please upload an image');
+      }
+      
+      const assetName = document.getElementById('assetName').value;
+      if (!assetName) {
+        throw new Error('Please enter an asset name');
+      }
+      
+      // Show status modal
+      window.statusModal.show('Uploading', 'Preparing your image...', 0);
+      
+      // Create form data
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('assetName', assetName);
+      
+      // Upload to backend using the service
+      const data = await generateModel(formData);
+      
+      // Update status modal
+      window.statusModal.updateTitle('Processing');
+      window.statusModal.updateMessage('Generating 3D model...');
+      
+      // Start polling for status
+      pollJobStatus(data.jobId);
+      
+    } catch (error) {
+      console.error('Error:', error);
+      window.statusModal.updateTitle('Error');
+      window.statusModal.updateMessage(error.message);
+      window.statusModal.enableClose(true);
+    }
+  }
+  
+  async function pollJobStatus(jobId) {
+    try {
+      const data = await checkJobStatus(jobId);
+      
+      window.statusModal.updateProgress(data.progress || 0);
+      
+      if (data.status === 'completed') {
+        window.statusModal.updateTitle('Success');
+        window.statusModal.updateMessage('3D model generated successfully!');
+        window.statusModal.enableClose(true);
+      } else if (data.status === 'failed') {
+        throw new Error(data.message || 'Failed to generate 3D model');
+      } else {
+        // Continue polling
+        setTimeout(() => pollJobStatus(jobId), 5000);
+      }
+      
+    } catch (error) {
+      console.error('Error:', error);
+      window.statusModal.updateTitle('Error');
+      window.statusModal.updateMessage(error.message);
+      window.statusModal.enableClose(true);
+    }
+  }
+  
+  if (submitBtn) {
+    submitBtn.addEventListener('click', handleSubmit);
+  }
+  
+  // Enable submit button when both image and name are present
+  function updateSubmitButton() {
+    const hasImage = window.imageUploader.getFile() !== null;
+    const hasName = assetName.value.trim() !== '';
+    submitBtn.disabled = !(hasImage && hasName);
+  }
+  
+  assetName.addEventListener('input', updateSubmitButton);
+  document.addEventListener('image-loaded', updateSubmitButton);
+  document.addEventListener('image-cleared', updateSubmitButton);
+</script>
+
+<style is:global>
+  /* Styles for the dynamically created card */
+  #cardPreview .card {
+    background: #D9D9D9;
+    outline: 2px solid #D9D9D9;
+    outline-offset: -1px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    color: #000;
+  }
+  
+  #cardPreview .card-header {
+    background: #D9D9D9;
+    padding: 0.5rem;
+    font-weight: bold;
+  }
+  
+  #cardPreview .card-image-container {
+    aspect-ratio: 4/5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+  }
+
+  #cardPreview .image-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+  }
+  
+  #cardPreview .card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    border-radius: 0;
+  }
+  
+  #cardPreview .card-footer {
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 2px solid #000;
+    font-size: 0.8rem;
+    background: #D9D9D9;
+  }
+  
+  #cardPreview .creator-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  #cardPreview .creator-avatar {
+    width: 20px;
+    height: 20px;
+  }
+</style> 

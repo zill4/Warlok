@@ -1,32 +1,38 @@
 ---
 // Component Imports
-import CardList from '../components/CardList';
 import '../styles/fonts.css';
 import Layout from '../layouts/Layout.astro';
 import '../styles/card-list.css';
+import CardComponent from '../components/CardComponent.astro';
+import CreateModelCard from '../components/CreateModelCard.astro';
 
-export const tempCards = [
-      {
-        id: '1',
-      name: 'Chroma Queen',
-      type: 'A ♦',
-      rarity: 'Rook',
-      description: 'A powerful cyber entity.',
-      effect: 'Can be placed anywhere on the board.',
-      creator: 'Zi114',
-      image: '/assets/images/Chroma_Queen.png'
-    },
-    {
-      id: '2',
-      name: 'Ace Kunoichi',
-      type: 'A ♦',
-      rarity: 'Ace',
-      description: 'Ace cyberrunner ninja.',
-      effect: 'Can be placed anywhere on the board when played as a straight.',
-      creator: 'Zi114',
-      image: '/assets/images/Ace_Kunoichi.png'
-    },
-  ];
+// Sample model data to match the screenshot
+const models = [
+  {
+    id: '1',
+    name: 'METALGREYMON',
+    creator: 'Zi114',
+    image: '/assets/images/card_back.jpg'
+  },
+  {
+    id: '2',
+    name: 'METALGREYMON',
+    creator: 'Zi114',
+    image: '/assets/images/card_back.jpg'
+  },
+  {
+    id: '3',
+    name: 'METALGREYMON',
+    creator: 'Zi114',
+    image: '/assets/images/card_back.jpg'
+  },
+  {
+    id: '4',
+    name: 'METALGREYMON',
+    creator: 'Zi114',
+    image: '/assets/images/card_back.jpg'
+  }
+];
   
 ---
 <Layout title="Profile">
@@ -35,37 +41,54 @@ export const tempCards = [
       <div class="profile-info">
         <img src="https://pbs.twimg.com/profile_images/1882571472712974336/LBgD5N5R_400x400.jpg" alt="Profile" class="avatar" />
         <div class="username">Zi114</div>
-        <!-- <div class="verified">✓ @_Zi114_</div> -->
         <div class="edit-profile">✎</div>
         <div class="logout" onclick="handleLogout()" style="cursor: pointer;">Logout</div>  
       </div>
     </div>
 
     <div class="navigation">
-      <button class="nav-button active">CARDS</button>
-      <button class="nav-button">DECKS</button>
-      <button class="nav-button">GAMES</button>
+      <button class="nav-button active">GAMES</button>
     </div>
 
     <div class="content">
-      <CardList client:load cards={tempCards} />
+      <div class="models-grid">
+        {models.map(model => (
+          <CardComponent 
+            title={model.name}
+            image={model.image}
+            creator={model.creator}
+            showViewOptions={true}
+          />
+        ))}
+        
+        <CreateModelCard />
+        
+        <!-- In Progress Card -->
+        <CardComponent 
+          title="Greymon 2/3"
+          image="/assets/images/Ace_Kunoichi.png"
+          footerText="In progress..."
+          centerFooter={true}
+        />
+      </div>
     </div>
   </div>
 </Layout>
+
 <style>
   .profile-container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
-    color: #D9D9D9;
+    color: #000;
     font-family: 'Courier New', monospace;
+    background-color: #000;
   }
 
   .profile-header {
     margin-bottom: 2rem;
     background: #0a0a0a;
     border: 1px solid #333;
-    border-radius: 4px;
     padding: 1.5rem;
   }
 
@@ -78,7 +101,6 @@ export const tempCards = [
   .avatar {
     width: 48px;
     height: 48px;
-    border-radius: 50%;
     border: 2px solid #333;
   }
 
@@ -86,14 +108,6 @@ export const tempCards = [
     font-size: 1.5rem;
     font-weight: bold;
     color: #fff;
-  }
-
-  .verified {
-    color: #1DA1F2;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
   }
 
   .edit-profile {
@@ -134,11 +148,6 @@ export const tempCards = [
     color: #fff;
   }
 
-  .content {
-    background: transparent;
-    border-radius: 8px;
-  }
-
   .logout {
     margin-left: 1rem;
     color: #666;
@@ -146,16 +155,110 @@ export const tempCards = [
   }
 
   .logout:hover {
-    color: #ff4444;  /* Red tint on hover */
+    color: #ff4444;
+  }
+  
+  .models-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+  
+  /* Card styles for the create model card */
+  .card {
+    background: #D9D9D9;
+    border: 2px solid #000;
+    outline: 2px solid #D9D9D9;
+    outline-offset: -1px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    color: #000;
+  }
+  
+  .card-header {
+    background: #D9D9D9;
+    padding: 0.5rem;
+    font-weight: bold;
+    border-bottom: 2px solid #000;
+  }
+  
+  .card-image-container {
+    aspect-ratio: 4/5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .image-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    border-radius: 0;
+  }
+  
+  .card-footer {
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 2px solid #000;
+    font-size: 0.8rem;
+    background: #D9D9D9;
+  }
+  
+  /* Updated CREATE 3D MODEL card styles */
+  .create-model-content {
+    aspect-ratio: 4/5;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .plus-container {
+    background: #000;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .swirl-footer {
+    height: 40px;
+    background-image: url('/assets/images/card_back.jpg');
+    background-size: cover;
+    background-position: center;
+  }
+
+  .plus-icon {
+    color: white;
+    font-size: 48px;
+    font-weight: lighter;
+  }
+
+  /* Remove these styles as they're no longer needed */
+  .black-bg,
+  .model-footer,
+  .model-header {
+    display: none;
   }
 </style>
 
 <script is:inline>
-    function handleLogout() {
-      // Remove the token from localStorage
-      localStorage.removeItem('token');
-      
-      // Redirect to the root route
-      window.location.href = '/';
-    }
-  </script>
+  function handleLogout() {
+    localStorage.removeItem('token');
+    window.location.href = '/';
+  }
+</script>

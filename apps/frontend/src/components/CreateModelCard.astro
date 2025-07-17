@@ -1,0 +1,55 @@
+---
+interface Props {
+  title?: string;
+}
+
+const { title = "CREATE ASSET" } = Astro.props;
+---
+
+<a href="/createAsset" class="card">
+  <div class="card-header">{title}</div>
+  <div class="card-content">
+    <div class="plus-icon">+</div>
+  </div>
+</a>
+
+<style>
+  .card {
+    background: #D9D9D9;
+    border: 2px solid #000;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    color: #000;
+    height: 100%; /* Match other cards height */
+    text-decoration: none;
+  }
+  
+  .card:hover {
+    cursor: pointer;
+    opacity: 0.9;
+  }
+  
+  .card-header {
+    background: #D9D9D9;
+    padding: 0.5rem;
+    font-weight: bold;
+    border-bottom: 2px solid #000;
+  }
+  
+  .card-content {
+    background-image: url('/assets/images/card_back.jpg');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1; /* This will make it fill the remaining space */
+  }
+
+  .plus-icon {
+    color: white;
+    font-size: 48px;
+    font-weight: lighter;
+  }
+</style> 

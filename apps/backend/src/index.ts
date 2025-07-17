@@ -6,6 +6,7 @@ import userRoutes from './routes/user';
 import profileRoutes from './routes/profile';
 import cardRoutes from './routes/card';
 import gameRoutes from './routes/game';
+import modelGenerationRoutes from './routes/modelGeneration';
 
 // Load environment variables before any other imports
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -34,6 +35,7 @@ async function startServer() {
     app.use('/api/profiles', profileRoutes);
     app.use('/api/cards', cardRoutes);
     app.use('/api/games', gameRoutes);
+    app.use('/api/models', modelGenerationRoutes);
 
     // Health check endpoint
     app.get('/health', (req, res) => {
